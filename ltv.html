@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny Knight Fall — LTV by install cohort</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0:#f4f3f1; --surface-1:#fcfcfb; --border:#e4e2dd;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#807e78;
+    --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a; --series-4:#eda100;
+    --grid:#eceae6; --tooltip-bg:#0b0b0b; --tooltip-fg:#ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0:#111110; --surface-1:#1a1a19; --border:#33322f;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8f8d85;
+      --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --series-4:#c98500;
+      --grid:#262623; --tooltip-bg:#fcfcfb; --tooltip-fg:#0b0b0b;
+    }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--surface-0); color:var(--text-primary);
+         font:14px/1.45 "Segoe UI",system-ui,sans-serif; padding:20px; }
+  h1 { font-size:20px; font-weight:650; }
+  .sub { color:var(--text-secondary); font-size:12.5px; margin:4px 0 18px; }
+  .sub a { color:var(--series-1); }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:14px; }
+  .tile { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .tile .v { font-size:24px; font-weight:650; letter-spacing:-0.02em; }
+  .tile .l { font-size:11.5px; color:var(--text-secondary); margin-top:2px; }
+  .tile .n { font-size:10.5px; color:var(--text-muted); margin-top:3px; }
+  .grid { display:grid; gap:14px; }
+  .card { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:14px 16px 10px; overflow:hidden; }
+  .card h2 { font-size:13.5px; font-weight:650; }
+  .card .note { font-size:11px; color:var(--text-muted); margin:2px 0 6px; }
+  .legend { display:flex; flex-wrap:wrap; gap:12px; font-size:11.5px; color:var(--text-secondary); margin:4px 0 2px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .sw { width:10px; height:10px; border-radius:3px; display:inline-block; }
+  svg { display:block; width:100%; }
+  svg text { font:10.5px "Segoe UI",system-ui,sans-serif; fill:var(--text-secondary); }
+  svg .dl { font-weight:600; fill:var(--text-primary); }
+  .gridline { stroke:var(--grid); stroke-width:1; }
+  .axis { stroke:var(--border); stroke-width:1; }
+  #tip { position:fixed; pointer-events:none; background:var(--tooltip-bg); color:var(--tooltip-fg);
+         padding:6px 9px; border-radius:7px; font-size:11.5px; line-height:1.5; opacity:0;
+         transition:opacity .08s; z-index:10; max-width:280px; box-shadow:0 2px 10px rgba(0,0,0,.25); }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  th { text-align:right; color:var(--text-secondary); font-weight:600; padding:4px 8px; border-bottom:1px solid var(--border); }
+  th:first-child, td:first-child { text-align:left; }
+  td { text-align:right; padding:3px 8px; font-variant-numeric:tabular-nums; }
+  td.heat { border-radius:4px; }
+  .caveats { margin-top:16px; font-size:11.5px; color:var(--text-muted); max-width:1100px; }
+  .caveats b { color:var(--text-secondary); }
+</style>
+</head>
+<body>
+<h1>LTV by install cohort — Tiny Knight Fall</h1>
+<div class="sub">tiny-knightfall-idle-rpg-game · analytics_538412813 · export 2026-06-29 → 2026-07-23 (last day partial) · <a href="index.html">← KPI dashboard</a></div>
+<div class="tiles" id="tiles"></div>
+<div class="grid" id="grid"></div>
+<div class="caveats" id="caveats"></div>
+<div id="tip"></div>
+
+<script>
+const RAW = [{"cohort": "2026-06-29", "size": 6, "dd": 0, "iap": 0.0, "iaa": 0.019}, {"cohort": "2026-07-04", "size": 56, "dd": 0, "iap": 0.0, "iaa": 0.1933}, {"cohort": "2026-07-04", "size": 56, "dd": 1, "iap": 0.0, "iaa": 0.056}, {"cohort": "2026-07-04", "size": 56, "dd": 2, "iap": 0.0, "iaa": 0.0066}, {"cohort": "2026-07-05", "size": 699, "dd": 0, "iap": 0.0, "iaa": 0.1993}, {"cohort": "2026-07-05", "size": 699, "dd": 1, "iap": 0.0, "iaa": 0.0004}, {"cohort": "2026-07-05", "size": 699, "dd": 3, "iap": 0.0, "iaa": 0.1193}, {"cohort": "2026-07-05", "size": 699, "dd": 6, "iap": 0.0, "iaa": 0.0}, {"cohort": "2026-07-05", "size": 699, "dd": 13, "iap": 0.0, "iaa": 0.0003}, {"cohort": "2026-07-06", "size": 530, "dd": 0, "iap": 0.0, "iaa": 0.0491}, {"cohort": "2026-07-07", "size": 784, "dd": 0, "iap": 0.0, "iaa": 0.2438}, {"cohort": "2026-07-07", "size": 784, "dd": 1, "iap": 0.0, "iaa": 0.0366}, {"cohort": "2026-07-07", "size": 784, "dd": 2, "iap": 0.0, "iaa": 0.0008}, {"cohort": "2026-07-07", "size": 784, "dd": 8, "iap": 0.0, "iaa": 0.002}, {"cohort": "2026-07-08", "size": 879, "dd": 0, "iap": 0.0, "iaa": 1.0181}, {"cohort": "2026-07-08", "size": 879, "dd": 1, "iap": 0.0, "iaa": 0.0404}, {"cohort": "2026-07-08", "size": 879, "dd": 2, "iap": 0.0, "iaa": 0.015}, {"cohort": "2026-07-08", "size": 879, "dd": 3, "iap": 0.0, "iaa": 0.0031}, {"cohort": "2026-07-08", "size": 879, "dd": 6, "iap": 0.0, "iaa": 0.001}, {"cohort": "2026-07-08", "size": 879, "dd": 8, "iap": 0.0, "iaa": 0.0005}, {"cohort": "2026-07-09", "size": 996, "dd": 0, "iap": 0.0, "iaa": 0.7868}, {"cohort": "2026-07-09", "size": 996, "dd": 1, "iap": 0.0, "iaa": 0.0897}, {"cohort": "2026-07-09", "size": 996, "dd": 2, "iap": 0.0, "iaa": 0.0251}, {"cohort": "2026-07-09", "size": 996, "dd": 3, "iap": 0.0, "iaa": 0.1263}, {"cohort": "2026-07-09", "size": 996, "dd": 4, "iap": 0.0, "iaa": 0.079}, {"cohort": "2026-07-09", "size": 996, "dd": 5, "iap": 0.0, "iaa": 0.0582}, {"cohort": "2026-07-09", "size": 996, "dd": 6, "iap": 0.0, "iaa": 0.0833}, {"cohort": "2026-07-09", "size": 996, "dd": 7, "iap": 0.0, "iaa": 0.1338}, {"cohort": "2026-07-09", "size": 996, "dd": 8, "iap": 0.0, "iaa": 0.1277}, {"cohort": "2026-07-09", "size": 996, "dd": 9, "iap": 0.0, "iaa": 0.0023}, {"cohort": "2026-07-09", "size": 996, "dd": 10, "iap": 0.0, "iaa": 0.1048}, {"cohort": "2026-07-09", "size": 996, "dd": 12, "iap": 0.0, "iaa": 0.0791}, {"cohort": "2026-07-09", "size": 996, "dd": 13, "iap": 0.0, "iaa": 0.0416}, {"cohort": "2026-07-09", "size": 996, "dd": 14, "iap": 0.0, "iaa": 0.0052}, {"cohort": "2026-07-10", "size": 1042, "dd": 0, "iap": 0.0, "iaa": 2.2485}, {"cohort": "2026-07-10", "size": 1042, "dd": 1, "iap": 0.0, "iaa": 0.0808}, {"cohort": "2026-07-10", "size": 1042, "dd": 2, "iap": 0.0, "iaa": 0.0907}, {"cohort": "2026-07-10", "size": 1042, "dd": 3, "iap": 0.0, "iaa": 0.001}, {"cohort": "2026-07-10", "size": 1042, "dd": 5, "iap": 0.0, "iaa": 0.1038}, {"cohort": "2026-07-10", "size": 1042, "dd": 6, "iap": 0.0, "iaa": 0.0755}, {"cohort": "2026-07-10", "size": 1042, "dd": 7, "iap": 0.0, "iaa": 0.0755}, {"cohort": "2026-07-10", "size": 1042, "dd": 13, "iap": 0.0, "iaa": 0.0039}, {"cohort": "2026-07-11", "size": 1111, "dd": 0, "iap": 0.0, "iaa": 2.0671}, {"cohort": "2026-07-11", "size": 1111, "dd": 1, "iap": 0.0, "iaa": 0.5297}, {"cohort": "2026-07-11", "size": 1111, "dd": 2, "iap": 0.0, "iaa": 0.0039}, {"cohort": "2026-07-11", "size": 1111, "dd": 3, "iap": 0.0, "iaa": 0.0304}, {"cohort": "2026-07-11", "size": 1111, "dd": 4, "iap": 0.0, "iaa": 0.0043}, {"cohort": "2026-07-11", "size": 1111, "dd": 6, "iap": 0.0, "iaa": 0.0018}, {"cohort": "2026-07-11", "size": 1111, "dd": 7, "iap": 0.0, "iaa": 0.0174}, {"cohort": "2026-07-11", "size": 1111, "dd": 9, "iap": 0.0, "iaa": 0.0043}, {"cohort": "2026-07-11", "size": 1111, "dd": 12, "iap": 0.0, "iaa": 0.0047}, {"cohort": "2026-07-12", "size": 1138, "dd": 0, "iap": 0.0, "iaa": 3.7945}, {"cohort": "2026-07-12", "size": 1138, "dd": 1, "iap": 0.0, "iaa": 0.2984}, {"cohort": "2026-07-12", "size": 1138, "dd": 2, "iap": 0.0, "iaa": 0.0402}, {"cohort": "2026-07-12", "size": 1138, "dd": 3, "iap": 0.0, "iaa": 0.1305}, {"cohort": "2026-07-12", "size": 1138, "dd": 4, "iap": 0.0, "iaa": 1.0024}, {"cohort": "2026-07-12", "size": 1138, "dd": 5, "iap": 0.0, "iaa": 0.0647}, {"cohort": "2026-07-12", "size": 1138, "dd": 6, "iap": 0.0, "iaa": 0.0556}, {"cohort": "2026-07-12", "size": 1138, "dd": 7, "iap": 0.0, "iaa": 0.0252}, {"cohort": "2026-07-12", "size": 1138, "dd": 8, "iap": 0.0, "iaa": 0.0095}, {"cohort": "2026-07-12", "size": 1138, "dd": 9, "iap": 0.0, "iaa": 0.0147}, {"cohort": "2026-07-12", "size": 1138, "dd": 10, "iap": 0.0, "iaa": 0.0104}, {"cohort": "2026-07-13", "size": 986, "dd": 0, "iap": 0.0, "iaa": 2.2035}, {"cohort": "2026-07-13", "size": 986, "dd": 1, "iap": 0.0, "iaa": 0.2971}, {"cohort": "2026-07-13", "size": 986, "dd": 2, "iap": 0.0, "iaa": 0.0719}, {"cohort": "2026-07-13", "size": 986, "dd": 3, "iap": 0.0, "iaa": 0.073}, {"cohort": "2026-07-13", "size": 986, "dd": 4, "iap": 0.0, "iaa": 0.0018}, {"cohort": "2026-07-13", "size": 986, "dd": 5, "iap": 0.0, "iaa": 0.028}, {"cohort": "2026-07-13", "size": 986, "dd": 6, "iap": 0.0, "iaa": 0.0095}, {"cohort": "2026-07-13", "size": 986, "dd": 7, "iap": 0.0, "iaa": 0.0556}, {"cohort": "2026-07-13", "size": 986, "dd": 8, "iap": 0.0, "iaa": 0.0755}, {"cohort": "2026-07-14", "size": 1012, "dd": 0, "iap": 0.0, "iaa": 1.5762}, {"cohort": "2026-07-14", "size": 1012, "dd": 1, "iap": 0.0, "iaa": 0.1079}, {"cohort": "2026-07-14", "size": 1012, "dd": 2, "iap": 0.0, "iaa": 0.0933}, {"cohort": "2026-07-14", "size": 1012, "dd": 4, "iap": 0.0, "iaa": 0.0227}, {"cohort": "2026-07-14", "size": 1012, "dd": 6, "iap": 0.0, "iaa": 0.0337}, {"cohort": "2026-07-14", "size": 1012, "dd": 7, "iap": 0.0, "iaa": 0.0927}, {"cohort": "2026-07-14", "size": 1012, "dd": 8, "iap": 0.0, "iaa": 0.0556}, {"cohort": "2026-07-14", "size": 1012, "dd": 9, "iap": 0.0, "iaa": 0.0122}, {"cohort": "2026-07-15", "size": 918, "dd": 0, "iap": 0.0, "iaa": 0.6188}, {"cohort": "2026-07-15", "size": 918, "dd": 1, "iap": 0.0, "iaa": 0.037}, {"cohort": "2026-07-15", "size": 918, "dd": 2, "iap": 0.0, "iaa": 0.0052}, {"cohort": "2026-07-15", "size": 918, "dd": 3, "iap": 0.0, "iaa": 0.03}, {"cohort": "2026-07-15", "size": 918, "dd": 4, "iap": 0.0, "iaa": 0.0034}, {"cohort": "2026-07-15", "size": 918, "dd": 5, "iap": 0.0, "iaa": 0.0132}, {"cohort": "2026-07-15", "size": 918, "dd": 6, "iap": 0.0, "iaa": 0.0094}, {"cohort": "2026-07-15", "size": 918, "dd": 7, "iap": 0.0, "iaa": 0.0101}, {"cohort": "2026-07-16", "size": 1023, "dd": 0, "iap": 0.0, "iaa": 0.2098}, {"cohort": "2026-07-16", "size": 1023, "dd": 1, "iap": 0.0, "iaa": 0.0179}, {"cohort": "2026-07-16", "size": 1023, "dd": 2, "iap": 0.0, "iaa": 0.01}, {"cohort": "2026-07-16", "size": 1023, "dd": 3, "iap": 0.0, "iaa": 0.0032}, {"cohort": "2026-07-16", "size": 1023, "dd": 6, "iap": 0.0, "iaa": 0.0006}, {"cohort": "2026-07-17", "size": 1052, "dd": 0, "iap": 0.0, "iaa": 0.3474}, {"cohort": "2026-07-17", "size": 1052, "dd": 1, "iap": 0.0, "iaa": 0.0401}, {"cohort": "2026-07-17", "size": 1052, "dd": 2, "iap": 0.0, "iaa": 0.0008}, {"cohort": "2026-07-17", "size": 1052, "dd": 3, "iap": 0.0, "iaa": 0.002}, {"cohort": "2026-07-18", "size": 1149, "dd": 0, "iap": 0.0, "iaa": 7.0056}, {"cohort": "2026-07-18", "size": 1149, "dd": 1, "iap": 0.0, "iaa": 0.6777}, {"cohort": "2026-07-18", "size": 1149, "dd": 3, "iap": 0.0, "iaa": 0.001}, {"cohort": "2026-07-19", "size": 1190, "dd": 0, "iap": 0.0, "iaa": 6.2881}, {"cohort": "2026-07-19", "size": 1190, "dd": 1, "iap": 0.0, "iaa": 0.0524}, {"cohort": "2026-07-19", "size": 1190, "dd": 2, "iap": 0.0, "iaa": 0.0107}, {"cohort": "2026-07-19", "size": 1190, "dd": 3, "iap": 0.0, "iaa": 0.0038}, {"cohort": "2026-07-19", "size": 1190, "dd": 4, "iap": 0.0, "iaa": 0.0058}, {"cohort": "2026-07-20", "size": 871, "dd": 0, "iap": 14.1065, "iaa": 3.6284}, {"cohort": "2026-07-20", "size": 871, "dd": 1, "iap": 11.3369, "iaa": 0.4794}, {"cohort": "2026-07-20", "size": 871, "dd": 2, "iap": 15.98, "iaa": 0.101}, {"cohort": "2026-07-20", "size": 871, "dd": 3, "iap": 0.0, "iaa": 0.0363}, {"cohort": "2026-07-21", "size": 335, "dd": 0, "iap": 34.1423, "iaa": 5.4874}, {"cohort": "2026-07-21", "size": 335, "dd": 1, "iap": 17.0106, "iaa": 0.1493}, {"cohort": "2026-07-21", "size": 335, "dd": 2, "iap": 6.9238, "iaa": 0.0152}, {"cohort": "2026-07-22", "size": 438, "dd": 0, "iap": 181.7027, "iaa": 22.6547}, {"cohort": "2026-07-22", "size": 438, "dd": 1, "iap": 12.9595, "iaa": 0.8525}, {"cohort": "2026-07-23", "size": 326, "dd": 0, "iap": 42.3316, "iaa": 12.7904}];
+const MAXDATE = new Date(Math.max(...RAW.map(r=>+new Date(r.cohort))));
+
+/* ---------- helpers ---------- */
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt$ = v => '$' + (v>=100 ? v.toFixed(0) : v>=1 ? v.toFixed(2) : v.toFixed(3));
+const fmtDm = s => s.slice(5).replace('-','/');
+const tip = document.getElementById('tip');
+function showTip(html, ev){ tip.innerHTML = html; tip.style.opacity = 1;
+  tip.style.left = Math.min(ev.clientX+14, innerWidth-tip.offsetWidth-10)+'px';
+  tip.style.top = (ev.clientY+14)+'px'; }
+function hideTip(){ tip.style.opacity = 0; }
+const NS='http://www.w3.org/2000/svg';
+function el(t,a,p){ const e=document.createElementNS(NS,t); for(const k in a)e.setAttribute(k,a[k]); if(p)p.appendChild(e); return e; }
+function card(t,n){ const c=document.createElement('div'); c.className='card';
+  c.innerHTML=`<h2>${t}</h2><div class="note">${n}</div>`; document.getElementById('grid').appendChild(c); return c; }
+function legend(c,items){ const l=document.createElement('div'); l.className='legend';
+  l.innerHTML=items.map(i=>`<span><span class="sw" style="background:${i.color}"></span>${i.name}</span>`).join(''); c.appendChild(l); }
+
+/* ---------- shape data ---------- */
+// per-cohort: size + revenue by day-since-install
+const cohorts = {};
+RAW.forEach(r=>{ const c = cohorts[r.cohort] = cohorts[r.cohort] || {size:r.size, rev:{}, iap:0, iaa:0};
+  c.rev[r.dd] = (r.iap||0)+(r.iaa||0); c.iap += r.iap||0; c.iaa += r.iaa||0; });
+const cohortKeys = Object.keys(cohorts).sort();
+const ageOf = c => Math.round((MAXDATE - new Date(c))/864e5);
+const cumTo = (c,dd) => { let s=0; for(let d=0; d<=dd; d++) s += cohorts[c].rev[d]||0; return s; };
+
+/* ---------- tiles ---------- */
+const totSize = cohortKeys.reduce((s,c)=>s+cohorts[c].size,0);
+const totIap = cohortKeys.reduce((s,c)=>s+cohorts[c].iap,0);
+const totIaa = cohortKeys.reduce((s,c)=>s+cohorts[c].iaa,0);
+const post = cohortKeys.filter(c=>c>='2026-07-20');
+const postSize = post.reduce((s,c)=>s+cohorts[c].size,0);
+const postRev = post.reduce((s,c)=>s+cohorts[c].iap+cohorts[c].iaa,0);
+document.getElementById('tiles').innerHTML = [
+  {v:fmt$((totIap+totIaa)/totSize), l:'Observed LTV / install (all cohorts)', n:`${fmt$(totIap+totIaa)} over ${totSize.toLocaleString()} installs`},
+  {v:fmt$(postRev/postSize), l:'LTV / install, Jul 20+ cohorts', n:'the only cohorts with working IAP tracking'},
+  {v:Math.round(100*totIap/(totIap+totIaa))+'%', l:'IAP share of cohort revenue', n:`IAP ${fmt$(totIap)} · ads ${fmt$(totIaa)}`},
+  (()=>{ const best = cohortKeys.reduce((a,c)=> (cohorts[c].iap+cohorts[c].iaa)/cohorts[c].size > (cohorts[a].iap+cohorts[a].iaa)/cohorts[a].size ? c : a);
+     return {v:fmt$((cohorts[best].iap+cohorts[best].iaa)/cohorts[best].size), l:'Best cohort: '+best.slice(5), n:`${cohorts[best].size} installs, ${ageOf(best)}d old — still accruing`}; })(),
+].map(t=>`<div class="tile"><div class="v">${t.v}</div><div class="l">${t.l}</div><div class="n">${t.n}</div></div>`).join('');
+
+/* ---------- 1. cumulative LTV curves by cohort week ---------- */
+{
+const buckets = [
+  {name:'Jun 29 – Jul 5', from:'2026-06-29', to:'2026-07-05', color:css('--series-1')},
+  {name:'Jul 6 – 12',     from:'2026-07-06', to:'2026-07-12', color:css('--series-2')},
+  {name:'Jul 13 – 19',    from:'2026-07-13', to:'2026-07-19', color:css('--series-3')},
+  {name:'Jul 20 – 23 (IAP tracked)', from:'2026-07-20', to:'2026-07-23', color:css('--series-4')},
+];
+const maxDD = 18;
+buckets.forEach(b=>{
+  b.curve = [];
+  for(let dd=0; dd<=maxDD; dd++){
+    const el_ = cohortKeys.filter(c=>c>=b.from && c<=b.to && ageOf(c)>=dd);
+    if(!el_.length){ b.curve.push(null); continue; }
+    const rev = el_.reduce((s,c)=>s+cumTo(c,dd),0);
+    const size = el_.reduce((s,c)=>s+cohorts[c].size,0);
+    b.curve.push(rev/size);
+  }
+});
+const c = card('Cumulative LTV per install, by cohort week',
+ 'Revenue per install accumulated N days after install. Each point averages only the cohorts old enough to have reached that day. The Jul 20+ week is the only one where purchases are tracked — earlier weeks are ad revenue only.');
+legend(c, buckets.map(b=>({name:b.name, color:b.color})));
+const W=980,H=300,P={l:52,r:16,t:12,b:24};
+const svg = el('svg',{viewBox:`0 0 ${W} ${H}`},c);
+const max = Math.max(...buckets.flatMap(b=>b.curve.filter(v=>v!=null)))*1.1;
+const x = d=>P.l + d/maxDD*(W-P.l-P.r), y = v=>P.t + (H-P.t-P.b)*(1-v/max);
+for(let t=0;t<=4;t++){ const v=max*t/4, yy=y(v);
+  el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+  el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent=fmt$(v); }
+for(let d=0;d<=maxDD;d+=2) el('text',{x:x(d),y:H-6,'text-anchor':'middle'},svg).textContent='D'+d;
+buckets.forEach(b=>{
+  const pts = b.curve.map((v,d)=> v==null?null:[x(d),y(v),d,v]).filter(Boolean);
+  el('path',{d:'M'+pts.map(p=>p[0]+','+p[1]).join('L'),fill:'none',stroke:b.color,'stroke-width':2,'stroke-linejoin':'round'},svg);
+  pts.forEach(p=>{ const dot=el('circle',{cx:p[0],cy:p[1],r:3,fill:b.color},svg);
+    dot.addEventListener('mousemove',ev=>showTip(`<b>${b.name}</b><br>D${p[2]}: ${fmt$(p[3])} / install`,ev));
+    dot.addEventListener('mouseleave',hideTip); });
+  const last = pts[pts.length-1];
+  if(last) el('text',{x:last[0]+6,y:last[1]+3,class:'dl'},svg).textContent = fmt$(last[3]);
+});
+}
+
+/* ---------- 2. LTV to date per cohort, stacked IAP/IAA ---------- */
+{
+const c = card('LTV per install to date, by install day — the Jul 20 cliff',
+ 'Bars = cumulative revenue per install for each daily cohort, split IAP vs ads. The step at Jul 20 is when build 15 made purchases visible, not a real change in player quality.');
+legend(c, [{name:'IAP',color:css('--series-1')},{name:'ads (IAA)',color:css('--series-2')}]);
+const rows = cohortKeys.filter(c=>cohorts[c].size>=50);
+const W=980,H=260,P={l:52,r:10,t:12,b:26};
+const svg = el('svg',{viewBox:`0 0 ${W} ${H}`},c);
+const vals = rows.map(k=>({k, iap:cohorts[k].iap/cohorts[k].size, iaa:cohorts[k].iaa/cohorts[k].size}));
+const max = Math.max(...vals.map(v=>v.iap+v.iaa))*1.1;
+const x = i=>P.l+(i+0.5)*(W-P.l-P.r)/rows.length, y = v=>P.t+(H-P.t-P.b)*(1-v/max);
+for(let t=0;t<=4;t++){ const v=max*t/4, yy=y(v);
+  el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+  el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent=fmt$(v); }
+const bw = Math.min(26,(W-P.l-P.r)/rows.length-4);
+vals.forEach((v,i)=>{
+  if(i%2===0) el('text',{x:x(i),y:H-8,'text-anchor':'middle'},svg).textContent=fmtDm(v.k);
+  const y1=y(v.iap), y0=y(0);
+  el('rect',{x:x(i)-bw/2,y:y1,width:bw,height:Math.max(0,y0-y1),rx:3,fill:css('--series-1')},svg);
+  const y2=y(v.iap+v.iaa);
+  el('rect',{x:x(i)-bw/2,y:y2,width:bw,height:Math.max(0,y1-y2-(v.iap>0?2:0)),rx:3,fill:css('--series-2')},svg);
+  const hit = el('rect',{x:x(i)-bw/2-2,y:P.t,width:bw+4,height:H-P.t-P.b,fill:'transparent'},svg);
+  hit.addEventListener('mousemove',ev=>showTip(
+    `<b>${v.k}</b> · ${cohorts[v.k].size} installs · ${ageOf(v.k)}d old<br>IAP: ${fmt$(v.iap)} /install<br>ads: ${fmt$(v.iaa)} /install<br>total: ${fmt$(v.iap+v.iaa)} /install`,ev));
+  hit.addEventListener('mouseleave',hideTip);
+});
+}
+
+/* ---------- 3. cohort table ---------- */
+{
+const c = card('Cohort LTV table', 'Cumulative revenue per install at day N after install (cohorts ≥50 installs). Blank = cohort not old enough. IAP is only visible for Jul 20+ cohorts.');
+const ramp=['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab'];
+const rows = cohortKeys.filter(k=>cohorts[k].size>=50);
+const maxLtv = Math.max(...rows.map(k=>(cohorts[k].iap+cohorts[k].iaa)/cohorts[k].size));
+const cell = (k,dd)=>{
+  if(ageOf(k)<dd) return '<td></td>';
+  const v = cumTo(k,dd)/cohorts[k].size;
+  const idx = Math.min(ramp.length-1, Math.floor(v/(maxLtv||1)*ramp.length));
+  return `<td class="heat" style="background:${ramp[idx]};color:${idx>5?'#fff':'#0b0b0b'}">${fmt$(v)}</td>`; };
+c.insertAdjacentHTML('beforeend',
+ `<div style="overflow-x:auto"><table><tr><th>cohort</th><th>installs</th><th>age</th><th>D1</th><th>D3</th><th>D7</th><th>D14</th><th>to date</th><th>IAP $</th><th>ads $</th></tr>`+
+ rows.map(k=>{ const co=cohorts[k];
+   return `<tr><td>${k.slice(5)}</td><td>${co.size}</td><td>${ageOf(k)}d</td>${cell(k,1)}${cell(k,3)}${cell(k,7)}${cell(k,14)}`+
+     `<td><b>${fmt$((co.iap+co.iaa)/co.size)}</b></td><td>${fmt$(co.iap)}</td><td>${fmt$(co.iaa)}</td></tr>`; }).join('')+
+ `</table></div>`);
+}
+
+document.getElementById('caveats').innerHTML =
+ `<b>Definitions & caveats.</b> LTV here = <i>observed</i> cumulative revenue per install (IAP event_value_in_usd + AppLovin MAX impression revenue), cohorted by first_open date, day boundaries UTC. ` +
+ `<b>IAP is only measurable from build 15 (~Jul 20):</b> older builds never emit purchase events, so cohorts before Jul 20 show ads-only LTV — their true LTV is understated by an unknown amount (AppsFlyer af_purchase is the source of truth for the missing period). ` +
+ `$14.43 of window revenue belongs to users with no first_open in the export (installed before Jun 29) and is excluded. ` +
+ `All cohorts are young (≤25 days); these are LTV floors, not converged values. Last day is partial (intraday).`;
+</script>
+</body>
+</html>

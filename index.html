@@ -171,8 +171,8 @@ const mature = k => { const rows = DATA.retention.filter(r=>r[k]>0 || (r.size>50
   return den? (100*num/den):0; };
 const R1 = mature('d1'), R3 = mature('d3'), R7 = mature('d7'), R14 = mature('d14');
 
-document.getElementById('sub').textContent =
-  `tiny-knightfall-idle-rpg-game · analytics_538412813 · full export 2026-06-29 → 2026-07-23 (last day partial, intraday) · generated 2026-07-23`;
+document.getElementById('sub').innerHTML =
+  `<a href="ltv.html" style="color:var(--series-1)">LTV by cohort →</a> · tiny-knightfall-idle-rpg-game · analytics_538412813 · full export 2026-06-29 → 2026-07-23 (last day partial, intraday) · generated 2026-07-23`;
 
 /* ---------- KPI tiles ---------- */
 const tiles = [
