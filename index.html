@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny Knight Fall — KPI Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0:#f4f3f1; --surface-1:#fcfcfb; --border:#e4e2dd;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#807e78;
+    --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a; --series-4:#eda100;
+    --series-5:#e87ba4; --series-6:#008300; --series-7:#4a3aa7; --series-8:#e34948;
+    --grid:#eceae6; --tooltip-bg:#0b0b0b; --tooltip-fg:#ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0:#111110; --surface-1:#1a1a19; --border:#33322f;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8f8d85;
+      --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --series-4:#c98500;
+      --series-5:#d55181; --series-6:#008300; --series-7:#9085e9; --series-8:#e66767;
+      --grid:#262623; --tooltip-bg:#fcfcfb; --tooltip-fg:#0b0b0b;
+    }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--surface-0); color:var(--text-primary);
+         font:14px/1.45 "Segoe UI",system-ui,sans-serif; padding:20px; }
+  h1 { font-size:20px; font-weight:650; }
+  .sub { color:var(--text-secondary); font-size:12.5px; margin:4px 0 18px; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+  .tile { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .tile .v { font-size:24px; font-weight:650; letter-spacing:-0.02em; }
+  .tile .l { font-size:11.5px; color:var(--text-secondary); margin-top:2px; }
+  .tile .n { font-size:10.5px; color:var(--text-muted); margin-top:3px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(430px,1fr)); gap:14px; }
+  .card { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:14px 16px 10px; overflow:hidden; }
+  .card.wide { grid-column:1 / -1; }
+  .card h2 { font-size:13.5px; font-weight:650; }
+  .card .note { font-size:11px; color:var(--text-muted); margin:2px 0 6px; }
+  .legend { display:flex; flex-wrap:wrap; gap:12px; font-size:11.5px; color:var(--text-secondary); margin:4px 0 2px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .sw { width:10px; height:10px; border-radius:3px; display:inline-block; }
+  svg { display:block; width:100%; }
+  svg text { font:10.5px "Segoe UI",system-ui,sans-serif; fill:var(--text-secondary); }
+  svg .dl { font-weight:600; fill:var(--text-primary); }
+  .gridline { stroke:var(--grid); stroke-width:1; }
+  .axis { stroke:var(--border); stroke-width:1; }
+  #tip { position:fixed; pointer-events:none; background:var(--tooltip-bg); color:var(--tooltip-fg);
+         padding:6px 9px; border-radius:7px; font-size:11.5px; line-height:1.5; opacity:0;
+         transition:opacity .08s; z-index:10; max-width:260px; box-shadow:0 2px 10px rgba(0,0,0,.25); }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  th { text-align:right; color:var(--text-secondary); font-weight:600; padding:4px 8px; border-bottom:1px solid var(--border); }
+  th:first-child, td:first-child { text-align:left; }
+  td { text-align:right; padding:3px 8px; font-variant-numeric:tabular-nums; }
+  td.heat { border-radius:4px; }
+  .caveats { margin-top:16px; font-size:11.5px; color:var(--text-muted); max-width:1100px; }
+  .caveats b { color:var(--text-secondary); }
+</style>
+</head>
+<body>
+<h1>Tiny Knight Fall — KPI Dashboard</h1>
+<div class="sub" id="sub"></div>
+<div class="tiles" id="tiles"></div>
+<div class="grid" id="grid"></div>
+<div class="caveats" id="caveats"></div>
+<div id="tip"></div>
+
+<script>
+const DATA = {"dau_version": [{"d": "20260629", "v": 3, "users": 4}, {"d": "20260629", "v": 4, "users": 4}, {"d": "20260630", "v": 1, "users": 1}, {"d": "20260630", "v": 2, "users": 2}, {"d": "20260630", "v": 3, "users": 4}, {"d": "20260630", "v": 4, "users": 5}, {"d": "20260701", "v": 3, "users": 2}, {"d": "20260701", "v": 4, "users": 2}, {"d": "20260701", "v": 5, "users": 4}, {"d": "20260701", "v": 6, "users": 6}, {"d": "20260702", "v": 2, "users": 1}, {"d": "20260702", "v": 3, "users": 1}, {"d": "20260702", "v": 4, "users": 2}, {"d": "20260702", "v": 5, "users": 1}, {"d": "20260702", "v": 6, "users": 2}, {"d": "20260703", "v": 6, "users": 1}, {"d": "20260703", "v": 7, "users": 4}, {"d": "20260704", "v": 6, "users": 58}, {"d": "20260705", "v": 4, "users": 2}, {"d": "20260705", "v": 6, "users": 104}, {"d": "20260705", "v": 7, "users": 228}, {"d": "20260705", "v": 8, "users": 410}, {"d": "20260706", "v": 2, "users": 1}, {"d": "20260706", "v": 6, "users": 29}, {"d": "20260706", "v": 7, "users": 64}, {"d": "20260706", "v": 8, "users": 579}, {"d": "20260707", "v": 3, "users": 1}, {"d": "20260707", "v": 6, "users": 56}, {"d": "20260707", "v": 7, "users": 38}, {"d": "20260707", "v": 8, "users": 903}, {"d": "20260708", "v": 5, "users": 1}, {"d": "20260708", "v": 6, "users": 62}, {"d": "20260708", "v": 7, "users": 29}, {"d": "20260708", "v": 8, "users": 721}, {"d": "20260708", "v": 9, "users": 379}, {"d": "20260709", "v": 6, "users": 41}, {"d": "20260709", "v": 7, "users": 26}, {"d": "20260709", "v": 8, "users": 371}, {"d": "20260709", "v": 9, "users": 984}, {"d": "20260710", "v": 6, "users": 27}, {"d": "20260710", "v": 7, "users": 15}, {"d": "20260710", "v": 8, "users": 253}, {"d": "20260710", "v": 9, "users": 1332}, {"d": "20260711", "v": 6, "users": 50}, {"d": "20260711", "v": 7, "users": 18}, {"d": "20260711", "v": 8, "users": 192}, {"d": "20260711", "v": 9, "users": 830}, {"d": "20260711", "v": 10, "users": 693}, {"d": "20260712", "v": 5, "users": 1}, {"d": "20260712", "v": 6, "users": 3}, {"d": "20260712", "v": 7, "users": 10}, {"d": "20260712", "v": 8, "users": 152}, {"d": "20260712", "v": 9, "users": 445}, {"d": "20260712", "v": 10, "users": 1317}, {"d": "20260713", "v": 6, "users": 2}, {"d": "20260713", "v": 7, "users": 8}, {"d": "20260713", "v": 8, "users": 105}, {"d": "20260713", "v": 9, "users": 309}, {"d": "20260713", "v": 10, "users": 1409}, {"d": "20260714", "v": 2, "users": 1}, {"d": "20260714", "v": 6, "users": 1}, {"d": "20260714", "v": 7, "users": 8}, {"d": "20260714", "v": 8, "users": 102}, {"d": "20260714", "v": 9, "users": 247}, {"d": "20260714", "v": 10, "users": 1574}, {"d": "20260715", "v": 6, "users": 1}, {"d": "20260715", "v": 7, "users": 8}, {"d": "20260715", "v": 8, "users": 84}, {"d": "20260715", "v": 9, "users": 186}, {"d": "20260715", "v": 10, "users": 1610}, {"d": "20260716", "v": 6, "users": 1}, {"d": "20260716", "v": 7, "users": 4}, {"d": "20260716", "v": 8, "users": 78}, {"d": "20260716", "v": 9, "users": 162}, {"d": "20260716", "v": 10, "users": 1678}, {"d": "20260716", "v": 11, "users": 4}, {"d": "20260716", "v": 12, "users": 5}, {"d": "20260716", "v": 14, "users": 92}, {"d": "20260717", "v": 6, "users": 3}, {"d": "20260717", "v": 7, "users": 3}, {"d": "20260717", "v": 8, "users": 76}, {"d": "20260717", "v": 9, "users": 129}, {"d": "20260717", "v": 10, "users": 1049}, {"d": "20260717", "v": 14, "users": 807}, {"d": "20260717", "v": 15, "users": 82}, {"d": "20260718", "v": 6, "users": 1}, {"d": "20260718", "v": 7, "users": 5}, {"d": "20260718", "v": 8, "users": 74}, {"d": "20260718", "v": 9, "users": 108}, {"d": "20260718", "v": 10, "users": 721}, {"d": "20260718", "v": 11, "users": 1}, {"d": "20260718", "v": 12, "users": 1}, {"d": "20260718", "v": 14, "users": 424}, {"d": "20260718", "v": 15, "users": 955}, {"d": "20260719", "v": 6, "users": 2}, {"d": "20260719", "v": 7, "users": 6}, {"d": "20260719", "v": 8, "users": 64}, {"d": "20260719", "v": 9, "users": 117}, {"d": "20260719", "v": 10, "users": 517}, {"d": "20260719", "v": 12, "users": 1}, {"d": "20260719", "v": 14, "users": 231}, {"d": "20260719", "v": 15, "users": 1469}, {"d": "20260720", "v": 7, "users": 8}, {"d": "20260720", "v": 8, "users": 56}, {"d": "20260720", "v": 9, "users": 89}, {"d": "20260720", "v": 10, "users": 363}, {"d": "20260720", "v": 14, "users": 130}, {"d": "20260720", "v": 15, "users": 796}, {"d": "20260720", "v": 16, "users": 634}, {"d": "20260721", "v": 6, "users": 1}, {"d": "20260721", "v": 7, "users": 4}, {"d": "20260721", "v": 8, "users": 38}, {"d": "20260721", "v": 9, "users": 93}, {"d": "20260721", "v": 10, "users": 292}, {"d": "20260721", "v": 11, "users": 2}, {"d": "20260721", "v": 14, "users": 87}, {"d": "20260721", "v": 15, "users": 438}, {"d": "20260721", "v": 16, "users": 559}, {"d": "20260722", "v": 6, "users": 1}, {"d": "20260722", "v": 7, "users": 7}, {"d": "20260722", "v": 8, "users": 40}, {"d": "20260722", "v": 9, "users": 87}, {"d": "20260722", "v": 10, "users": 276}, {"d": "20260722", "v": 14, "users": 81}, {"d": "20260722", "v": 15, "users": 279}, {"d": "20260722", "v": 16, "users": 710}, {"d": "20260723", "v": 6, "users": 2}, {"d": "20260723", "v": 7, "users": 2}, {"d": "20260723", "v": 8, "users": 19}, {"d": "20260723", "v": 9, "users": 44}, {"d": "20260723", "v": 10, "users": 118}, {"d": "20260723", "v": 14, "users": 36}, {"d": "20260723", "v": 15, "users": 135}, {"d": "20260723", "v": 16, "users": 541}, {"d": "20260723", "v": 17, "users": 58}], "daily": [{"d": "20260629", "dau": 8, "new_users": 6, "sessions": 7, "iaa_rev": 0.019, "iap_rev": 0.0, "impressions": 2, "ad_viewers": 2, "iap_events": 0, "payers": 0}, {"d": "20260630", "dau": 12, "new_users": 6, "sessions": 13, "iaa_rev": 0.0132, "iap_rev": 0.0, "impressions": 4, "ad_viewers": 2, "iap_events": 0, "payers": 0}, {"d": "20260701", "dau": 13, "new_users": 10, "sessions": 18, "iaa_rev": 0.0, "iap_rev": 0.0, "impressions": 0, "ad_viewers": 0, "iap_events": 0, "payers": 0}, {"d": "20260702", "dau": 7, "new_users": 5, "sessions": 6, "iaa_rev": 0.0, "iap_rev": 0.0, "impressions": 0, "ad_viewers": 0, "iap_events": 0, "payers": 0}, {"d": "20260703", "dau": 5, "new_users": 5, "sessions": 2, "iaa_rev": 0.0, "iap_rev": 0.0, "impressions": 0, "ad_viewers": 0, "iap_events": 0, "payers": 0}, {"d": "20260704", "dau": 58, "new_users": 56, "sessions": 60, "iaa_rev": 0.1933, "iap_rev": 0.0, "impressions": 18, "ad_viewers": 2, "iap_events": 0, "payers": 0}, {"d": "20260705", "dau": 725, "new_users": 699, "sessions": 920, "iaa_rev": 0.2553, "iap_rev": 0.0, "impressions": 50, "ad_viewers": 11, "iap_events": 0, "payers": 0}, {"d": "20260706", "dau": 665, "new_users": 530, "sessions": 781, "iaa_rev": 0.0561, "iap_rev": 0.0, "impressions": 13, "ad_viewers": 5, "iap_events": 0, "payers": 0}, {"d": "20260707", "dau": 997, "new_users": 784, "sessions": 1210, "iaa_rev": 0.2438, "iap_rev": 0.0, "impressions": 67, "ad_viewers": 19, "iap_events": 0, "payers": 0}, {"d": "20260708", "dau": 1184, "new_users": 879, "sessions": 1426, "iaa_rev": 1.174, "iap_rev": 0.0, "impressions": 197, "ad_viewers": 32, "iap_events": 0, "payers": 0}, {"d": "20260709", "dau": 1418, "new_users": 996, "sessions": 1735, "iaa_rev": 0.8279, "iap_rev": 0.0, "impressions": 160, "ad_viewers": 26, "iap_events": 0, "payers": 0}, {"d": "20260710", "dau": 1625, "new_users": 1042, "sessions": 2037, "iaa_rev": 2.3533, "iap_rev": 0.0, "impressions": 210, "ad_viewers": 41, "iap_events": 0, "payers": 0}, {"d": "20260711", "dau": 1775, "new_users": 1111, "sessions": 2220, "iaa_rev": 2.1761, "iap_rev": 0.0, "impressions": 232, "ad_viewers": 82, "iap_events": 1, "payers": 1}, {"d": "20260712", "dau": 1922, "new_users": 1138, "sessions": 2388, "iaa_rev": 4.5411, "iap_rev": 0.0, "impressions": 359, "ad_viewers": 88, "iap_events": 0, "payers": 0}, {"d": "20260713", "dau": 1831, "new_users": 986, "sessions": 2269, "iaa_rev": 2.601, "iap_rev": 0.0, "impressions": 236, "ad_viewers": 60, "iap_events": 0, "payers": 0}, {"d": "20260714", "dau": 1931, "new_users": 1012, "sessions": 2315, "iaa_rev": 2.0509, "iap_rev": 0.0, "impressions": 253, "ad_viewers": 60, "iap_events": 0, "payers": 0}, {"d": "20260715", "dau": 1889, "new_users": 918, "sessions": 2222, "iaa_rev": 1.2105, "iap_rev": 0.0, "impressions": 236, "ad_viewers": 39, "iap_events": 0, "payers": 0}, {"d": "20260716", "dau": 2019, "new_users": 1023, "sessions": 2473, "iaa_rev": 1.6261, "iap_rev": 0.0, "impressions": 177, "ad_viewers": 34, "iap_events": 0, "payers": 0}, {"d": "20260717", "dau": 2135, "new_users": 1052, "sessions": 2530, "iaa_rev": 0.7929, "iap_rev": 0.0, "impressions": 155, "ad_viewers": 39, "iap_events": 0, "payers": 0}, {"d": "20260718", "dau": 2275, "new_users": 1149, "sessions": 2784, "iaa_rev": 7.2247, "iap_rev": 0.0, "impressions": 197, "ad_viewers": 52, "iap_events": 0, "payers": 0}, {"d": "20260719", "dau": 2402, "new_users": 1190, "sessions": 2867, "iaa_rev": 7.2314, "iap_rev": 0.0, "impressions": 203, "ad_viewers": 45, "iap_events": 0, "payers": 0}, {"d": "20260720", "dau": 2066, "new_users": 871, "sessions": 2434, "iaa_rev": 3.7993, "iap_rev": 14.11, "impressions": 223, "ad_viewers": 69, "iap_events": 2, "payers": 2}, {"d": "20260721", "dau": 1509, "new_users": 335, "sessions": 1702, "iaa_rev": 6.2807, "iap_rev": 45.48, "impressions": 342, "ad_viewers": 73, "iap_events": 6, "payers": 5}, {"d": "20260722", "dau": 1480, "new_users": 438, "sessions": 1669, "iaa_rev": 23.0271, "iap_rev": 228.39, "impressions": 395, "ad_viewers": 118, "iap_events": 27, "payers": 11}, {"d": "20260723", "dau": 944, "new_users": 308, "sessions": 1035, "iaa_rev": 13.7948, "iap_rev": 60.05, "impressions": 299, "ad_viewers": 83, "iap_events": 10, "payers": 8}], "retention": [{"cohort": "2026-06-29", "size": 6, "d1": 16.7, "d3": 16.7, "d7": 0.0, "d14": 16.7}, {"cohort": "2026-06-30", "size": 6, "d1": 16.7, "d3": 0.0, "d7": 16.7, "d14": 0.0}, {"cohort": "2026-07-01", "size": 10, "d1": 10.0, "d3": 0.0, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-02", "size": 5, "d1": 0.0, "d3": 0.0, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-03", "size": 5, "d1": 0.0, "d3": 0.0, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-04", "size": 56, "d1": 30.4, "d3": 7.1, "d7": 3.6, "d14": 0.0}, {"cohort": "2026-07-05", "size": 699, "d1": 16.6, "d3": 7.3, "d7": 4.9, "d14": 2.4}, {"cohort": "2026-07-06", "size": 530, "d1": 23.6, "d3": 8.1, "d7": 3.2, "d14": 2.6}, {"cohort": "2026-07-07", "size": 784, "d1": 23.1, "d3": 10.2, "d7": 4.0, "d14": 2.7}, {"cohort": "2026-07-08", "size": 879, "d1": 22.5, "d3": 11.3, "d7": 6.4, "d14": 3.8}, {"cohort": "2026-07-09", "size": 996, "d1": 25.1, "d3": 9.9, "d7": 5.7, "d14": 1.9}, {"cohort": "2026-07-10", "size": 1042, "d1": 23.6, "d3": 9.9, "d7": 5.0, "d14": 0.0}, {"cohort": "2026-07-11", "size": 1111, "d1": 27.2, "d3": 12.0, "d7": 5.4, "d14": 0.0}, {"cohort": "2026-07-12", "size": 1138, "d1": 25.1, "d3": 11.2, "d7": 6.1, "d14": 0.0}, {"cohort": "2026-07-13", "size": 986, "d1": 25.6, "d3": 9.6, "d7": 5.2, "d14": 0.0}, {"cohort": "2026-07-14", "size": 1012, "d1": 24.8, "d3": 10.5, "d7": 4.3, "d14": 0.0}, {"cohort": "2026-07-15", "size": 918, "d1": 27.2, "d3": 10.2, "d7": 4.7, "d14": 0.0}, {"cohort": "2026-07-16", "size": 1023, "d1": 27.6, "d3": 10.8, "d7": 3.9, "d14": 0.0}, {"cohort": "2026-07-17", "size": 1052, "d1": 27.3, "d3": 12.3, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-18", "size": 1149, "d1": 25.6, "d3": 10.0, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-19", "size": 1190, "d1": 25.4, "d3": 10.9, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-20", "size": 871, "d1": 29.3, "d3": 7.7, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-21", "size": 335, "d1": 23.3, "d3": 0.0, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-22", "size": 438, "d1": 22.4, "d3": 0.0, "d7": 0.0, "d14": 0.0}, {"cohort": "2026-07-23", "size": 308, "d1": 0.0, "d3": 0.0, "d7": 0.0, "d14": 0.0}], "ret_curve": [{"dd": 0, "active": 16549, "eligible": 16549}, {"dd": 1, "active": 4073, "eligible": 16241}, {"dd": 2, "active": 2300, "eligible": 15803}, {"dd": 3, "active": 1587, "eligible": 15468}, {"dd": 4, "active": 1179, "eligible": 14597}, {"dd": 5, "active": 898, "eligible": 13407}, {"dd": 6, "active": 763, "eligible": 12258}, {"dd": 7, "active": 557, "eligible": 11206}, {"dd": 8, "active": 437, "eligible": 10183}, {"dd": 9, "active": 367, "eligible": 9265}, {"dd": 10, "active": 294, "eligible": 8253}, {"dd": 11, "active": 233, "eligible": 7267}, {"dd": 12, "active": 195, "eligible": 6129}, {"dd": 13, "active": 129, "eligible": 5018}, {"dd": 14, "active": 105, "eligible": 3976}, {"dd": 15, "active": 60, "eligible": 2980}, {"dd": 16, "active": 40, "eligible": 2101}, {"dd": 17, "active": 20, "eligible": 1317}, {"dd": 18, "active": 4, "eligible": 787}, {"dd": 19, "active": 0, "eligible": 88}, {"dd": 20, "active": 1, "eligible": 32}], "iaa_by_format": [{"fmt": "REWARDED", "imps": 3966, "rev": 81.3668}, {"fmt": "INTER", "imps": 62, "rev": 0.1259}], "iaa_by_placement": [{"pl": "key_challenge_BossRush", "imps": 462, "rev": 25.6103}, {"pl": "summon_gear", "imps": 922, "rev": 14.4883}, {"pl": "daily_quest", "imps": 533, "rev": 10.5119}, {"pl": "key_challenge_GoldRush", "imps": 226, "rev": 8.0046}, {"pl": "game_speed_x2", "imps": 105, "rev": 4.7916}, {"pl": "lucky_spin", "imps": 309, "rev": 4.0259}, {"pl": "summon_skill", "imps": 444, "rev": 3.8288}, {"pl": "flybox_gold", "imps": 101, "rev": 3.4967}, {"pl": "summon_companion", "imps": 264, "rev": 1.9295}, {"pl": "flybox_blessing", "imps": 48, "rev": 1.3477}, {"pl": "flybox_gem", "imps": 23, "rev": 0.847}, {"pl": "skip_time_research", "imps": 80, "rev": 0.3636}, {"pl": "blessing_attack", "imps": 39, "rev": 0.3095}, {"pl": "(none)", "imps": 43, "rev": 0.2815}, {"pl": "welcome_back", "imps": 29, "rev": 0.2121}], "iap_by_product": [{"product": "com.idle.tiny.skip.ad.permanent.sale", "buys": 11, "buyers": 11, "rev": 138.13}, {"product": "com.idle.tiny.package.combo.mythic", "buys": 3, "buyers": 2, "rev": 34.23}, {"product": "com.idle.tiny.auto.blessing", "buys": 6, "buyers": 6, "rev": 32.69}, {"product": "com.idle.tiny.skip.ad.permanent", "buys": 1, "buyers": 1, "rev": 29.99}, {"product": "com.idle.tiny.membership", "buys": 3, "buyers": 3, "rev": 22.11}, {"product": "com.idle.tiny.skip.ad.30days", "buys": 2, "buyers": 2, "rev": 21.98}, {"product": "com.idle.tiny.daily.challenge.key.1", "buys": 6, "buyers": 3, "rev": 13.52}, {"product": "com.idle.tiny.time.limit.mega.summon", "buys": 1, "buyers": 1, "rev": 12.12}, {"product": "com.idle.tiny.skip.ad.30days.sale", "buys": 2, "buyers": 2, "rev": 11.87}, {"product": "com.idle.tiny.monthly.newbie", "buys": 3, "buyers": 3, "rev": 10.19}, {"product": "com.idle.tiny.skip.ad.3days", "buys": 3, "buyers": 3, "rev": 9.48}, {"product": "com.idle.tiny.campaign.51", "buys": 4, "buyers": 4, "rev": 8.72}, {"product": "com.idle.tiny.campaign.101", "buys": 1, "buyers": 1, "rev": 2.99}], "ad_funnel": [{"d": "20260701", "ad_type": "inter", "requests": 2, "fills": 2, "shows": 0}, {"d": "20260701", "ad_type": "rewarded", "requests": 2, "fills": 2, "shows": 0}, {"d": "20260704", "ad_type": "inter", "requests": 81, "fills": 8, "shows": 0}, {"d": "20260704", "ad_type": "rewarded", "requests": 34, "fills": 25, "shows": 17}, {"d": "20260705", "ad_type": "inter", "requests": 1979, "fills": 106, "shows": 1}, {"d": "20260705", "ad_type": "rewarded", "requests": 638, "fills": 149, "shows": 46}, {"d": "20260706", "ad_type": "inter", "requests": 2963, "fills": 87, "shows": 0}, {"d": "20260706", "ad_type": "rewarded", "requests": 628, "fills": 93, "shows": 11}, {"d": "20260707", "ad_type": "inter", "requests": 12660, "fills": 170, "shows": 2}, {"d": "20260707", "ad_type": "rewarded", "requests": 1307, "fills": 190, "shows": 54}, {"d": "20260708", "ad_type": "inter", "requests": 25613, "fills": 201, "shows": 1}, {"d": "20260708", "ad_type": "rewarded", "requests": 1928, "fills": 354, "shows": 180}, {"d": "20260709", "ad_type": "inter", "requests": 18600, "fills": 234, "shows": 5}, {"d": "20260709", "ad_type": "rewarded", "requests": 2138, "fills": 342, "shows": 160}, {"d": "20260710", "ad_type": "inter", "requests": 28387, "fills": 278, "shows": 1}, {"d": "20260710", "ad_type": "rewarded", "requests": 2714, "fills": 468, "shows": 205}, {"d": "20260711", "ad_type": "inter", "requests": 20553, "fills": 356, "shows": 4}, {"d": "20260711", "ad_type": "rewarded", "requests": 2620, "fills": 460, "shows": 202}, {"d": "20260712", "ad_type": "inter", "requests": 17728, "fills": 364, "shows": 7}, {"d": "20260712", "ad_type": "rewarded", "requests": 2818, "fills": 622, "shows": 325}, {"d": "20260713", "ad_type": "inter", "requests": 26623, "fills": 335, "shows": 5}, {"d": "20260713", "ad_type": "rewarded", "requests": 2880, "fills": 462, "shows": 206}, {"d": "20260714", "ad_type": "inter", "requests": 39290, "fills": 300, "shows": 3}, {"d": "20260714", "ad_type": "rewarded", "requests": 3139, "fills": 488, "shows": 225}, {"d": "20260715", "ad_type": "inter", "requests": 17470, "fills": 261, "shows": 5}, {"d": "20260715", "ad_type": "rewarded", "requests": 2458, "fills": 449, "shows": 228}, {"d": "20260716", "ad_type": "inter", "requests": 26305, "fills": 295, "shows": 3}, {"d": "20260716", "ad_type": "rewarded", "requests": 2938, "fills": 392, "shows": 164}, {"d": "20260717", "ad_type": "inter", "requests": 43654, "fills": 378, "shows": 1}, {"d": "20260717", "ad_type": "rewarded", "requests": 3724, "fills": 448, "shows": 139}, {"d": "20260718", "ad_type": "inter", "requests": 27308, "fills": 398, "shows": 6}, {"d": "20260718", "ad_type": "rewarded", "requests": 3371, "fills": 475, "shows": 177}, {"d": "20260719", "ad_type": "inter", "requests": 47112, "fills": 339, "shows": 1}, {"d": "20260719", "ad_type": "rewarded", "requests": 4081, "fills": 487, "shows": 184}, {"d": "20260720", "ad_type": "inter", "requests": 44847, "fills": 331, "shows": 3}, {"d": "20260720", "ad_type": "rewarded", "requests": 3592, "fills": 495, "shows": 202}, {"d": "20260721", "ad_type": "inter", "requests": 24709, "fills": 238, "shows": 1}, {"d": "20260721", "ad_type": "rewarded", "requests": 2504, "fills": 526, "shows": 328}, {"d": "20260722", "ad_type": "inter", "requests": 19820, "fills": 337, "shows": 4}, {"d": "20260722", "ad_type": "rewarded", "requests": 2010, "fills": 674, "shows": 353}, {"d": "20260723", "ad_type": "inter", "requests": 9309, "fills": 237, "shows": 6}, {"d": "20260723", "ad_type": "rewarded", "requests": 1160, "fills": 488, "shows": 262}], "levels": [{"lvl": 1, "starters": 5290, "wins": 0, "losses": 0, "avg_win_time": null}, {"lvl": 2, "starters": 4096, "wins": 4125, "losses": 443, "avg_win_time": 4.6}, {"lvl": 3, "starters": 3326, "wins": 3343, "losses": 545, "avg_win_time": 7.8}, {"lvl": 4, "starters": 2721, "wins": 2727, "losses": 765, "avg_win_time": 7.2}, {"lvl": 5, "starters": 2152, "wins": 2204, "losses": 147, "avg_win_time": 4.4}, {"lvl": 6, "starters": 1964, "wins": 1969, "losses": 37, "avg_win_time": 6.3}, {"lvl": 7, "starters": 1821, "wins": 1839, "losses": 59, "avg_win_time": 7.3}, {"lvl": 8, "starters": 1713, "wins": 1725, "losses": 37, "avg_win_time": 5.9}, {"lvl": 9, "starters": 1599, "wins": 1613, "losses": 124, "avg_win_time": 4.9}, {"lvl": 10, "starters": 1482, "wins": 1488, "losses": 475, "avg_win_time": 6.0}, {"lvl": 11, "starters": 1343, "wins": 1364, "losses": 417, "avg_win_time": 6.3}, {"lvl": 12, "starters": 1104, "wins": 1117, "losses": 335, "avg_win_time": 4.8}, {"lvl": 13, "starters": 997, "wins": 1006, "losses": 325, "avg_win_time": 4.6}, {"lvl": 14, "starters": 912, "wins": 922, "losses": 177, "avg_win_time": 5.5}, {"lvl": 15, "starters": 856, "wins": 859, "losses": 112, "avg_win_time": 5.8}, {"lvl": 16, "starters": 814, "wins": 819, "losses": 140, "avg_win_time": 6.8}, {"lvl": 17, "starters": 765, "wins": 772, "losses": 118, "avg_win_time": 7.6}, {"lvl": 18, "starters": 704, "wins": 710, "losses": 170, "avg_win_time": 7.5}, {"lvl": 19, "starters": 640, "wins": 643, "losses": 21, "avg_win_time": 8.5}, {"lvl": 20, "starters": 601, "wins": 605, "losses": 30, "avg_win_time": 7.7}, {"lvl": 21, "starters": 565, "wins": 568, "losses": 280, "avg_win_time": 7.2}, {"lvl": 22, "starters": 506, "wins": 514, "losses": 112, "avg_win_time": 8.4}, {"lvl": 23, "starters": 470, "wins": 476, "losses": 308, "avg_win_time": 7.7}, {"lvl": 24, "starters": 404, "wins": 416, "losses": 589, "avg_win_time": 7.3}, {"lvl": 25, "starters": 314, "wins": 318, "losses": 78, "avg_win_time": 5.5}, {"lvl": 26, "starters": 295, "wins": 303, "losses": 168, "avg_win_time": 5.3}, {"lvl": 27, "starters": 271, "wins": 278, "losses": 42, "avg_win_time": 5.1}, {"lvl": 28, "starters": 260, "wins": 266, "losses": 29, "avg_win_time": 3.6}, {"lvl": 29, "starters": 246, "wins": 250, "losses": 146, "avg_win_time": 3.6}, {"lvl": 30, "starters": 227, "wins": 231, "losses": 43, "avg_win_time": 4.1}, {"lvl": 31, "starters": 217, "wins": 225, "losses": 84, "avg_win_time": 3.4}, {"lvl": 32, "starters": 207, "wins": 212, "losses": 15, "avg_win_time": 3.6}, {"lvl": 33, "starters": 202, "wins": 206, "losses": 39, "avg_win_time": 3.5}, {"lvl": 34, "starters": 196, "wins": 206, "losses": 80, "avg_win_time": 3.4}, {"lvl": 35, "starters": 185, "wins": 187, "losses": 7, "avg_win_time": 3.0}, {"lvl": 36, "starters": 183, "wins": 183, "losses": 1, "avg_win_time": 2.8}, {"lvl": 37, "starters": 182, "wins": 182, "losses": 11, "avg_win_time": 2.8}, {"lvl": 38, "starters": 177, "wins": 176, "losses": 4, "avg_win_time": 3.1}, {"lvl": 39, "starters": 172, "wins": 173, "losses": 9, "avg_win_time": 3.4}, {"lvl": 40, "starters": 164, "wins": 165, "losses": 5, "avg_win_time": 3.8}, {"lvl": 41, "starters": 156, "wins": 157, "losses": 19, "avg_win_time": 3.3}, {"lvl": 42, "starters": 154, "wins": 155, "losses": 27, "avg_win_time": 3.7}, {"lvl": 43, "starters": 147, "wins": 147, "losses": 2, "avg_win_time": 3.6}, {"lvl": 44, "starters": 142, "wins": 144, "losses": 6, "avg_win_time": 3.1}, {"lvl": 45, "starters": 140, "wins": 141, "losses": 4, "avg_win_time": 3.0}, {"lvl": 46, "starters": 138, "wins": 137, "losses": 15, "avg_win_time": 4.0}, {"lvl": 47, "starters": 134, "wins": 135, "losses": 50, "avg_win_time": 4.4}, {"lvl": 48, "starters": 127, "wins": 130, "losses": 10, "avg_win_time": 4.3}, {"lvl": 49, "starters": 126, "wins": 126, "losses": 2, "avg_win_time": 4.6}, {"lvl": 50, "starters": 123, "wins": 125, "losses": 0, "avg_win_time": 3.7}, {"lvl": 51, "starters": 121, "wins": 123, "losses": 0, "avg_win_time": 3.6}, {"lvl": 52, "starters": 121, "wins": 122, "losses": 0, "avg_win_time": 2.4}, {"lvl": 53, "starters": 121, "wins": 121, "losses": 5, "avg_win_time": 2.6}, {"lvl": 54, "starters": 118, "wins": 128, "losses": 227, "avg_win_time": 4.3}, {"lvl": 55, "starters": 96, "wins": 101, "losses": 162, "avg_win_time": 4.1}, {"lvl": 56, "starters": 86, "wins": 95, "losses": 105, "avg_win_time": 3.6}, {"lvl": 57, "starters": 77, "wins": 78, "losses": 17, "avg_win_time": 4.4}, {"lvl": 58, "starters": 73, "wins": 73, "losses": 14, "avg_win_time": 3.4}, {"lvl": 59, "starters": 71, "wins": 70, "losses": 2, "avg_win_time": 4.1}, {"lvl": 60, "starters": 71, "wins": 70, "losses": 6, "avg_win_time": 3.0}], "geo": [{"country": "Bangladesh", "users": 1877, "rev": 0.02}, {"country": "Sudan", "users": 1656, "rev": 0.01}, {"country": "Iran", "users": 1371, "rev": 0.08}, {"country": "United States", "users": 1059, "rev": 127.97}, {"country": "Nepal", "users": 865, "rev": 0.0}, {"country": "Algeria", "users": 755, "rev": 0.05}, {"country": "Pakistan", "users": 662, "rev": 0.01}, {"country": "Afghanistan", "users": 636, "rev": 0.0}, {"country": "Ethiopia", "users": 557, "rev": 0.0}, {"country": "Iraq", "users": 527, "rev": 0.26}, {"country": "United Kingdom", "users": 388, "rev": 22.12}, {"country": "Congo - Kinshasa", "users": 355, "rev": 0.0}]};
+
+/* ---------- helpers ---------- */
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtD = s => { const d = String(s).replaceAll('-',''); return d.slice(4,6).replace(/^0/,'') + '/' + d.slice(6,8).replace(/^0/,''); };
+const fmt$ = v => '$' + (v>=100 ? v.toFixed(0) : v.toFixed(2));
+const fmtK = v => v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(Math.round(v));
+const tip = document.getElementById('tip');
+function showTip(html, ev){ tip.innerHTML = html; tip.style.opacity = 1;
+  const pad = 14, w = tip.offsetWidth;
+  tip.style.left = Math.min(ev.clientX + pad, innerWidth - w - 10) + 'px';
+  tip.style.top  = (ev.clientY + pad) + 'px'; }
+function hideTip(){ tip.style.opacity = 0; }
+
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+function card(title, note, opts={}){
+  const c = document.createElement('div'); c.className = 'card' + (opts.wide?' wide':'');
+  c.innerHTML = `<h2>${title}</h2><div class="note">${note}</div>`;
+  document.getElementById('grid').appendChild(c); return c;
+}
+function legend(c, items){
+  const l = document.createElement('div'); l.className='legend';
+  l.innerHTML = items.map(i=>`<span><span class="sw" style="background:${i.color}"></span>${i.name}</span>`).join('');
+  c.appendChild(l);
+}
+
+/* Generic time chart: stacked bars + optional line overlays, one y axis. */
+function timeChart(c, {dates, stacks=[], lines=[], h=230, yFmt=fmtK, tipRow}){
+  const W = 860, P = {l:44, r:10, t:10, b:22};
+  const svg = el('svg', {viewBox:`0 0 ${W} ${h}`}, c);
+  const iw = W-P.l-P.r, ih = h-P.t-P.b, n = dates.length;
+  const totals = dates.map((_,i)=> stacks.reduce((s,st)=>s+(st.values[i]||0),0));
+  let max = Math.max(...totals, ...lines.flatMap(l=>l.values.filter(v=>v!=null)), 1);
+  max *= 1.08;
+  const y = v => P.t + ih - (v/max)*ih;
+  const x = i => P.l + (i+0.5)*(iw/n);
+  const bw = Math.min(22, iw/n - 4);
+  const ticks = 4;
+  for (let t=0;t<=ticks;t++){ const v = max*t/ticks, yy = y(v);
+    el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+    el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent = yFmt(v);
+  }
+  el('line',{x1:P.l,x2:W-P.r,y1:y(0),y2:y(0),class:'axis'},svg);
+  const step = Math.ceil(n/9);
+  dates.forEach((d,i)=>{ if(i%step===0) el('text',{x:x(i),y:h-6,'text-anchor':'middle'},svg).textContent = fmtD(d); });
+  // stacked bars with 2px gaps between segments
+  dates.forEach((d,i)=>{ let acc = 0;
+    stacks.forEach((st,si)=>{ const v = st.values[i]||0; if(v<=0){return;}
+      const y1 = y(acc+v), y0 = y(acc);
+      el('rect',{x:x(i)-bw/2, y:y1, width:bw, height:Math.max(0.5,y0-y1-(acc>0?2:0)),
+        rx:3, fill:st.color},svg);
+      acc += v; });
+  });
+  lines.forEach(ln=>{
+    const pts = ln.values.map((v,i)=> v==null?null:[x(i),y(v)]).filter(Boolean);
+    el('path',{d:'M'+pts.map(p=>p.join(',')).join('L'), fill:'none', stroke:ln.color,
+      'stroke-width':2,'stroke-linejoin':'round'},svg);
+    pts.forEach(p=> el('circle',{cx:p[0],cy:p[1],r:2.4,fill:ln.color},svg));
+  });
+  // hover columns
+  dates.forEach((d,i)=>{
+    const r = el('rect',{x:x(i)-iw/n/2, y:P.t, width:iw/n, height:ih, fill:'transparent'},svg);
+    r.addEventListener('mousemove', ev=> showTip(tipRow(i), ev));
+    r.addEventListener('mouseleave', hideTip);
+  });
+}
+
+/* Horizontal bars */
+function hbars(c, rows, {color, vFmt=fmtK, h=null, tipRow}){
+  const W = 860, rh = 24, P = {l:210, r:56, t:4, b:4};
+  const H = h || rows.length*rh + P.t + P.b;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`}, c);
+  const max = Math.max(...rows.map(r=>r.v), 1e-9);
+  rows.forEach((r,i)=>{ const yy = P.t + i*rh;
+    el('text',{x:P.l-8,y:yy+rh/2+3,'text-anchor':'end'},svg).textContent =
+      r.name.length>30 ? r.name.slice(0,29)+'…' : r.name;
+    const w = Math.max(2,(r.v/max)*(W-P.l-P.r));
+    const bar = el('rect',{x:P.l,y:yy+4,width:w,height:rh-9,rx:3,fill:color},svg);
+    el('text',{x:P.l+w+6,y:yy+rh/2+3,class:'dl'},svg).textContent = vFmt(r.v);
+    if (tipRow){ bar.addEventListener('mousemove',ev=>showTip(tipRow(r),ev));
+                 bar.addEventListener('mouseleave',hideTip); }
+  });
+}
+
+/* ---------- data prep ---------- */
+const daily = DATA.daily;
+const dates = daily.map(r=>r.d);
+const lastFull = daily[daily.length-2], today = daily[daily.length-1];
+const totIAP = daily.reduce((s,r)=>s+r.iap_rev,0);
+const totIAA = daily.reduce((s,r)=>s+r.iaa_rev,0);
+const installs = daily.reduce((s,r)=>s+r.new_users,0);
+const peakDAU = Math.max(...daily.map(r=>r.dau));
+// weighted retention from mature cohorts
+const mature = k => { const rows = DATA.retention.filter(r=>r[k]>0 || (r.size>50 && r[k]===0));
+  const cut = {d1:1,d3:3,d7:7,d14:14}[k];
+  const ok = DATA.retention.filter(r=>{
+    const age = (new Date('2026-07-23') - new Date(r.cohort))/864e5; return age>cut && r.size>=50; });
+  const num = ok.reduce((s,r)=>s+r.size*r[k]/100,0), den = ok.reduce((s,r)=>s+r.size,0);
+  return den? (100*num/den):0; };
+const R1 = mature('d1'), R3 = mature('d3'), R7 = mature('d7'), R14 = mature('d14');
+
+document.getElementById('sub').textContent =
+  `tiny-knightfall-idle-rpg-game · analytics_538412813 · full export 2026-06-29 → 2026-07-23 (last day partial, intraday) · generated 2026-07-23`;
+
+/* ---------- KPI tiles ---------- */
+const tiles = [
+  {v: fmtK(installs), l:'Installs (first_open)', n:'whole export window'},
+  {v: fmtK(lastFull.dau), l:'DAU (Jul 22, last full day)', n:`peak ${fmtK(peakDAU)} on Jul 19`},
+  {v: fmt$(totIAP+totIAA), l:'Total revenue', n:`IAP ${fmt$(totIAP)} + ads ${fmt$(totIAA)}`},
+  {v: fmt$((lastFull.iap_rev+lastFull.iaa_rev)/lastFull.dau), l:'ARPDAU (Jul 22)', n:'revenue ÷ DAU'},
+  {v: R1.toFixed(1)+'%', l:'D1 retention', n:'weighted, mature cohorts'},
+  {v: R7.toFixed(1)+'%', l:'D7 retention', n:`D3 ${R3.toFixed(1)}% · D14 ${R14.toFixed(1)}%`},
+];
+document.getElementById('tiles').innerHTML = tiles.map(t=>
+  `<div class="tile"><div class="v">${t.v}</div><div class="l">${t.l}</div><div class="n">${t.n}</div></div>`).join('');
+
+/* ---------- 1. DAU by version (ordinal blue ramp — version is ordered) ---------- */
+{
+const ramp = ['#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab','#104281'];
+const vers = [...new Set(DATA.dau_version.map(r=>r.v))].filter(v=>v!=null).sort((a,b)=>a-b);
+const byVol = {}; DATA.dau_version.forEach(r=>{ byVol[r.v]=(byVol[r.v]||0)+r.users; });
+const top = vers.filter(v=>byVol[v]>500);
+const groups = [...top]; // ascending version order
+const c = card('DAU by app version', 'Distinct users per day, stacked by build (users on several builds in one day count once per build). Minor builds (<500 user-days) folded into “older”. Darker = newer build.', {wide:true});
+const map = {}; DATA.dau_version.forEach(r=>{ map[r.d] = map[r.d]||{}; map[r.d][r.v]=r.users; });
+const stacks = [{name:'older', color:'#9a988f',
+    values: dates.map(d=> vers.filter(v=>!groups.includes(v)).reduce((s,v)=>s+(map[d]?.[v]||0),0))}]
+  .concat(groups.map((v,i)=>({name:'v'+v, color: ramp[Math.min(i, ramp.length-1)],
+    values: dates.map(d=> map[d]?.[v]||0)})));
+legend(c, stacks.map(s=>({name:s.name, color:s.color})));
+timeChart(c, {dates, stacks, h:250, tipRow: i=>
+  `<b>${fmtD(dates[i])}</b><br>` + stacks.map(s=>s.values[i]?`${s.name}: ${s.values[i]}`:'').filter(Boolean).join('<br>')
+  + `<br>total DAU: ${daily[i].dau}`});
+}
+
+/* ---------- 2. DAU & new users ---------- */
+{
+const c = card('DAU and new users', 'Bars = new users (first_open) per day; line = DAU. Jul 23 is a partial day.');
+legend(c, [{name:'new users',color:css('--series-3')},{name:'DAU',color:css('--series-1')}]);
+timeChart(c, {dates,
+  stacks:[{name:'new users', color:css('--series-3'), values: daily.map(r=>r.new_users)}],
+  lines:[{name:'DAU', color:css('--series-1'), values: daily.map(r=>r.dau)}],
+  tipRow: i=> `<b>${fmtD(dates[i])}</b><br>DAU: ${daily[i].dau}<br>new users: ${daily[i].new_users}<br>sessions: ${daily[i].sessions}`});
+}
+
+/* ---------- 3. Revenue IAP vs IAA ---------- */
+{
+const c = card('Revenue per day — IAP vs ads (IAA)',
+  'IAP = store-validated in_app_purchase USD (tracked only since build 15, ~Jul 20). IAA = AppLovin MAX impression-level revenue (ad_impression_MAX).');
+legend(c, [{name:'IAP',color:css('--series-1')},{name:'IAA (ads)',color:css('--series-2')}]);
+timeChart(c, {dates, yFmt:fmt$,
+  stacks:[{name:'IAP', color:css('--series-1'), values: daily.map(r=>r.iap_rev)},
+          {name:'IAA', color:css('--series-2'), values: daily.map(r=>r.iaa_rev)}],
+  tipRow: i=> `<b>${fmtD(dates[i])}</b><br>IAP: ${fmt$(daily[i].iap_rev)} (${daily[i].payers} payers)<br>IAA: ${fmt$(daily[i].iaa_rev)} (${daily[i].impressions} imps)<br>ARPDAU: ${fmt$((daily[i].iap_rev+daily[i].iaa_rev)/daily[i].dau)}`});
+}
+
+/* ---------- 4. Retention curve ---------- */
+{
+const c = card('Retention curve', '% of eligible installs active exactly N days after first_open (classic day-N). Cohorts only count toward day N once they are old enough.');
+const pts = DATA.ret_curve.filter(r=>r.dd<=14).map(r=>({dd:r.dd, v: 100*r.active/Math.max(r.eligible,1)}));
+const W=860,H=230,P={l:44,r:14,t:10,b:22};
+const svg = el('svg',{viewBox:`0 0 ${W} ${H}`},c);
+const max = 30;
+const x = d=> P.l + d/14*(W-P.l-P.r), y = v=> P.t + (H-P.t-P.b)*(1-v/max);
+for(let t=0;t<=3;t++){ const v=max*t/3, yy=y(v);
+  el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+  el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent = v.toFixed(0)+'%'; }
+[0,1,3,7,14].forEach(d=> el('text',{x:x(d),y:H-6,'text-anchor':'middle'},svg).textContent='D'+d);
+el('path',{d:'M'+pts.slice(1).map(p=>[x(p.dd),y(Math.min(p.v,max))].join(',')).join('L'),
+  fill:'none',stroke:css('--series-1'),'stroke-width':2},svg);
+pts.slice(1).forEach(p=>{
+  const dot = el('circle',{cx:x(p.dd),cy:y(Math.min(p.v,max)),r:3.2,fill:css('--series-1')},svg);
+  dot.addEventListener('mousemove',ev=>showTip(`<b>D${p.dd}</b>: ${p.v.toFixed(1)}%`,ev));
+  dot.addEventListener('mouseleave',hideTip);
+  if([1,3,7,14].includes(p.dd))
+    el('text',{x:x(p.dd),y:y(p.v)-8,'text-anchor':'middle',class:'dl'},svg).textContent=p.v.toFixed(1)+'%';
+});
+}
+
+/* ---------- 5. Retention cohort table ---------- */
+{
+const c = card('Retention by install cohort', 'Rows = install day (cohorts ≥50 installs). Cells blank where the cohort is not old enough yet.', {wide:true});
+const ramp=['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab'];
+const rows = DATA.retention.filter(r=>r.size>=50);
+const today_ = new Date('2026-07-23');
+const cell = (r,k,cut)=>{
+  const age = (today_ - new Date(r.cohort))/864e5;
+  if (age<=cut) return '<td></td>';
+  const v=r[k], idx=Math.min(ramp.length-1, Math.floor(v/30*ramp.length));
+  const dark = idx>5;
+  return `<td class="heat" style="background:${ramp[idx]};color:${dark?'#fff':'#0b0b0b'}">${v.toFixed(1)}%</td>`; };
+c.insertAdjacentHTML('beforeend',
+  `<div style="overflow-x:auto"><table><tr><th>cohort</th><th>installs</th><th>D1</th><th>D3</th><th>D7</th><th>D14</th></tr>` +
+  rows.map(r=>`<tr><td>${r.cohort.slice(5)}</td><td>${r.size}</td>${cell(r,'d1',1)}${cell(r,'d3',3)}${cell(r,'d7',7)}${cell(r,'d14',14)}</tr>`).join('') +
+  `</table></div>`);
+}
+
+/* ---------- 6. Ad funnel ---------- */
+{
+const c = card('Ad fill rate — interstitial is broken', 'Fill rate = successful ad_request_status ÷ ad_request. Interstitial fills <2% and almost never shows; rewarded fills ~20–30%.');
+const days2 = [...new Set(DATA.ad_funnel.map(r=>r.d))].sort();
+const get = (d,t)=> DATA.ad_funnel.find(r=>r.d===d && r.ad_type===t) || {requests:0,fills:0,shows:0};
+const fr = t => days2.map(d=>{ const r=get(d,t); return r.requests? 100*r.fills/r.requests : null; });
+const inter = fr('inter'), rew = fr('rewarded');
+legend(c, [{name:'rewarded',color:css('--series-1')},{name:'interstitial',color:css('--series-2')}]);
+timeChart(c, {dates: days2, yFmt:v=>v.toFixed(0)+'%',
+  lines:[{color:css('--series-1'), values:rew},{color:css('--series-2'), values:inter}],
+  tipRow: i=>{ const ri=get(days2[i],'inter'), rr=get(days2[i],'rewarded');
+    return `<b>${fmtD(days2[i])}</b><br>rewarded: ${rr.requests} req → ${rr.fills} fill → ${rr.shows} shown`+
+           `<br>inter: ${ri.requests} req → ${ri.fills} fill → ${ri.shows} shown`; }});
+}
+
+/* ---------- 7. IAA by placement ---------- */
+{
+const c = card('Ad revenue by placement', 'ad_impression_MAX rewarded placements, whole window. “(none)” = impressions missing the ad_placement param.');
+hbars(c, DATA.iaa_by_placement.slice(0,10).map(r=>({name:r.pl, v:r.rev, imps:r.imps})),
+  {color:css('--series-2'), vFmt:fmt$, tipRow:r=>`<b>${r.name}</b><br>${fmt$(r.v)} · ${r.imps} impressions<br>eCPM ${fmt$(1000*r.v/r.imps)}`});
+}
+
+/* ---------- 8. IAP by product ---------- */
+{
+const c = card('IAP revenue by product', 'Store-validated purchases (since ~Jul 20 only). Product ids shortened by their com.idle.tiny prefix.');
+hbars(c, DATA.iap_by_product.map(r=>({name:r.product.replace('com.idle.tiny.',''), v:r.rev, buys:r.buys, buyers:r.buyers})),
+  {color:css('--series-1'), vFmt:fmt$, tipRow:r=>`<b>${r.name}</b><br>${fmt$(r.v)} · ${r.buys} buys · ${r.buyers} buyers`});
+}
+
+/* ---------- 9. Levels ---------- */
+{
+const c = card('Level funnel & difficulty', 'Line = distinct users starting each level (levels 2–60). Bars = loss rate (losses ÷ attempts). Spikes mark difficulty walls.', {wide:true});
+const rows = DATA.levels.filter(r=>r.lvl>=2);
+const lr = rows.map(r=> (r.wins+r.losses)? 100*r.losses/(r.wins+r.losses) : 0);
+const maxS = Math.max(...rows.map(r=>r.starters));
+const W=860,H=240,P={l:44,r:10,t:10,b:22};
+const svg = el('svg',{viewBox:`0 0 ${W} ${H}`},c);
+legend(c, [{name:'users starting level',color:css('--series-1')},{name:'loss rate %',color:css('--series-8')}]);
+c.appendChild(svg);
+const x = i=> P.l + (i+0.5)*(W-P.l-P.r)/rows.length;
+const yS = v=> P.t + (H-P.t-P.b)*(1-v/(maxS*1.05));
+for(let t=0;t<=4;t++){ const v=maxS*1.05*t/4, yy=yS(v);
+  el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+  el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent=fmtK(v); }
+rows.forEach((r,i)=>{ if(r.lvl%5===0) el('text',{x:x(i),y:H-6,'text-anchor':'middle'},svg).textContent=r.lvl; });
+// loss-rate bars scaled to 100% of plot height
+rows.forEach((r,i)=>{ const hh=(H-P.t-P.b)*lr[i]/100;
+  const b = el('rect',{x:x(i)-4,y:H-P.b-hh,width:8,height:hh,rx:2,fill:css('--series-8'),opacity:.55},svg);
+  b.addEventListener('mousemove',ev=>showTip(`<b>level ${r.lvl}</b><br>loss rate ${lr[i].toFixed(0)}% (${r.losses}/${r.wins+r.losses})<br>avg win time ${r.avg_win_time}s`,ev));
+  b.addEventListener('mouseleave',hideTip); });
+el('path',{d:'M'+rows.map((r,i)=>[x(i),yS(r.starters)].join(',')).join('L'),
+  fill:'none',stroke:css('--series-1'),'stroke-width':2},svg);
+rows.forEach((r,i)=>{ const dot=el('circle',{cx:x(i),cy:yS(r.starters),r:2.4,fill:css('--series-1')},svg);
+  dot.addEventListener('mousemove',ev=>showTip(`<b>level ${r.lvl}</b><br>${r.starters} starters<br>loss rate ${lr[i].toFixed(0)}%`,ev));
+  dot.addEventListener('mouseleave',hideTip); });
+}
+
+/* ---------- 10. Geo ---------- */
+{
+const c = card('Users vs revenue by country', 'Traffic is low-monetizing geos; nearly all revenue is US/UK. Top 12 countries by users.', {wide:true});
+c.insertAdjacentHTML('beforeend',
+  `<div style="overflow-x:auto"><table><tr><th>country</th><th>users</th><th>revenue</th><th>rev / 1k users</th></tr>`+
+  DATA.geo.map(r=>`<tr><td>${r.country}</td><td>${r.users.toLocaleString()}</td><td>${fmt$(r.rev)}</td><td>${fmt$(1000*r.rev/r.users)}</td></tr>`).join('')+
+  `</table></div>`);
+}
+
+document.getElementById('caveats').innerHTML =
+  `<b>Definitions & caveats.</b> Source: GA4/Firebase BigQuery export (streaming tables only; the export begins 2026-06-29 and Jul 23 is a partial day). ` +
+  `Users = user_pseudo_id (device-scoped; player_id coverage is too low to use). ` +
+  `IAA revenue uses ad_impression_MAX only — ad_impression and ad_impression_rocket are duplicate logs of the same impressions (~$80 each, not additive). ` +
+  `IAP revenue = event_value_in_usd on in_app_purchase, which only started reporting with build 15 (~Jul 20); earlier real IAP revenue, if any, is not in BigQuery. ` +
+  `Retention is day-N (active exactly N days after install), cohorted by first_open. All figures UTC.`;
+</script>
+</body>
+</html>
