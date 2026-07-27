@@ -3,7 +3,7 @@
 Static, self-contained dashboards served from GitHub Pages:
 
 - [`index.html`](index.html) — KPI overview (DAU, revenue, retention, ad funnel, levels, geo)
-- [`ltv.html`](ltv.html) — LTV by install cohort
+- [`campaigns.html`](campaigns.html) — LTV and retention by campaign cohort
 
 All numbers are baked into each page as a single `const DATA = {…}` object, so the
 pages need no backend and load instantly.
