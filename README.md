@@ -4,7 +4,7 @@ Static, self-contained dashboards served from GitHub Pages:
 
 - [`index.html`](index.html) — KPI overview (DAU, revenue, retention, ad funnel, levels, geo)
 - [`campaigns.html`](campaigns.html) — LTV and retention by campaign cohort
-- [`churn.html`](churn.html) — campaign-filtered churn, level exits, and last custom event
+- [`churn.html`](churn.html) — campaign-filtered inactivity, level survival, quest funnel, and last custom event
 
 All numbers are baked into each page as a single `const DATA = {…}` object, so the
 pages need no backend and load instantly.

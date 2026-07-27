@@ -15,6 +15,7 @@ for (const text of [
   "Inactive players by playtime",
   "Tutorial step exits",
   "Players left in game at each campaign level",
+  "Quest reward funnel",
   "Last custom event before player became inactive",
 ]) {
   if (!html.includes(text)) throw new Error(`Missing required UI text: ${text}`);
@@ -30,6 +31,11 @@ const data = JSON.parse(html.slice(payloadStart, payloadEnd));
 if (data.meta.inactivity_hours !== 72) throw new Error("Expected 72-hour inactivity rule");
 if (data.players.some((row) => "churned" in row || "online_time" in row)) {
   throw new Error("Legacy app-removal fields remain in the payload");
+}
+if (data.players.some((row) =>
+  !["quest_any", "quest_main", "quest_daily", "quest_diary"].every((key) => key in row)
+)) {
+  throw new Error("Quest funnel flags are missing from the payload");
 }
 const inactive = data.players.filter((row) => row.inactive);
 const zeroPlaytime = inactive.filter((row) => row.playtime_seconds === 0);

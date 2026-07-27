@@ -136,7 +136,10 @@ def player_summaries(lo: str, hi: str):
         (SELECT COALESCE(
             CAST(value.int_value AS FLOAT64), value.double_value,
             SAFE_CAST(value.string_value AS FLOAT64))
-          FROM UNNEST(event_params) WHERE key='level') AS level
+          FROM UNNEST(event_params) WHERE key='level') AS level,
+        IF(event_name='earn',
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key='position'),
+          NULL) AS quest_position
       FROM {TABLE}
       WHERE _TABLE_SUFFIX BETWEEN '{lo}' AND '{hi}'
         AND event_timestamp BETWEEN
@@ -153,6 +156,11 @@ def player_summaries(lo: str, hi: str):
         SUM(IF(event_name='user_engagement', COALESCE(engagement_ms,0), 0))/1000
           AS engagement_seconds,
         MAX(IF(event_name='level_start', level, NULL)) AS max_level,
+        LOGICAL_OR(quest_position IN ('main_quest','daily_quest','diary_quest'))
+          AS quest_any,
+        LOGICAL_OR(quest_position='main_quest') AS quest_main,
+        LOGICAL_OR(quest_position='daily_quest') AS quest_daily,
+        LOGICAL_OR(quest_position='diary_quest') AS quest_diary,
         ARRAY_AGG(IF(event_name NOT IN ({excluded})
             AND NOT STARTS_WITH(event_name,'firebase_'),
           event_name, NULL) IGNORE NULLS ORDER BY event_timestamp DESC LIMIT 1)
@@ -168,6 +176,10 @@ def player_summaries(lo: str, hi: str):
       CAST(COALESCE(NULLIF(u.max_online_time,0),u.engagement_seconds,0) AS INT64)
         AS playtime_seconds,
       CAST(COALESCE(u.max_level,0) AS INT64) AS max_level,
+      COALESCE(u.quest_any,FALSE) AS quest_any,
+      COALESCE(u.quest_main,FALSE) AS quest_main,
+      COALESCE(u.quest_daily,FALSE) AS quest_daily,
+      COALESCE(u.quest_diary,FALSE) AS quest_diary,
       u.last_custom_event,
       COALESCE(u.last_heartbeat_ts,u.last_event_ts) AS last_activity_ts
     FROM users u CROSS JOIN bounds b
@@ -200,6 +212,10 @@ def main() -> None:
             "inactive": bool(row.get("inactive")),
             "playtime_seconds": int(row.get("playtime_seconds") or 0),
             "max_level": int(row.get("max_level") or 0),
+            "quest_any": bool(row.get("quest_any")),
+            "quest_main": bool(row.get("quest_main")),
+            "quest_daily": bool(row.get("quest_daily")),
+            "quest_diary": bool(row.get("quest_diary")),
             "last_custom_event": row.get("last_custom_event") or None,
             "last_activity_ts": int(row.get("last_activity_ts") or 0),
         }
@@ -212,6 +228,10 @@ def main() -> None:
                 old["playtime_seconds"], record["playtime_seconds"]
             )
             old["max_level"] = max(old["max_level"], record["max_level"])
+            old["quest_any"] = old["quest_any"] or record["quest_any"]
+            old["quest_main"] = old["quest_main"] or record["quest_main"]
+            old["quest_daily"] = old["quest_daily"] or record["quest_daily"]
+            old["quest_diary"] = old["quest_diary"] or record["quest_diary"]
             if record["last_activity_ts"] > old["last_activity_ts"]:
                 old["last_activity_ts"] = record["last_activity_ts"]
                 old["last_custom_event"] = (
