@@ -4,6 +4,7 @@ Static, self-contained dashboards served from GitHub Pages:
 
 - [`index.html`](index.html) — KPI overview (DAU, revenue, retention, ad funnel, levels, geo)
 - [`campaigns.html`](campaigns.html) — LTV and retention by campaign cohort
+- [`churn.html`](churn.html) — campaign-filtered churn, level exits, and last custom event
 
 All numbers are baked into each page as a single `const DATA = {…}` object, so the
 pages need no backend and load instantly.
@@ -21,6 +22,16 @@ uv run --with google-cloud-bigquery --with db-dtypes --with pandas --with pyarro
 ```
 
 Then commit the updated `index.html`.
+
+The churn dashboard refreshes AppsFlyer paid + organic install reports and joins
+them to GA4 by `user_property.appsflyer_id`:
+
+```bash
+refresh_churn.bat
+```
+
+It writes an anonymous, self-contained `churn.html`; AppsFlyer IDs and BigQuery
+user IDs are never embedded in the published page.
 
 **Prerequisites:** queries run through [`bq_helper.py`](bq_helper.py) as **your own
 Google identity** (read-only, byte-capped) using the project bound in **Mirror

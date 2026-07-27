@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 parquet/
+tk_installs.csv
+tk_organic.csv
+tk_daily.csv
