@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tiny Knight Fall — Campaign churn</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f4f6;--panel:#ffffff;--line:#e5e7eb;--ink:#111827;--muted:#64748b;
+  --blue:#2563eb;--blue-soft:#dbeafe;--orange:#ea580c;--green:#059669;--red:#dc2626;
+}
+@media(prefers-color-scheme:dark){
+  :root{color-scheme:dark;--bg:#0f1115;--panel:#171a21;--line:#2b303b;--ink:#f8fafc;
+    --muted:#94a3b8;--blue:#60a5fa;--blue-soft:#172554;--orange:#fb923c;--green:#34d399;--red:#f87171}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.shell{max-width:1440px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+h1{font-size:24px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+.sub,.note{color:var(--muted);font-size:12px}
+.nav a{color:var(--blue);text-decoration:none;white-space:nowrap}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:12px;margin-bottom:14px}
+label{display:grid;gap:4px;color:var(--muted);font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.04em}
+select,input,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+button{cursor:pointer;font-weight:650}
+button:hover{border-color:var(--blue);color:var(--blue)}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.tile,.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.tile{padding:15px}
+.tile .value{font-size:26px;font-weight:750;letter-spacing:-.03em}
+.tile .label{color:var(--muted);font-size:12px;margin-top:2px}
+.tile .detail{color:var(--muted);font-size:10.5px;margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{padding:16px;min-width:0}
+.card.wide{grid-column:1/-1}
+.card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
+h2{font-size:15px;margin:0 0 3px}
+.chart-wrap{position:relative;min-height:260px}
+canvas{display:block;width:100%;height:260px}
+.table-wrap{overflow:auto;max-height:360px;margin-top:10px;border-top:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em}
+th:first-child,td:first-child{text-align:left}
+.empty{display:grid;place-items:center;min-height:250px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:24px}
+.empty b{display:block;color:var(--ink);margin-bottom:5px}
+.foot{margin-top:14px;color:var(--muted);font-size:11px}
+@media(max-width:900px){.tiles{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.card.wide{grid-column:auto}}
+@media(max-width:540px){.shell{padding:14px}.tiles{grid-template-columns:1fr}header{display:block}.nav{margin-top:8px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div>
+      <h1>Campaign churn</h1>
+      <div class="sub" id="provenance"></div>
+    </div>
+    <div class="nav"><a href="index.html">KPI overview</a> · <a href="campaigns.html">Campaign LTV</a></div>
+  </header>
+
+  <section class="filters" aria-label="Dashboard filters">
+    <label>Campaign<select id="campaign"></select></label>
+    <label>Install date from<input id="from" type="date"></label>
+    <label>Install date to<input id="to" type="date"></label>
+    <button id="reset" type="button">Reset</button>
+  </section>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="grid">
+    <article class="card wide">
+      <div class="card-head">
+        <div><h2>User churn by playtime</h2><div class="note">GA4 app removals grouped by lifetime <code>online_time</code> in 10-second bins; 10m+ is an overflow bin.</div></div>
+        <button type="button" data-download="hist">Download CSV</button>
+      </div>
+      <div class="chart-wrap"><canvas id="histChart" role="img" aria-label="Histogram of churned users by 10-second playtime bin"></canvas></div>
+      <div class="table-wrap" id="histTable"></div>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <div><h2>Tutorial step exits</h2><div class="note">Shown only when a tutorial-step event or parameter exists.</div></div>
+        <button type="button" data-download="tutorial">Download CSV</button>
+      </div>
+      <div id="tutorialBody"></div>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <div><h2>Users left by campaign level</h2><div class="note">Last <code>level_start</code> before app removal. Exit % uses all matched users who reached that level.</div></div>
+        <button type="button" data-download="levels">Download CSV</button>
+      </div>
+      <div class="chart-wrap"><canvas id="levelChart" role="img" aria-label="Users who left after starting each campaign level"></canvas></div>
+      <div class="table-wrap" id="levelTable"></div>
+    </article>
+
+    <article class="card wide">
+      <div class="card-head">
+        <div><h2>Last custom event before player quit</h2><div class="note">The final game-defined event before GA4 recorded <code>app_remove</code>; automatic Firebase events are excluded.</div></div>
+        <button type="button" data-download="events">Download CSV</button>
+      </div>
+      <div class="chart-wrap"><canvas id="eventChart" role="img" aria-label="Last custom event before player quit"></canvas></div>
+      <div class="table-wrap" id="eventTable"></div>
+    </article>
+  </section>
+
+  <div class="foot" id="foot"></div>
+</main>
+<script>
+const DATA = /*__DATA__*/;
+const $ = id => document.getElementById(id);
+const nf = new Intl.NumberFormat();
+const pct = (n,d) => d ? (100*n/d).toFixed(1)+'%' : '—';
+let current = {hist:[],tutorial:[],levels:[],events:[]};
+
+function table(headers, rows){
+  return '<table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
+    rows.map(r=>'<tr>'+r.map(v=>'<td>'+v+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+}
+function rowsForSelection(){
+  const camp=$('campaign').value, lo=$('from').value, hi=$('to').value;
+  return DATA.players.filter(r=>(camp==='All'||r.campaign===camp)&&r.install_date>=lo&&r.install_date<=hi);
+}
+function palette(){
+  const s=getComputedStyle(document.documentElement);
+  return {ink:s.getPropertyValue('--ink').trim(),muted:s.getPropertyValue('--muted').trim(),
+    line:s.getPropertyValue('--line').trim(),blue:s.getPropertyValue('--blue').trim(),
+    orange:s.getPropertyValue('--orange').trim()};
+}
+function bars(canvas, labels, values, opts={}){
+  const c=$(canvas), box=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  c.width=Math.max(640,box.width)*dpr;c.height=260*dpr;
+  const x=c.getContext('2d');x.scale(dpr,dpr);
+  const W=c.width/dpr,H=260,p={l:52,r:16,t:14,b:52}, C=palette();
+  x.clearRect(0,0,W,H);const max=Math.max(1,...values), plotW=W-p.l-p.r, plotH=H-p.t-p.b;
+  x.font='11px system-ui';x.textBaseline='middle';
+  for(let i=0;i<=4;i++){const v=max*i/4,y=p.t+plotH-(i/4)*plotH;x.strokeStyle=C.line;x.beginPath();x.moveTo(p.l,y);x.lineTo(W-p.r,y);x.stroke();
+    x.fillStyle=C.muted;x.textAlign='right';x.fillText(nf.format(Math.round(v)),p.l-7,y)}
+  const step=plotW/Math.max(labels.length,1), bw=Math.max(2,Math.min(32,step*.72));
+  values.forEach((v,i)=>{const h=v/max*plotH,xx=p.l+i*step+(step-bw)/2;x.fillStyle=opts.color||C.blue;x.fillRect(xx,p.t+plotH-h,bw,h)});
+  x.fillStyle=C.muted;x.textAlign='center';x.textBaseline='top';
+  const every=Math.max(1,Math.ceil(labels.length/14));
+  labels.forEach((lab,i)=>{if(i%every===0||i===labels.length-1)x.fillText(lab,p.l+i*step+step/2,H-p.b+8)});
+}
+function download(kind){
+  const rows=current[kind]||[], keys=rows.length?Object.keys(rows[0]):['status'];
+  const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';
+  const csv=[keys.join(','),...rows.map(r=>keys.map(k=>esc(r[k])).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`tiny-knight_churn_${kind}_${$('from').value}_${$('to').value}.csv`;a.click();URL.revokeObjectURL(a.href);
+}
+function render(){
+  const rows=rowsForSelection(), churn=rows.filter(r=>r.churned), mapped=rows.length;
+  const campaigns=new Set(rows.map(r=>r.campaign));
+  $('tiles').innerHTML=[
+    [nf.format(mapped),'Matched installs','AppsFlyer ID ↔ BigQuery user_property'],
+    [nf.format(churn.length),'App removals',pct(churn.length,mapped)+' of matched installs'],
+    [nf.format(campaigns.size),'Campaigns','in current selection'],
+    [pct(mapped,DATA.meta.af_installs),'BQ match coverage',nf.format(mapped)+' of '+nf.format(DATA.meta.af_installs)+' AF installs']
+  ].map(t=>`<div class="tile"><div class="value">${t[0]}</div><div class="label">${t[1]}</div><div class="detail">${t[2]}</div></div>`).join('');
+
+  const bins=new Map();
+  churn.forEach(r=>{const sec=Math.max(0,Number(r.online_time)||0), start=sec>=600?600:Math.floor(sec/10)*10;
+    bins.set(start,(bins.get(start)||0)+1)});
+  const hist=[...bins].sort((a,b)=>a[0]-b[0]).map(([start,users])=>({
+    time_bin:start===600?'600s+':`${start}–${start+9}s`,users,percent_of_churned:pct(users,churn.length)
+  }));
+  current.hist=hist;bars('histChart',hist.map(r=>r.time_bin),hist.map(r=>r.users));
+  $('histTable').innerHTML=table(['Playtime bin','Users','% of churned'],hist.map(r=>[r.time_bin,nf.format(r.users),r.percent_of_churned]));
+
+  if(!DATA.meta.tutorial_available){
+    current.tutorial=[{status:'Tutorial-step telemetry is not available in BigQuery'}];
+    $('tutorialBody').innerHTML='<div class="empty"><div><b>Tutorial steps are not tracked</b>No event name or parameter identifies tutorial steps in the current export. The dashboard does not infer them from unrelated events.</div></div>';
+  }else{
+    current.tutorial=[];$('tutorialBody').innerHTML='<div class="empty"><div><b>No exits in this selection</b>Try a wider date range or another campaign.</div></div>';
+  }
+
+  const maxLevel=Math.max(0,...rows.map(r=>Number(r.max_level)||0));
+  const levels=[];
+  for(let level=1;level<=maxLevel;level++){
+    const reached=rows.filter(r=>(Number(r.max_level)||0)>=level).length;
+    const left=churn.filter(r=>(Number(r.max_level)||0)===level).length;
+    if(reached||left)levels.push({level,reached,left,exit_percent:pct(left,reached)});
+  }
+  current.levels=levels;bars('levelChart',levels.map(r=>'L'+r.level),levels.map(r=>r.left),{color:palette().orange});
+  $('levelTable').innerHTML=table(['Level started','Users reached','Users left here','Exit %'],levels.map(r=>['Level '+r.level,nf.format(r.reached),nf.format(r.left),r.exit_percent]));
+
+  const em=new Map();churn.forEach(r=>{const e=r.last_custom_event||'(no custom event)';em.set(e,(em.get(e)||0)+1)});
+  const events=[...em].sort((a,b)=>b[1]-a[1]).map(([event,users])=>({event,users,percent_of_churned:pct(users,churn.length)}));
+  current.events=events;const top=events.slice(0,20);
+  bars('eventChart',top.map(r=>r.event.length>18?r.event.slice(0,17)+'…':r.event),top.map(r=>r.users));
+  $('eventTable').innerHTML=table(['Last custom event','Users','% of churned'],events.map(r=>[r.event,nf.format(r.users),r.percent_of_churned]));
+  $('foot').textContent=`Definition: churn = GA4 app_remove. Campaign and install date come from AppsFlyer raw install reports joined to BigQuery through user_property appsflyer_id. Last ${DATA.meta.lag_days} day(s) are excluded from AppsFlyer freshness expectations.`;
+}
+
+const camps=['All',...DATA.meta.campaigns];
+$('campaign').innerHTML=camps.map(c=>`<option>${c}</option>`).join('');
+$('from').min=DATA.meta.min_date;$('from').max=DATA.meta.max_date;$('from').value=DATA.meta.min_date;
+$('to').min=DATA.meta.min_date;$('to').max=DATA.meta.max_date;$('to').value=DATA.meta.max_date;
+$('provenance').textContent=`${DATA.meta.project} · ${DATA.meta.dataset} · AppsFlyer installs ${DATA.meta.min_date} → ${DATA.meta.max_date} · refreshed ${DATA.meta.generated_at}`;
+$('campaign').onchange=render;$('from').onchange=render;$('to').onchange=render;
+$('reset').onclick=()=>{$('campaign').value='All';$('from').value=DATA.meta.min_date;$('to').value=DATA.meta.max_date;render()};
+document.querySelectorAll('[data-download]').forEach(b=>b.onclick=()=>download(b.dataset.download));
+window.addEventListener('resize',()=>render(),{passive:true});
+render();
+</script>
+</body>
+</html>
