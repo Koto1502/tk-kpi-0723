@@ -40,6 +40,8 @@ button:hover{border-color:var(--blue);color:var(--blue)}
 h2{font-size:15px;margin:0 0 3px}
 .chart-wrap{position:relative;min-height:260px}
 canvas{display:block;width:100%;height:260px}
+.chart-tip{display:none;position:absolute;z-index:2;pointer-events:none;background:var(--ink);color:var(--panel);
+  border-radius:7px;padding:6px 8px;font-size:11px;line-height:1.3;box-shadow:0 4px 16px #0003;white-space:nowrap}
 .table-wrap{overflow:auto;max-height:360px;margin-top:10px;border-top:1px solid var(--line)}
 table{border-collapse:collapse;width:100%;font-size:12px}
 th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
@@ -74,10 +76,10 @@ th:first-child,td:first-child{text-align:left}
   <section class="grid">
     <article class="card wide">
       <div class="card-head">
-        <div><h2>User churn by playtime</h2><div class="note">GA4 app removals grouped by lifetime <code>online_time</code> in 10-second bins; 10m+ is an overflow bin.</div></div>
+        <div><h2>Inactive players by playtime</h2><div class="note">Players whose last heartbeat or <code>user_engagement</code> is at least 3 days old. Playtime uses <code>online_time</code>, falling back to summed engagement time, in 10-second bins.</div></div>
         <button type="button" data-download="hist">Download CSV</button>
       </div>
-      <div class="chart-wrap"><canvas id="histChart" role="img" aria-label="Histogram of churned users by 10-second playtime bin"></canvas></div>
+      <div class="chart-wrap"><canvas id="histChart" role="img" aria-label="Histogram of inactive users by 10-second playtime bin"></canvas></div>
       <div class="table-wrap" id="histTable"></div>
     </article>
 
@@ -91,16 +93,16 @@ th:first-child,td:first-child{text-align:left}
 
     <article class="card">
       <div class="card-head">
-        <div><h2>Users left by campaign level</h2><div class="note">Last <code>level_start</code> before app removal. Exit % uses all matched users who reached that level.</div></div>
+        <div><h2>Players left in game at each campaign level</h2><div class="note">A survival view: players who reached each <code>level_start</code>, regardless of whether they later became inactive.</div></div>
         <button type="button" data-download="levels">Download CSV</button>
       </div>
-      <div class="chart-wrap"><canvas id="levelChart" role="img" aria-label="Users who left after starting each campaign level"></canvas></div>
+      <div class="chart-wrap"><canvas id="levelChart" role="img" aria-label="Players remaining at the start of each campaign level"></canvas></div>
       <div class="table-wrap" id="levelTable"></div>
     </article>
 
     <article class="card wide">
       <div class="card-head">
-        <div><h2>Last custom event before player quit</h2><div class="note">The final game-defined event before GA4 recorded <code>app_remove</code>; automatic Firebase events are excluded.</div></div>
+        <div><h2>Last custom event before player became inactive</h2><div class="note">The final game-defined event observed for 3-day-inactive players; automatic Firebase events are excluded.</div></div>
         <button type="button" data-download="events">Download CSV</button>
       </div>
       <div class="chart-wrap"><canvas id="eventChart" role="img" aria-label="Last custom event before player quit"></canvas></div>
@@ -141,10 +143,21 @@ function bars(canvas, labels, values, opts={}){
   for(let i=0;i<=4;i++){const v=max*i/4,y=p.t+plotH-(i/4)*plotH;x.strokeStyle=C.line;x.beginPath();x.moveTo(p.l,y);x.lineTo(W-p.r,y);x.stroke();
     x.fillStyle=C.muted;x.textAlign='right';x.fillText(nf.format(Math.round(v)),p.l-7,y)}
   const step=plotW/Math.max(labels.length,1), bw=Math.max(2,Math.min(32,step*.72));
-  values.forEach((v,i)=>{const h=v/max*plotH,xx=p.l+i*step+(step-bw)/2;x.fillStyle=opts.color||C.blue;x.fillRect(xx,p.t+plotH-h,bw,h)});
+  const geometry=[];
+  values.forEach((v,i)=>{const h=v/max*plotH,xx=p.l+i*step+(step-bw)/2,yy=p.t+plotH-h;
+    x.fillStyle=opts.color||C.blue;x.fillRect(xx,yy,bw,h);geometry.push({x:xx,y:yy,w:bw,h,value:v,label:labels[i]})});
   x.fillStyle=C.muted;x.textAlign='center';x.textBaseline='top';
   const every=Math.max(1,Math.ceil(labels.length/14));
   labels.forEach((lab,i)=>{if(i%every===0||i===labels.length-1)x.fillText(lab,p.l+i*step+step/2,H-p.b+8)});
+  let tip=c.parentElement.querySelector('.chart-tip');
+  if(!tip){tip=document.createElement('div');tip.className='chart-tip';c.parentElement.appendChild(tip)}
+  c.onpointermove=e=>{const rect=c.getBoundingClientRect(),px=(e.clientX-rect.left)*W/rect.width;
+    const i=Math.floor((px-p.l)/step),bar=geometry[i];
+    if(!bar||i<0||i>=geometry.length){tip.style.display='none';return}
+    tip.innerHTML=`<b>${bar.label}</b><br>${opts.valueLabel||'Players'}: ${nf.format(bar.value)}`;
+    tip.style.display='block';tip.style.left=Math.min(rect.width-tip.offsetWidth-4,Math.max(4,e.clientX-rect.left+10))+'px';
+    tip.style.top=Math.max(4,e.clientY-rect.top-tip.offsetHeight-8)+'px'};
+  c.onpointerleave=()=>{tip.style.display='none'};
 }
 function download(kind){
   const rows=current[kind]||[], keys=rows.length?Object.keys(rows[0]):['status'];
@@ -154,23 +167,24 @@ function download(kind){
   a.download=`tiny-knight_churn_${kind}_${$('from').value}_${$('to').value}.csv`;a.click();URL.revokeObjectURL(a.href);
 }
 function render(){
-  const rows=rowsForSelection(), churn=rows.filter(r=>r.churned), mapped=rows.length;
+  const rows=rowsForSelection(), inactive=rows.filter(r=>r.inactive), mapped=rows.length;
+  const active=mapped-inactive.length;
   const campaigns=new Set(rows.map(r=>r.campaign));
   $('tiles').innerHTML=[
     [nf.format(mapped),'Matched installs','AppsFlyer ID ↔ BigQuery user_property'],
-    [nf.format(churn.length),'App removals',pct(churn.length,mapped)+' of matched installs'],
-    [nf.format(campaigns.size),'Campaigns','in current selection'],
-    [pct(mapped,DATA.meta.af_installs),'BQ match coverage',nf.format(mapped)+' of '+nf.format(DATA.meta.af_installs)+' AF installs']
+    [nf.format(inactive.length),'Inactive 3+ days',pct(inactive.length,mapped)+' of matched installs'],
+    [nf.format(active),'Recently active','heartbeat or engagement within 3 days'],
+    [nf.format(campaigns.size),'Campaigns','in current selection']
   ].map(t=>`<div class="tile"><div class="value">${t[0]}</div><div class="label">${t[1]}</div><div class="detail">${t[2]}</div></div>`).join('');
 
   const bins=new Map();
-  churn.forEach(r=>{const sec=Math.max(0,Number(r.online_time)||0), start=sec>=600?600:Math.floor(sec/10)*10;
+  inactive.forEach(r=>{const sec=Math.max(0,Number(r.playtime_seconds)||0), start=sec>=600?600:Math.floor(sec/10)*10;
     bins.set(start,(bins.get(start)||0)+1)});
   const hist=[...bins].sort((a,b)=>a[0]-b[0]).map(([start,users])=>({
-    time_bin:start===600?'600s+':`${start}–${start+9}s`,users,percent_of_churned:pct(users,churn.length)
+    time_bin:start===600?'600s+':`${start}–${start+9}s`,users,percent_of_inactive:pct(users,inactive.length)
   }));
-  current.hist=hist;bars('histChart',hist.map(r=>r.time_bin),hist.map(r=>r.users));
-  $('histTable').innerHTML=table(['Playtime bin','Users','% of churned'],hist.map(r=>[r.time_bin,nf.format(r.users),r.percent_of_churned]));
+  current.hist=hist;bars('histChart',hist.map(r=>r.time_bin),hist.map(r=>r.users),{valueLabel:'Inactive players'});
+  $('histTable').innerHTML=table(['Playtime bin','Inactive players','% of inactive'],hist.map(r=>[r.time_bin,nf.format(r.users),r.percent_of_inactive]));
 
   if(!DATA.meta.tutorial_available){
     current.tutorial=[{status:'Tutorial-step telemetry is not available in BigQuery'}];
@@ -182,19 +196,18 @@ function render(){
   const maxLevel=Math.max(0,...rows.map(r=>Number(r.max_level)||0));
   const levels=[];
   for(let level=1;level<=maxLevel;level++){
-    const reached=rows.filter(r=>(Number(r.max_level)||0)>=level).length;
-    const left=churn.filter(r=>(Number(r.max_level)||0)===level).length;
-    if(reached||left)levels.push({level,reached,left,exit_percent:pct(left,reached)});
+    const remaining=rows.filter(r=>(Number(r.max_level)||0)>=level).length;
+    if(remaining)levels.push({level,users_remaining:remaining,percent_of_selected_players:pct(remaining,mapped)});
   }
-  current.levels=levels;bars('levelChart',levels.map(r=>'L'+r.level),levels.map(r=>r.left),{color:palette().orange});
-  $('levelTable').innerHTML=table(['Level started','Users reached','Users left here','Exit %'],levels.map(r=>['Level '+r.level,nf.format(r.reached),nf.format(r.left),r.exit_percent]));
+  current.levels=levels;bars('levelChart',levels.map(r=>'L'+r.level),levels.map(r=>r.users_remaining),{color:palette().orange,valueLabel:'Players remaining'});
+  $('levelTable').innerHTML=table(['Level started','Players left in game','% of selected players'],levels.map(r=>['Level '+r.level,nf.format(r.users_remaining),r.percent_of_selected_players]));
 
-  const em=new Map();churn.forEach(r=>{const e=r.last_custom_event||'(no custom event)';em.set(e,(em.get(e)||0)+1)});
-  const events=[...em].sort((a,b)=>b[1]-a[1]).map(([event,users])=>({event,users,percent_of_churned:pct(users,churn.length)}));
+  const em=new Map();inactive.forEach(r=>{const e=r.last_custom_event||'(no custom event)';em.set(e,(em.get(e)||0)+1)});
+  const events=[...em].sort((a,b)=>b[1]-a[1]).map(([event,users])=>({event,users,percent_of_inactive:pct(users,inactive.length)}));
   current.events=events;const top=events.slice(0,20);
-  bars('eventChart',top.map(r=>r.event.length>18?r.event.slice(0,17)+'…':r.event),top.map(r=>r.users));
-  $('eventTable').innerHTML=table(['Last custom event','Users','% of churned'],events.map(r=>[r.event,nf.format(r.users),r.percent_of_churned]));
-  $('foot').textContent=`Definition: churn = GA4 app_remove. Campaign and install date come from AppsFlyer raw install reports joined to BigQuery through user_property appsflyer_id. Last ${DATA.meta.lag_days} day(s) are excluded from AppsFlyer freshness expectations.`;
+  bars('eventChart',top.map(r=>r.event.length>18?r.event.slice(0,17)+'…':r.event),top.map(r=>r.users),{valueLabel:'Inactive players'});
+  $('eventTable').innerHTML=table(['Last custom event','Inactive players','% of inactive'],events.map(r=>[r.event,nf.format(r.users),r.percent_of_inactive]));
+  $('foot').textContent=`Definition: inactive = no online_time heartbeat or user_engagement for ${DATA.meta.inactivity_hours/24} days relative to the latest valid BigQuery event. Playtime uses max online_time when positive, otherwise summed engagement_time_msec. Campaign and install date come from AppsFlyer install reports joined through user_property appsflyer_id.`;
 }
 
 const camps=['All',...DATA.meta.campaigns];

@@ -12,10 +12,10 @@ for (const text of [
   "Install date from",
   "Install date to",
   "Download CSV",
-  "User churn by playtime",
+  "Inactive players by playtime",
   "Tutorial step exits",
-  "Users left by campaign level",
-  "Last custom event before player quit",
+  "Players left in game at each campaign level",
+  "Last custom event before player became inactive",
 ]) {
   if (!html.includes(text)) throw new Error(`Missing required UI text: ${text}`);
 }
@@ -24,6 +24,17 @@ if (/"(?:af_id|appsflyer_id|user_id|user_pseudo_id)"\s*:/.test(html)) {
   throw new Error("A raw identifier field leaked into the published payload");
 }
 
+const payloadStart = html.indexOf("const DATA = ") + "const DATA = ".length;
+const payloadEnd = html.indexOf(";\nconst $", payloadStart);
+const data = JSON.parse(html.slice(payloadStart, payloadEnd));
+if (data.meta.inactivity_hours !== 72) throw new Error("Expected 72-hour inactivity rule");
+if (data.players.some((row) => "churned" in row || "online_time" in row)) {
+  throw new Error("Legacy app-removal fields remain in the payload");
+}
+const inactive = data.players.filter((row) => row.inactive);
+const zeroPlaytime = inactive.filter((row) => row.playtime_seconds === 0);
+
 console.log(
-  `Validated ${scripts.length} script block(s), ${html.length.toLocaleString()} bytes`
+  `Validated ${scripts.length} script block(s), ${data.players.length.toLocaleString()} players, ` +
+  `${inactive.length.toLocaleString()} inactive, ${zeroPlaytime.length.toLocaleString()} zero-playtime`
 );

@@ -24,7 +24,8 @@ uv run --with google-cloud-bigquery --with db-dtypes --with pandas --with pyarro
 Then commit the updated `index.html`.
 
 The churn dashboard refreshes AppsFlyer paid + organic install reports and joins
-them to GA4 by `user_property.appsflyer_id`:
+them to GA4 by `user_property.appsflyer_id`. A player is considered inactive after
+three days without an `online_time` heartbeat or `user_engagement` event:
 
 ```bash
 refresh_churn.bat
