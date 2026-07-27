@@ -15,7 +15,7 @@ for (const text of [
   "Inactive players by playtime",
   "Tutorial step exits",
   "Players left in game at each campaign level",
-  "Quest reward funnel",
+  "Main quest reward funnel",
   "Last custom event before player became inactive",
 ]) {
   if (!html.includes(text)) throw new Error(`Missing required UI text: ${text}`);
@@ -33,14 +33,17 @@ if (data.players.some((row) => "churned" in row || "online_time" in row)) {
   throw new Error("Legacy app-removal fields remain in the payload");
 }
 if (data.players.some((row) =>
-  !["quest_any", "quest_main", "quest_daily", "quest_diary"].every((key) => key in row)
+  !Number.isInteger(row.main_quest_claims) || row.main_quest_claims < 0
 )) {
-  throw new Error("Quest funnel flags are missing from the payload");
+  throw new Error("Main-quest claim counts are missing or invalid");
 }
+const maxQuest = Math.max(0, ...data.players.map((row) => row.main_quest_claims));
+if (maxQuest < 1) throw new Error("No main-quest reward claims found");
 const inactive = data.players.filter((row) => row.inactive);
 const zeroPlaytime = inactive.filter((row) => row.playtime_seconds === 0);
 
 console.log(
   `Validated ${scripts.length} script block(s), ${data.players.length.toLocaleString()} players, ` +
-  `${inactive.length.toLocaleString()} inactive, ${zeroPlaytime.length.toLocaleString()} zero-playtime`
+  `${inactive.length.toLocaleString()} inactive, ${zeroPlaytime.length.toLocaleString()} zero-playtime, ` +
+  `${maxQuest.toLocaleString()} max main-quest claims`
 );
