@@ -49,7 +49,7 @@ th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-size:10
 th:first-child,td:first-child{text-align:left}
 .empty{display:grid;place-items:center;min-height:250px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:24px}
 .empty b{display:block;color:var(--ink);margin-bottom:5px}
-.funnel{display:grid;gap:9px;padding:10px 0 4px}
+.funnel{display:grid;gap:9px;padding:10px 0 4px;max-height:480px;overflow:auto}
 .funnel-row{display:grid;grid-template-columns:150px 1fr 76px;gap:10px;align-items:center;font-size:12px}
 .funnel-label{font-weight:650;text-align:right}
 .funnel-track{height:30px;background:var(--blue-soft);border-radius:7px;overflow:hidden}
@@ -109,7 +109,7 @@ th:first-child,td:first-child{text-align:left}
 
     <article class="card wide">
       <div class="card-head">
-        <div><h2>Quest reward funnel</h2><div class="note">Observed players who claimed quest rewards through <code>earn.position</code>. Quest start and completion events are not currently instrumented.</div></div>
+        <div><h2>Main quest reward funnel</h2><div class="note">Sequential <code>earn</code> events where <code>position = main_quest</code>, ordered by event time for each player. Quest N means the player recorded at least N main-quest reward claims.</div></div>
         <button type="button" data-download="quest">Download CSV</button>
       </div>
       <div class="funnel" id="questChart" role="img" aria-label="Quest reward claim funnel"></div>
@@ -218,21 +218,22 @@ function render(){
   current.levels=levels;bars('levelChart',levels.map(r=>'L'+r.level),levels.map(r=>r.users_remaining),{color:palette().orange,valueLabel:'Players remaining'});
   $('levelTable').innerHTML=table(['Level started','Players left in game','% of selected players'],levels.map(r=>['Level '+r.level,nf.format(r.users_remaining),r.percent_of_selected_players]));
 
-  const questCounts=[
-    ['Matched players',mapped],
-    ['Any quest reward',rows.filter(r=>r.quest_any).length],
-    ['Main quest reward',rows.filter(r=>r.quest_main).length],
-    ['Daily quest reward',rows.filter(r=>r.quest_daily).length],
-    ['Diary quest reward',rows.filter(r=>r.quest_diary).length]
-  ];
-  const quest=questCounts.map((r,i)=>({stage:r[0],users:r[1],
-    percent_of_matched:pct(r[1],mapped),conversion_from_previous:i?pct(r[1],questCounts[i-1][1]):'100.0%'}));
+  const maxQuest=Math.max(0,...rows.map(r=>Number(r.main_quest_claims)||0));
+  const questOne=rows.filter(r=>(Number(r.main_quest_claims)||0)>=1).length;
+  const quest=[];
+  for(let number=1;number<=maxQuest;number++){
+    const users=rows.filter(r=>(Number(r.main_quest_claims)||0)>=number).length;
+    const previous=number===1?questOne:quest[number-2].users;
+    quest.push({quest:number,users,percent_of_quest_1:pct(users,questOne),
+      conversion_from_previous:number===1?'100.0%':pct(users,previous)});
+  }
   current.quest=quest;
-  $('questChart').innerHTML=quest.map(r=>`<div class="funnel-row" title="${r.stage}: ${nf.format(r.users)} players (${r.percent_of_matched})">
-    <div class="funnel-label">${r.stage}</div><div class="funnel-track"><div class="funnel-bar" style="width:${mapped?100*r.users/mapped:0}%"></div></div>
-    <div class="funnel-value">${nf.format(r.users)} · ${r.percent_of_matched}</div></div>`).join('');
-  $('questTable').innerHTML=table(['Stage','Players','% of matched','Conversion from previous'],
-    quest.map(r=>[r.stage,nf.format(r.users),r.percent_of_matched,r.conversion_from_previous]));
+  $('questChart').innerHTML=quest.length?quest.map(r=>`<div class="funnel-row" title="Quest ${r.quest}: ${nf.format(r.users)} players (${r.percent_of_quest_1} of Quest 1)">
+    <div class="funnel-label">Quest ${r.quest}</div><div class="funnel-track"><div class="funnel-bar" style="width:${questOne?100*r.users/questOne:0}%"></div></div>
+    <div class="funnel-value">${nf.format(r.users)} · ${r.percent_of_quest_1}</div></div>`).join(''):
+    '<div class="empty"><div><b>No main-quest rewards in this selection</b>Try a wider date range or another campaign.</div></div>';
+  $('questTable').innerHTML=table(['Main quest','Players reaching reward','% of Quest 1','Conversion from previous'],
+    quest.map(r=>['Quest '+r.quest,nf.format(r.users),r.percent_of_quest_1,r.conversion_from_previous]));
 
   const em=new Map();inactive.forEach(r=>{const e=r.last_custom_event||'(no custom event)';em.set(e,(em.get(e)||0)+1)});
   const events=[...em].sort((a,b)=>b[1]-a[1]).map(([event,users])=>({event,users,percent_of_inactive:pct(users,inactive.length)}));

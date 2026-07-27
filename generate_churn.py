@@ -146,6 +146,18 @@ def player_summaries(lo: str, hi: str):
           UNIX_MICROS(TIMESTAMP_SUB(PARSE_TIMESTAMP('%Y%m%d','{lo}'), INTERVAL 1 DAY))
           AND UNIX_MICROS(TIMESTAMP_ADD(PARSE_TIMESTAMP('%Y%m%d','{hi}'), INTERVAL 2 DAY))
     ),
+    main_quest AS (
+      SELECT user_id, MAX(quest_number) AS main_quest_claims
+      FROM (
+        SELECT user_id,
+          ROW_NUMBER() OVER (
+            PARTITION BY user_id ORDER BY event_timestamp
+          ) AS quest_number
+        FROM raw
+        WHERE event_name='earn' AND quest_position='main_quest'
+      )
+      GROUP BY user_id
+    ),
     users AS (
       SELECT user_id,
         ARRAY_AGG(af_id IGNORE NULLS ORDER BY event_timestamp DESC LIMIT 1)[SAFE_OFFSET(0)] af_id,
@@ -156,11 +168,6 @@ def player_summaries(lo: str, hi: str):
         SUM(IF(event_name='user_engagement', COALESCE(engagement_ms,0), 0))/1000
           AS engagement_seconds,
         MAX(IF(event_name='level_start', level, NULL)) AS max_level,
-        LOGICAL_OR(quest_position IN ('main_quest','daily_quest','diary_quest'))
-          AS quest_any,
-        LOGICAL_OR(quest_position='main_quest') AS quest_main,
-        LOGICAL_OR(quest_position='daily_quest') AS quest_daily,
-        LOGICAL_OR(quest_position='diary_quest') AS quest_diary,
         ARRAY_AGG(IF(event_name NOT IN ({excluded})
             AND NOT STARTS_WITH(event_name,'firebase_'),
           event_name, NULL) IGNORE NULLS ORDER BY event_timestamp DESC LIMIT 1)
@@ -176,13 +183,12 @@ def player_summaries(lo: str, hi: str):
       CAST(COALESCE(NULLIF(u.max_online_time,0),u.engagement_seconds,0) AS INT64)
         AS playtime_seconds,
       CAST(COALESCE(u.max_level,0) AS INT64) AS max_level,
-      COALESCE(u.quest_any,FALSE) AS quest_any,
-      COALESCE(u.quest_main,FALSE) AS quest_main,
-      COALESCE(u.quest_daily,FALSE) AS quest_daily,
-      COALESCE(u.quest_diary,FALSE) AS quest_diary,
+      CAST(COALESCE(q.main_quest_claims,0) AS INT64) AS main_quest_claims,
       u.last_custom_event,
       COALESCE(u.last_heartbeat_ts,u.last_event_ts) AS last_activity_ts
-    FROM users u CROSS JOIN bounds b
+    FROM users u
+    LEFT JOIN main_quest q USING (user_id)
+    CROSS JOIN bounds b
     WHERE u.af_id IS NOT NULL
     """
     dry_run_bytes(sql)
@@ -212,10 +218,7 @@ def main() -> None:
             "inactive": bool(row.get("inactive")),
             "playtime_seconds": int(row.get("playtime_seconds") or 0),
             "max_level": int(row.get("max_level") or 0),
-            "quest_any": bool(row.get("quest_any")),
-            "quest_main": bool(row.get("quest_main")),
-            "quest_daily": bool(row.get("quest_daily")),
-            "quest_diary": bool(row.get("quest_diary")),
+            "main_quest_claims": int(row.get("main_quest_claims") or 0),
             "last_custom_event": row.get("last_custom_event") or None,
             "last_activity_ts": int(row.get("last_activity_ts") or 0),
         }
@@ -228,10 +231,7 @@ def main() -> None:
                 old["playtime_seconds"], record["playtime_seconds"]
             )
             old["max_level"] = max(old["max_level"], record["max_level"])
-            old["quest_any"] = old["quest_any"] or record["quest_any"]
-            old["quest_main"] = old["quest_main"] or record["quest_main"]
-            old["quest_daily"] = old["quest_daily"] or record["quest_daily"]
-            old["quest_diary"] = old["quest_diary"] or record["quest_diary"]
+            old["main_quest_claims"] += record["main_quest_claims"]
             if record["last_activity_ts"] > old["last_activity_ts"]:
                 old["last_activity_ts"] = record["last_activity_ts"]
                 old["last_custom_event"] = (
