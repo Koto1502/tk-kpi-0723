@@ -35,6 +35,7 @@ TABLE = f"`{PROJECT}.{DATASET}.events_intraday_*`"
 APP_ID = os.environ.get("TK_APPSFLYER_APP_ID", "com.game.tiny.knightfall.idle.rpg")
 APP_START = "2026-06-29"
 AF_LAG_DAYS = 1
+INACTIVITY_HOURS = 72
 AUTOMATIC_EVENTS = (
     "app_clear_data", "app_exception", "app_remove", "app_store_refund",
     "app_store_subscription_cancel", "app_store_subscription_convert",
@@ -128,29 +129,49 @@ def player_summaries(lo: str, hi: str):
             CAST(value.int_value AS FLOAT64), value.double_value,
             SAFE_CAST(value.string_value AS FLOAT64))
           FROM UNNEST(user_properties) WHERE key='online_time') AS online_time,
-        (SELECT value.int_value FROM UNNEST(event_params) WHERE key='level') AS level
+        (SELECT COALESCE(
+            CAST(value.int_value AS FLOAT64), value.double_value,
+            SAFE_CAST(value.string_value AS FLOAT64))
+          FROM UNNEST(event_params) WHERE key='engagement_time_msec') AS engagement_ms,
+        (SELECT COALESCE(
+            CAST(value.int_value AS FLOAT64), value.double_value,
+            SAFE_CAST(value.string_value AS FLOAT64))
+          FROM UNNEST(event_params) WHERE key='level') AS level
       FROM {TABLE}
       WHERE _TABLE_SUFFIX BETWEEN '{lo}' AND '{hi}'
+        AND event_timestamp BETWEEN
+          UNIX_MICROS(TIMESTAMP_SUB(PARSE_TIMESTAMP('%Y%m%d','{lo}'), INTERVAL 1 DAY))
+          AND UNIX_MICROS(TIMESTAMP_ADD(PARSE_TIMESTAMP('%Y%m%d','{hi}'), INTERVAL 2 DAY))
     ),
     users AS (
       SELECT user_id,
         ARRAY_AGG(af_id IGNORE NULLS ORDER BY event_timestamp DESC LIMIT 1)[SAFE_OFFSET(0)] af_id,
-        MIN(IF(event_name='app_remove', event_timestamp, NULL)) remove_ts
+        MAX(event_timestamp) AS last_event_ts,
+        MAX(IF(online_time IS NOT NULL OR event_name='user_engagement',
+          event_timestamp, NULL)) AS last_heartbeat_ts,
+        MAX(online_time) AS max_online_time,
+        SUM(IF(event_name='user_engagement', COALESCE(engagement_ms,0), 0))/1000
+          AS engagement_seconds,
+        MAX(IF(event_name='level_start', level, NULL)) AS max_level,
+        ARRAY_AGG(IF(event_name NOT IN ({excluded})
+            AND NOT STARTS_WITH(event_name,'firebase_'),
+          event_name, NULL) IGNORE NULLS ORDER BY event_timestamp DESC LIMIT 1)
+          [SAFE_OFFSET(0)] AS last_custom_event
       FROM raw GROUP BY user_id
+    ),
+    bounds AS (
+      SELECT MAX(event_timestamp) AS data_max_ts FROM raw
     )
-    SELECT u.af_id, u.user_id, u.remove_ts IS NOT NULL AS churned,
-      CAST(MAX(IF(u.remove_ts IS NULL OR r.event_timestamp <= u.remove_ts,
-        COALESCE(r.online_time,0), NULL)) AS INT64) AS online_time,
-      CAST(MAX(IF((u.remove_ts IS NULL OR r.event_timestamp < u.remove_ts)
-        AND r.event_name='level_start', r.level, NULL)) AS INT64) AS max_level,
-      ARRAY_AGG(IF(u.remove_ts IS NOT NULL AND r.event_timestamp < u.remove_ts
-          AND r.event_name NOT IN ({excluded})
-          AND NOT STARTS_WITH(r.event_name,'firebase_'),
-        r.event_name, NULL) IGNORE NULLS ORDER BY r.event_timestamp DESC LIMIT 1)
-        [SAFE_OFFSET(0)] AS last_custom_event
-    FROM users u JOIN raw r USING(user_id)
+    SELECT u.af_id, u.user_id,
+      COALESCE(u.last_heartbeat_ts,u.last_event_ts)
+        < b.data_max_ts-{INACTIVITY_HOURS}*60*60*1000000 AS inactive,
+      CAST(COALESCE(NULLIF(u.max_online_time,0),u.engagement_seconds,0) AS INT64)
+        AS playtime_seconds,
+      CAST(COALESCE(u.max_level,0) AS INT64) AS max_level,
+      u.last_custom_event,
+      COALESCE(u.last_heartbeat_ts,u.last_event_ts) AS last_activity_ts
+    FROM users u CROSS JOIN bounds b
     WHERE u.af_id IS NOT NULL
-    GROUP BY u.af_id, u.user_id, churned
     """
     dry_run_bytes(sql)
     return run(sql, gib=2, max_rows=100_000)
@@ -165,8 +186,8 @@ def main() -> None:
     bq_lo, bq_hi = bq_window()
     summaries = player_summaries(bq_lo, bq_hi)
 
-    # One anonymous record per AppsFlyer ID. Prefer a churned record if GA4 has
-    # more than one user_pseudo_id for the same AppsFlyer install.
+    # One anonymous record per AppsFlyer ID. If GA4 has more than one
+    # user_pseudo_id, treat the install as active when any identity is recent.
     joined: dict[str, dict] = {}
     for row in summaries.to_dict("records"):
         af_id = str(row.get("af_id") or "").strip()
@@ -176,20 +197,34 @@ def main() -> None:
         record = {
             "install_date": install["install_date"],
             "campaign": install["campaign"],
-            "churned": bool(row.get("churned")),
-            "online_time": int(row.get("online_time") or 0),
+            "inactive": bool(row.get("inactive")),
+            "playtime_seconds": int(row.get("playtime_seconds") or 0),
             "max_level": int(row.get("max_level") or 0),
             "last_custom_event": row.get("last_custom_event") or None,
+            "last_activity_ts": int(row.get("last_activity_ts") or 0),
         }
         old = joined.get(af_id)
-        if old is None or (record["churned"] and not old["churned"]):
+        if old is None:
             joined[af_id] = record
-        elif old and record["churned"] == old["churned"]:
-            old["online_time"] = max(old["online_time"], record["online_time"])
+        else:
+            old["inactive"] = old["inactive"] and record["inactive"]
+            old["playtime_seconds"] = max(
+                old["playtime_seconds"], record["playtime_seconds"]
+            )
             old["max_level"] = max(old["max_level"], record["max_level"])
-            old["last_custom_event"] = old["last_custom_event"] or record["last_custom_event"]
+            if record["last_activity_ts"] > old["last_activity_ts"]:
+                old["last_activity_ts"] = record["last_activity_ts"]
+                old["last_custom_event"] = (
+                    record["last_custom_event"] or old["last_custom_event"]
+                )
 
-    players = sorted(joined.values(), key=lambda r: (r["install_date"], r["campaign"]))
+    players = sorted(
+        (
+            {key: value for key, value in row.items() if key != "last_activity_ts"}
+            for row in joined.values()
+        ),
+        key=lambda r: (r["install_date"], r["campaign"]),
+    )
     campaigns = sorted({r["campaign"] for r in players})
     payload = {
         "meta": {
@@ -202,6 +237,7 @@ def main() -> None:
             "matched_players": len(players),
             "campaigns": campaigns,
             "tutorial_available": False,
+            "inactivity_hours": INACTIVITY_HOURS,
             "lag_days": AF_LAG_DAYS,
             "bq_window": f"{bq_lo}..{bq_hi}",
         },
