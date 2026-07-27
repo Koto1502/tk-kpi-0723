@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny Knight Fall — KPI Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0:#f4f3f1; --surface-1:#fcfcfb; --border:#e4e2dd;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#807e78;
+    --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a; --series-4:#eda100;
+    --series-5:#e87ba4; --series-6:#008300; --series-7:#4a3aa7; --series-8:#e34948;
+    --grid:#eceae6; --tooltip-bg:#0b0b0b; --tooltip-fg:#ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0:#111110; --surface-1:#1a1a19; --border:#33322f;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8f8d85;
+      --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --series-4:#c98500;
+      --series-5:#d55181; --series-6:#008300; --series-7:#9085e9; --series-8:#e66767;
+      --grid:#262623; --tooltip-bg:#fcfcfb; --tooltip-fg:#0b0b0b;
+    }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--surface-0); color:var(--text-primary);
+         font:14px/1.45 "Segoe UI",system-ui,sans-serif; padding:20px; }
+  h1 { font-size:20px; font-weight:650; }
+  .sub { color:var(--text-secondary); font-size:12.5px; margin:4px 0 18px; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+  .tile { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .tile .v { font-size:24px; font-weight:650; letter-spacing:-0.02em; }
+  .tile .l { font-size:11.5px; color:var(--text-secondary); margin-top:2px; }
+  .tile .n { font-size:10.5px; color:var(--text-muted); margin-top:3px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(430px,1fr)); gap:14px; }
+  .card { background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:14px 16px 10px; overflow:hidden; }
+  .card.wide { grid-column:1 / -1; }
+  .card h2 { font-size:13.5px; font-weight:650; }
+  .card .note { font-size:11px; color:var(--text-muted); margin:2px 0 6px; }
+  .legend { display:flex; flex-wrap:wrap; gap:12px; font-size:11.5px; color:var(--text-secondary); margin:4px 0 2px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .sw { width:10px; height:10px; border-radius:3px; display:inline-block; }
+  svg { display:block; width:100%; }
+  svg text { font:10.5px "Segoe UI",system-ui,sans-serif; fill:var(--text-secondary); }
+  svg .dl { font-weight:600; fill:var(--text-primary); }
+  .gridline { stroke:var(--grid); stroke-width:1; }
+  .axis { stroke:var(--border); stroke-width:1; }
+  #tip { position:fixed; pointer-events:none; background:var(--tooltip-bg); color:var(--tooltip-fg);
+         padding:6px 9px; border-radius:7px; font-size:11.5px; line-height:1.5; opacity:0;
+         transition:opacity .08s; z-index:10; max-width:260px; box-shadow:0 2px 10px rgba(0,0,0,.25); }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  th { text-align:right; color:var(--text-secondary); font-weight:600; padding:4px 8px; border-bottom:1px solid var(--border); }
+  th:first-child, td:first-child { text-align:left; }
+  td { text-align:right; padding:3px 8px; font-variant-numeric:tabular-nums; }
+  td.heat { border-radius:4px; }
+  .caveats { margin-top:16px; font-size:11.5px; color:var(--text-muted); max-width:1100px; }
+  .caveats b { color:var(--text-secondary); }
+</style>
+</head>
+<body>
+<h1>Tiny Knight Fall — KPI Dashboard</h1>
+<div class="sub" id="sub"></div>
+<div class="tiles" id="tiles"></div>
+<div class="grid" id="grid"></div>
+<div class="caveats" id="caveats"></div>
+<div id="tip"></div>
+
+<script>
+const DATA = /*__DATA__*/;
+
+/* ---------- helpers ---------- */
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtD = s => { const d = String(s).replaceAll('-',''); return d.slice(4,6).replace(/^0/,'') + '/' + d.slice(6,8).replace(/^0/,''); };
+const fmt$ = v => '$' + (v>=100 ? v.toFixed(0) : v.toFixed(2));
+const fmtK = v => v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(Math.round(v));
+const tip = document.getElementById('tip');
+function showTip(html, ev){ tip.innerHTML = html; tip.style.opacity = 1;
+  const pad = 14, w = tip.offsetWidth;
+  tip.style.left = Math.min(ev.clientX + pad, innerWidth - w - 10) + 'px';
+  tip.style.top  = (ev.clientY + pad) + 'px'; }
+function hideTip(){ tip.style.opacity = 0; }
+
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+function card(title, note, opts={}){
+  const c = document.createElement('div'); c.className = 'card' + (opts.wide?' wide':'');
+  c.innerHTML = `<h2>${title}</h2><div class="note">${note}</div>`;
+  document.getElementById('grid').appendChild(c); return c;
+}
+function legend(c, items){
+  const l = document.createElement('div'); l.className='legend';
+  l.innerHTML = items.map(i=>`<span><span class="sw" style="background:${i.color}"></span>${i.name}</span>`).join('');
+  c.appendChild(l);
+}
+
+/* Generic time chart: stacked bars + optional line overlays, one y axis. */
+function timeChart(c, {dates, stacks=[], lines=[], h=230, yFmt=fmtK, tipRow}){
+  const W = 860, P = {l:44, r:10, t:10, b:22};
+  const svg = el('svg', {viewBox:`0 0 ${W} ${h}`}, c);
+  const iw = W-P.l-P.r, ih = h-P.t-P.b, n = dates.length;
+  const totals = dates.map((_,i)=> stacks.reduce((s,st)=>s+(st.values[i]||0),0));
+  let max = Math.max(...totals, ...lines.flatMap(l=>l.values.filter(v=>v!=null)), 1);
+  max *= 1.08;
+  const y = v => P.t + ih - (v/max)*ih;
+  const x = i => P.l + (i+0.5)*(iw/n);
+  const bw = Math.min(22, iw/n - 4);
+  const ticks = 4;
+  for (let t=0;t<=ticks;t++){ const v = max*t/ticks, yy = y(v);
+    el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+    el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent = yFmt(v);
+  }
+  el('line',{x1:P.l,x2:W-P.r,y1:y(0),y2:y(0),class:'axis'},svg);
+  const step = Math.ceil(n/9);
+  dates.forEach((d,i)=>{ if(i%step===0) el('text',{x:x(i),y:h-6,'text-anchor':'middle'},svg).textContent = fmtD(d); });
+  // stacked bars with 2px gaps between segments
+  dates.forEach((d,i)=>{ let acc = 0;
+    stacks.forEach((st,si)=>{ const v = st.values[i]||0; if(v<=0){return;}
+      const y1 = y(acc+v), y0 = y(acc);
+      el('rect',{x:x(i)-bw/2, y:y1, width:bw, height:Math.max(0.5,y0-y1-(acc>0?2:0)),
+        rx:3, fill:st.color},svg);
+      acc += v; });
+  });
+  lines.forEach(ln=>{
+    const pts = ln.values.map((v,i)=> v==null?null:[x(i),y(v)]).filter(Boolean);
+    el('path',{d:'M'+pts.map(p=>p.join(',')).join('L'), fill:'none', stroke:ln.color,
+      'stroke-width':2,'stroke-linejoin':'round'},svg);
+    pts.forEach(p=> el('circle',{cx:p[0],cy:p[1],r:2.4,fill:ln.color},svg));
+  });
+  // hover columns
+  dates.forEach((d,i)=>{
+    const r = el('rect',{x:x(i)-iw/n/2, y:P.t, width:iw/n, height:ih, fill:'transparent'},svg);
+    r.addEventListener('mousemove', ev=> showTip(tipRow(i), ev));
+    r.addEventListener('mouseleave', hideTip);
+  });
+}
+
+/* Horizontal bars */
+function hbars(c, rows, {color, vFmt=fmtK, h=null, tipRow}){
+  const W = 860, rh = 24, P = {l:210, r:56, t:4, b:4};
+  const H = h || rows.length*rh + P.t + P.b;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`}, c);
+  const max = Math.max(...rows.map(r=>r.v), 1e-9);
+  rows.forEach((r,i)=>{ const yy = P.t + i*rh;
+    el('text',{x:P.l-8,y:yy+rh/2+3,'text-anchor':'end'},svg).textContent =
+      r.name.length>30 ? r.name.slice(0,29)+'…' : r.name;
+    const w = Math.max(2,(r.v/max)*(W-P.l-P.r));
+    const bar = el('rect',{x:P.l,y:yy+4,width:w,height:rh-9,rx:3,fill:color},svg);
+    el('text',{x:P.l+w+6,y:yy+rh/2+3,class:'dl'},svg).textContent = vFmt(r.v);
+    if (tipRow){ bar.addEventListener('mousemove',ev=>showTip(tipRow(r),ev));
+                 bar.addEventListener('mouseleave',hideTip); }
+  });
+}
+
+/* ---------- data prep ---------- */
+const daily = DATA.daily;
+const dates = daily.map(r=>r.d);
+const lastFull = daily[daily.length-2], today = daily[daily.length-1];
+const totIAP = daily.reduce((s,r)=>s+r.iap_rev,0);
+const totIAA = daily.reduce((s,r)=>s+r.iaa_rev,0);
+const installs = daily.reduce((s,r)=>s+r.new_users,0);
+const peakDAU = Math.max(...daily.map(r=>r.dau));
+const peakRow = daily.reduce((a,b)=>b.dau>a.dau?b:a, daily[0]);
+const LAST = new Date(String(dates[dates.length-1]).replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3'));
+const isoD = s => String(s).replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3');
+const monthDay = s => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+String(s).slice(4,6)-1]+' '+ +String(s).slice(6,8);
+// weighted retention from mature cohorts
+const mature = k => { const rows = DATA.retention.filter(r=>r[k]>0 || (r.size>50 && r[k]===0));
+  const cut = {d1:1,d3:3,d7:7,d14:14}[k];
+  const ok = DATA.retention.filter(r=>{
+    const age = (LAST - new Date(r.cohort))/864e5; return age>cut && r.size>=50; });
+  const num = ok.reduce((s,r)=>s+r.size*r[k]/100,0), den = ok.reduce((s,r)=>s+r.size,0);
+  return den? (100*num/den):0; };
+const R1 = mature('d1'), R3 = mature('d3'), R7 = mature('d7'), R14 = mature('d14');
+
+document.getElementById('sub').innerHTML =
+  `<a href="ltv.html" style="color:var(--series-1)">LTV by cohort →</a> · tiny-knightfall-idle-rpg-game · analytics_538412813 · full export ${isoD(dates[0])} → ${isoD(dates[dates.length-1])} (last day partial, intraday) · generated ${isoD(dates[dates.length-1])}`;
+
+/* ---------- KPI tiles ---------- */
+const tiles = [
+  {v: fmtK(installs), l:'Installs (first_open)', n:'whole export window'},
+  {v: fmtK(lastFull.dau), l:`DAU (${monthDay(lastFull.d)}, last full day)`, n:`peak ${fmtK(peakDAU)} on ${monthDay(peakRow.d)}`},
+  {v: fmt$(totIAP+totIAA), l:'Total revenue', n:`IAP ${fmt$(totIAP)} + ads ${fmt$(totIAA)}`},
+  {v: fmt$((lastFull.iap_rev+lastFull.iaa_rev)/lastFull.dau), l:`ARPDAU (${monthDay(lastFull.d)})`, n:'revenue ÷ DAU'},
+  {v: R1.toFixed(1)+'%', l:'D1 retention', n:'weighted, mature cohorts'},
+  {v: R7.toFixed(1)+'%', l:'D7 retention', n:`D3 ${R3.toFixed(1)}% · D14 ${R14.toFixed(1)}%`},
+];
+document.getElementById('tiles').innerHTML = tiles.map(t=>
+  `<div class="tile"><div class="v">${t.v}</div><div class="l">${t.l}</div><div class="n">${t.n}</div></div>`).join('');
+
+/* ---------- 1. DAU by version (ordinal blue ramp — version is ordered) ---------- */
+{
+const ramp = ['#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab','#104281'];
+const vers = [...new Set(DATA.dau_version.map(r=>r.v))].filter(v=>v!=null).sort((a,b)=>a-b);
+const byVol = {}; DATA.dau_version.forEach(r=>{ byVol[r.v]=(byVol[r.v]||0)+r.users; });
+const top = vers.filter(v=>byVol[v]>500);
+const groups = [...top]; // ascending version order
+const c = card('DAU by app version', 'Distinct users per day, stacked by build (users on several builds in one day count once per build). Minor builds (<500 user-days) folded into “older”. Darker = newer build.', {wide:true});
+const map = {}; DATA.dau_version.forEach(r=>{ map[r.d] = map[r.d]||{}; map[r.d][r.v]=r.users; });
+const stacks = [{name:'older', color:'#9a988f',
+    values: dates.map(d=> vers.filter(v=>!groups.includes(v)).reduce((s,v)=>s+(map[d]?.[v]||0),0))}]
+  .concat(groups.map((v,i)=>({name:'v'+v, color: ramp[Math.min(i, ramp.length-1)],
+    values: dates.map(d=> map[d]?.[v]||0)})));
+legend(c, stacks.map(s=>({name:s.name, color:s.color})));
+timeChart(c, {dates, stacks, h:250, tipRow: i=>
+  `<b>${fmtD(dates[i])}</b><br>` + stacks.map(s=>s.values[i]?`${s.name}: ${s.values[i]}`:'').filter(Boolean).join('<br>')
+  + `<br>total DAU: ${daily[i].dau}`});
+}
+
+/* ---------- 2. DAU & new users ---------- */
+{
+const c = card('DAU and new users', `Bars = new users (first_open) per day; line = DAU. ${monthDay(dates[dates.length-1])} is a partial day.`);
+legend(c, [{name:'new users',color:css('--series-3')},{name:'DAU',color:css('--series-1')}]);
+timeChart(c, {dates,
+  stacks:[{name:'new users', color:css('--series-3'), values: daily.map(r=>r.new_users)}],
+  lines:[{name:'DAU', color:css('--series-1'), values: daily.map(r=>r.dau)}],
+  tipRow: i=> `<b>${fmtD(dates[i])}</b><br>DAU: ${daily[i].dau}<br>new users: ${daily[i].new_users}<br>sessions: ${daily[i].sessions}`});
+}
+
+/* ---------- 3. Revenue IAP vs IAA ---------- */
+{
+const c = card('Revenue per day — IAP vs ads (IAA)',
+  'IAP = store-validated in_app_purchase USD (tracked only since build 15, ~Jul 20). IAA = AppLovin MAX impression-level revenue (ad_impression_MAX).');
+legend(c, [{name:'IAP',color:css('--series-1')},{name:'IAA (ads)',color:css('--series-2')}]);
+timeChart(c, {dates, yFmt:fmt$,
+  stacks:[{name:'IAP', color:css('--series-1'), values: daily.map(r=>r.iap_rev)},
+          {name:'IAA', color:css('--series-2'), values: daily.map(r=>r.iaa_rev)}],
+  tipRow: i=> `<b>${fmtD(dates[i])}</b><br>IAP: ${fmt$(daily[i].iap_rev)} (${daily[i].payers} payers)<br>IAA: ${fmt$(daily[i].iaa_rev)} (${daily[i].impressions} imps)<br>ARPDAU: ${fmt$((daily[i].iap_rev+daily[i].iaa_rev)/daily[i].dau)}`});
+}
+
+/* ---------- 4. Retention curve ---------- */
+{
+const c = card('Retention curve', '% of eligible installs active exactly N days after first_open (classic day-N). Cohorts only count toward day N once they are old enough.');
+const pts = DATA.ret_curve.filter(r=>r.dd<=14).map(r=>({dd:r.dd, v: 100*r.active/Math.max(r.eligible,1)}));
+const W=860,H=230,P={l:44,r:14,t:10,b:22};
+const svg = el('svg',{viewBox:`0 0 ${W} ${H}`},c);
+const max = 30;
+const x = d=> P.l + d/14*(W-P.l-P.r), y = v=> P.t + (H-P.t-P.b)*(1-v/max);
+for(let t=0;t<=3;t++){ const v=max*t/3, yy=y(v);
+  el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+  el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent = v.toFixed(0)+'%'; }
+[0,1,3,7,14].forEach(d=> el('text',{x:x(d),y:H-6,'text-anchor':'middle'},svg).textContent='D'+d);
+el('path',{d:'M'+pts.slice(1).map(p=>[x(p.dd),y(Math.min(p.v,max))].join(',')).join('L'),
+  fill:'none',stroke:css('--series-1'),'stroke-width':2},svg);
+pts.slice(1).forEach(p=>{
+  const dot = el('circle',{cx:x(p.dd),cy:y(Math.min(p.v,max)),r:3.2,fill:css('--series-1')},svg);
+  dot.addEventListener('mousemove',ev=>showTip(`<b>D${p.dd}</b>: ${p.v.toFixed(1)}%`,ev));
+  dot.addEventListener('mouseleave',hideTip);
+  if([1,3,7,14].includes(p.dd))
+    el('text',{x:x(p.dd),y:y(p.v)-8,'text-anchor':'middle',class:'dl'},svg).textContent=p.v.toFixed(1)+'%';
+});
+}
+
+/* ---------- 5. Retention cohort table ---------- */
+{
+const c = card('Retention by install cohort', 'Rows = install day (cohorts ≥50 installs). Cells blank where the cohort is not old enough yet.', {wide:true});
+const ramp=['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab'];
+const rows = DATA.retention.filter(r=>r.size>=50);
+const today_ = LAST;
+const cell = (r,k,cut)=>{
+  const age = (today_ - new Date(r.cohort))/864e5;
+  if (age<=cut) return '<td></td>';
+  const v=r[k], idx=Math.min(ramp.length-1, Math.floor(v/30*ramp.length));
+  const dark = idx>5;
+  return `<td class="heat" style="background:${ramp[idx]};color:${dark?'#fff':'#0b0b0b'}">${v.toFixed(1)}%</td>`; };
+c.insertAdjacentHTML('beforeend',
+  `<div style="overflow-x:auto"><table><tr><th>cohort</th><th>installs</th><th>D1</th><th>D3</th><th>D7</th><th>D14</th></tr>` +
+  rows.map(r=>`<tr><td>${r.cohort.slice(5)}</td><td>${r.size}</td>${cell(r,'d1',1)}${cell(r,'d3',3)}${cell(r,'d7',7)}${cell(r,'d14',14)}</tr>`).join('') +
+  `</table></div>`);
+}
+
+/* ---------- 6. Ad funnel ---------- */
+{
+const c = card('Ad fill rate — interstitial is broken', 'Fill rate = successful ad_request_status ÷ ad_request. Interstitial fills <2% and almost never shows; rewarded fills ~20–30%.');
+const days2 = [...new Set(DATA.ad_funnel.map(r=>r.d))].sort();
+const get = (d,t)=> DATA.ad_funnel.find(r=>r.d===d && r.ad_type===t) || {requests:0,fills:0,shows:0};
+const fr = t => days2.map(d=>{ const r=get(d,t); return r.requests? 100*r.fills/r.requests : null; });
+const inter = fr('inter'), rew = fr('rewarded');
+legend(c, [{name:'rewarded',color:css('--series-1')},{name:'interstitial',color:css('--series-2')}]);
+timeChart(c, {dates: days2, yFmt:v=>v.toFixed(0)+'%',
+  lines:[{color:css('--series-1'), values:rew},{color:css('--series-2'), values:inter}],
+  tipRow: i=>{ const ri=get(days2[i],'inter'), rr=get(days2[i],'rewarded');
+    return `<b>${fmtD(days2[i])}</b><br>rewarded: ${rr.requests} req → ${rr.fills} fill → ${rr.shows} shown`+
+           `<br>inter: ${ri.requests} req → ${ri.fills} fill → ${ri.shows} shown`; }});
+}
+
+/* ---------- 7. IAA by placement ---------- */
+{
+const c = card('Ad revenue by placement', 'ad_impression_MAX rewarded placements, whole window. “(none)” = impressions missing the ad_placement param.');
+hbars(c, DATA.iaa_by_placement.slice(0,10).map(r=>({name:r.pl, v:r.rev, imps:r.imps})),
+  {color:css('--series-2'), vFmt:fmt$, tipRow:r=>`<b>${r.name}</b><br>${fmt$(r.v)} · ${r.imps} impressions<br>eCPM ${fmt$(1000*r.v/r.imps)}`});
+}
+
+/* ---------- 8. IAP by product ---------- */
+{
+const c = card('IAP revenue by product', 'Store-validated purchases (since ~Jul 20 only). Product ids shortened by their com.idle.tiny prefix.');
+hbars(c, DATA.iap_by_product.map(r=>({name:r.product.replace('com.idle.tiny.',''), v:r.rev, buys:r.buys, buyers:r.buyers})),
+  {color:css('--series-1'), vFmt:fmt$, tipRow:r=>`<b>${r.name}</b><br>${fmt$(r.v)} · ${r.buys} buys · ${r.buyers} buyers`});
+}
+
+/* ---------- 9. Levels ---------- */
+{
+const c = card('Level funnel & difficulty', 'Line = distinct users starting each level (levels 2–60). Bars = loss rate (losses ÷ attempts). Spikes mark difficulty walls.', {wide:true});
+const rows = DATA.levels.filter(r=>r.lvl>=2);
+const lr = rows.map(r=> (r.wins+r.losses)? 100*r.losses/(r.wins+r.losses) : 0);
+const maxS = Math.max(...rows.map(r=>r.starters));
+const W=860,H=240,P={l:44,r:10,t:10,b:22};
+const svg = el('svg',{viewBox:`0 0 ${W} ${H}`},c);
+legend(c, [{name:'users starting level',color:css('--series-1')},{name:'loss rate %',color:css('--series-8')}]);
+c.appendChild(svg);
+const x = i=> P.l + (i+0.5)*(W-P.l-P.r)/rows.length;
+const yS = v=> P.t + (H-P.t-P.b)*(1-v/(maxS*1.05));
+for(let t=0;t<=4;t++){ const v=maxS*1.05*t/4, yy=yS(v);
+  el('line',{x1:P.l,x2:W-P.r,y1:yy,y2:yy,class:'gridline'},svg);
+  el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent=fmtK(v); }
+rows.forEach((r,i)=>{ if(r.lvl%5===0) el('text',{x:x(i),y:H-6,'text-anchor':'middle'},svg).textContent=r.lvl; });
+// loss-rate bars scaled to 100% of plot height
+rows.forEach((r,i)=>{ const hh=(H-P.t-P.b)*lr[i]/100;
+  const b = el('rect',{x:x(i)-4,y:H-P.b-hh,width:8,height:hh,rx:2,fill:css('--series-8'),opacity:.55},svg);
+  b.addEventListener('mousemove',ev=>showTip(`<b>level ${r.lvl}</b><br>loss rate ${lr[i].toFixed(0)}% (${r.losses}/${r.wins+r.losses})<br>avg win time ${r.avg_win_time}s`,ev));
+  b.addEventListener('mouseleave',hideTip); });
+el('path',{d:'M'+rows.map((r,i)=>[x(i),yS(r.starters)].join(',')).join('L'),
+  fill:'none',stroke:css('--series-1'),'stroke-width':2},svg);
+rows.forEach((r,i)=>{ const dot=el('circle',{cx:x(i),cy:yS(r.starters),r:2.4,fill:css('--series-1')},svg);
+  dot.addEventListener('mousemove',ev=>showTip(`<b>level ${r.lvl}</b><br>${r.starters} starters<br>loss rate ${lr[i].toFixed(0)}%`,ev));
+  dot.addEventListener('mouseleave',hideTip); });
+}
+
+/* ---------- 10. Geo ---------- */
+{
+const c = card('Users vs revenue by country', 'Traffic is low-monetizing geos; nearly all revenue is US/UK. Top 12 countries by users.', {wide:true});
+c.insertAdjacentHTML('beforeend',
+  `<div style="overflow-x:auto"><table><tr><th>country</th><th>users</th><th>revenue</th><th>rev / 1k users</th></tr>`+
+  DATA.geo.map(r=>`<tr><td>${r.country}</td><td>${r.users.toLocaleString()}</td><td>${fmt$(r.rev)}</td><td>${fmt$(1000*r.rev/r.users)}</td></tr>`).join('')+
+  `</table></div>`);
+}
+
+document.getElementById('caveats').innerHTML =
+  `<b>Definitions & caveats.</b> Source: GA4/Firebase BigQuery export (streaming tables only; the export begins ${isoD(dates[0])} and ${monthDay(dates[dates.length-1])} is a partial day). ` +
+  `Users = user_pseudo_id (device-scoped; player_id coverage is too low to use). ` +
+  `IAA revenue uses ad_impression_MAX only — ad_impression and ad_impression_rocket are duplicate logs of the same impressions (~$80 each, not additive). ` +
+  `IAP revenue = event_value_in_usd on in_app_purchase, which only started reporting with build 15 (~Jul 20); earlier real IAP revenue, if any, is not in BigQuery. ` +
+  `Retention is day-N (active exactly N days after install), cohorted by first_open. All figures UTC.`;
+</script>
+</body>
+</html>
