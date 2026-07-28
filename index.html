@@ -176,7 +176,7 @@ const mature = k => { const rows = DATA.retention.filter(r=>r[k]>0 || (r.size>50
 const R1 = mature('d1'), R3 = mature('d3'), R7 = mature('d7'), R14 = mature('d14');
 
 document.getElementById('sub').innerHTML =
-  `<a href="campaigns.html" style="color:var(--series-1)">Campaign LTV &amp; retention →</a> · <a href="churn.html" style="color:var(--series-1)">Campaign churn →</a> · tiny-knightfall-idle-rpg-game · analytics_538412813 · full export ${isoD(dates[0])} → ${isoD(dates[dates.length-1])} (last day partial, intraday) · generated ${isoD(dates[dates.length-1])}`;
+  `<a href="campaigns.html" style="color:var(--series-1)">Campaign LTV &amp; retention →</a> · <a href="retention.html" style="color:var(--series-1)">Retention cohorts →</a> · <a href="churn.html" style="color:var(--series-1)">Campaign churn →</a> · tiny-knightfall-idle-rpg-game · analytics_538412813 · full export ${isoD(dates[0])} → ${isoD(dates[dates.length-1])} (last day partial, intraday) · generated ${isoD(dates[dates.length-1])}`;
 
 /* ---------- KPI tiles ---------- */
 const tiles = [
