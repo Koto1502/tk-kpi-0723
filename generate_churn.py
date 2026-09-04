@@ -34,6 +34,8 @@ DATASET = "analytics_538412813"
 TABLE = f"`{PROJECT}.{DATASET}.events_intraday_*`"
 APP_ID = os.environ.get("TK_APPSFLYER_APP_ID", "com.game.tiny.knightfall.idle.rpg")
 APP_START = "2026-06-29"
+# AppsFlyer refuses install/uninstall raw reports spanning more than 60 days.
+MAX_AF_WINDOW_DAYS = 60
 AF_LAG_DAYS = 1
 INACTIVITY_HOURS = 72
 AUTOMATIC_EVENTS = (
@@ -95,10 +97,25 @@ def pull_installs(start: str, end: str) -> list[dict]:
         raise RuntimeError(f"AppsFlyer credential profile {profile!r} is not available")
 
     def pull(report: str) -> tuple[list[dict], str]:
-        response = api.pull_csv(
-            token, APP_ID, report, start, end, "raw", timeout=180
-        )
-        return list(csv.DictReader(io.StringIO(response.csv_text))), response.csv_text
+        # AppsFlyer caps install/uninstall raw reports at 60 days per query, so walk
+        # the window in chunks and stitch the CSVs back together (header once).
+        chunks: list[str] = []
+        lo = dt.date.fromisoformat(start)
+        stop = dt.date.fromisoformat(end)
+        while lo <= stop:
+            hi = min(lo + dt.timedelta(days=MAX_AF_WINDOW_DAYS - 1), stop)
+            response = api.pull_csv(
+                token, APP_ID, report, lo.isoformat(), hi.isoformat(), "raw", timeout=180
+            )
+            text = response.csv_text
+            if chunks:
+                # drop the repeated header line
+                text = text.split("\n", 1)[1] if "\n" in text else ""
+            if text.strip():
+                chunks.append(text if text.endswith("\n") else text + "\n")
+            lo = hi + dt.timedelta(days=1)
+        csv_text = "".join(chunks)
+        return list(csv.DictReader(io.StringIO(csv_text))), csv_text
 
     paid, paid_csv = pull("installs_report")
     organic, organic_csv = pull("organic_installs_report")
