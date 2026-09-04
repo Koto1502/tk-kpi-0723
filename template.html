@@ -56,11 +56,55 @@
   td.heat { border-radius:4px; }
   .caveats { margin-top:16px; font-size:11.5px; color:var(--text-muted); max-width:1100px; }
   .caveats b { color:var(--text-secondary); }
+
+  /* ---- global filter bar ---- */
+  .filters { position:sticky; top:0; z-index:9; background:var(--surface-0);
+    border-bottom:1px solid var(--border); padding:9px 0 11px; margin:0 0 14px;
+    display:flex; flex-wrap:wrap; gap:9px; align-items:center; }
+  .ms { position:relative; }
+  .ms > button { background:var(--surface-1); border:1px solid var(--border); color:var(--text-primary);
+    border-radius:8px; padding:7px 11px; font:inherit; font-size:12px; cursor:pointer;
+    display:flex; gap:7px; align-items:center; }
+  .ms > button:hover { border-color:var(--text-muted); }
+  .ms .cnt { background:var(--series-1); color:#fff; border-radius:20px; padding:0 6px;
+    font-size:10.5px; font-weight:650; }
+  .ms .dim { color:var(--text-muted); }
+  .ms .panel { display:none; position:absolute; top:calc(100% + 5px); left:0; width:300px;
+    max-height:340px; overflow:auto; background:var(--surface-1); border:1px solid var(--border);
+    border-radius:9px; box-shadow:0 6px 22px rgba(0,0,0,.22); padding:8px; }
+  .ms.open .panel { display:block; }
+  .ms .panel input[type=search] { width:100%; padding:6px 8px; margin-bottom:5px; font:inherit;
+    font-size:12px; border:1px solid var(--border); border-radius:6px;
+    background:var(--surface-0); color:var(--text-primary); }
+  .ms .opt { display:flex; align-items:center; gap:7px; padding:4px 5px; border-radius:5px;
+    cursor:pointer; font-size:12px; }
+  .ms .opt:hover { background:var(--surface-0); }
+  .ms .opt .n { margin-left:auto; color:var(--text-muted); font-size:11px; font-variant-numeric:tabular-nums; }
+  .ms .acts { display:flex; gap:10px; padding:1px 5px 6px; }
+  .ms .acts a { color:var(--series-1); font-size:11.5px; cursor:pointer; }
+  .fstat { font-size:11.5px; color:var(--text-secondary); margin-left:auto; }
+  .fstat b { color:var(--text-primary); }
+  .btn { background:var(--surface-1); border:1px solid var(--border); color:var(--text-primary);
+    border-radius:8px; padding:7px 11px; font:inherit; font-size:12px; cursor:pointer; }
+  .btn:hover { border-color:var(--text-muted); }
+  .badge { display:inline-block; font-size:10px; font-weight:600; padding:1px 6px; border-radius:20px;
+    background:var(--surface-0); border:1px solid var(--border); color:var(--text-muted);
+    margin-left:6px; vertical-align:middle; }
+  .ctrls { display:flex; flex-wrap:wrap; gap:11px; align-items:center; margin:2px 0 9px;
+    font-size:12px; color:var(--text-secondary); }
+  .ctrls label { display:inline-flex; gap:5px; align-items:center; cursor:pointer; }
+  select.vsel { background:var(--surface-1); border:1px solid var(--border); color:var(--text-primary);
+    border-radius:7px; padding:5px 8px; font:inherit; font-size:12px; }
+  th.grp { text-align:center; font-size:11.5px; padding-bottom:2px; }
+  td.na, th.na { color:var(--text-muted); }
+  .vA { color:var(--series-1); } .vB { color:var(--series-2); }
+  .empty { padding:18px 4px; color:var(--text-muted); font-size:12.5px; }
 </style>
 </head>
 <body>
 <h1>Tiny Knight Fall — KPI Dashboard</h1>
 <div class="sub" id="sub"></div>
+<div class="filters" id="filters"></div>
 <div class="tiles" id="tiles"></div>
 <div class="grid" id="grid"></div>
 <div class="caveats" id="caveats"></div>
@@ -154,8 +198,202 @@ function hbars(c, rows, {color, vFmt=fmtK, h=null, tipRow}){
   });
 }
 
+/* ================= segment engine =================
+   Every section below the filter bar is recomputed in the browser from two
+   baked-in tables: one row per user (SEG.users) and one row per user-day-build
+   (SEG.facts). So a filtered DAU is a genuine distinct-user count for the
+   selected segment, not a total scaled down by a ratio. Revenue is carried as
+   integer micro-USD in the payload and converted here. */
+const SEG = DATA.seg, S_U = SEG.users, S_F = SEG.facts;
+const NU = S_U.co.length, NF = S_F.u.length, NDAY = SEG.days.length;
+const DAYS = SEG.days, VERS = SEG.versions, LASTDAY = NDAY - 1;
+const MU = 1e-6;
+const isoDay = s => String(s).replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3');
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+let NOWMIN = 0; for (let i=0;i<NU;i++) if (S_U.lt[i] > NOWMIN) NOWMIN = S_U.lt[i];
+
+/* per-user active-day index (CSR). Independent of the filter, so built once. */
+const UDoff = new Int32Array(NU+1);
+for (let k=0;k<NF;k++) UDoff[S_F.u[k]+1]++;
+for (let i=0;i<NU;i++) UDoff[i+1] += UDoff[i];
+const UDday = new Int16Array(NF);
+{ const cur = Int32Array.from(UDoff.subarray(0,NU));
+  for (let k=0;k<NF;k++) UDday[cur[S_F.u[k]]++] = S_F.d[k]; }
+function active(i, day){
+  for (let k=UDoff[i]; k<UDoff[i+1]; k++) if (UDday[k]===day) return true;
+  return false;
+}
+
+/* ---- filter state ---- */
+const FIL = { co:new Set(), ca:new Set() };
+/* version-comparison / swimlane controls, kept outside renderAll so the user's
+   choices survive a filter change */
+const VS = { a:null, b:null, hours:24,
+             mets:new Set(['dau','inst','arpu','arppu','d1','d3','d7']) };
+let MASK = new Uint8Array(NU), NSEL = 0;
+function buildMask(){
+  const useCo = FIL.co.size>0, useCa = FIL.ca.size>0;
+  MASK = new Uint8Array(NU); NSEL = 0;
+  for (let i=0;i<NU;i++){
+    if (useCo && !FIL.co.has(S_U.co[i])) continue;
+    if (useCa && !FIL.ca.has(S_U.ca[i])) continue;
+    MASK[i] = 1; NSEL++;
+  }
+}
+
+/* ---- rebuild every date-level aggregate for the current selection ---- */
+let AGG = null;
+function computeAgg(){
+  const dau=new Int32Array(NDAY), newu=new Int32Array(NDAY), sess=new Int32Array(NDAY),
+        imps=new Int32Array(NDAY), pay=new Int32Array(NDAY), adv=new Int32Array(NDAY),
+        iap=new Float64Array(NDAY), iaa=new Float64Array(NDAY);
+  const lD=new Int32Array(NU).fill(-1), lP=new Int32Array(NU).fill(-1), lA=new Int32Array(NU).fill(-1);
+  const dv = new Map();
+  for (let k=0;k<NF;k++){
+    const u=S_F.u[k]; if (!MASK[u]) continue;
+    const d=S_F.d[k], v=S_F.v[k];
+    if (lD[u]!==d){ dau[d]++; lD[u]=d; }          // facts are sorted by (user, day)
+    sess[d]+=S_F.sess[k]; imps[d]+=S_F.imp[k];
+    iap[d]+=S_F.iap[k]; iaa[d]+=S_F.adr[k];
+    if (S_F.iap[k]>0 && lP[u]!==d){ pay[d]++; lP[u]=d; }
+    if (S_F.imp[k]>0 && lA[u]!==d){ adv[d]++; lA[u]=d; }
+    if (v>=0){ const key=d*100+v; dv.set(key,(dv.get(key)||0)+1); }
+  }
+  const cU=new Int32Array(SEG.countries.length), cR=new Float64Array(SEG.countries.length);
+  const coh=[]; for (let i=0;i<NDAY;i++) coh.push([]);
+  for (let i=0;i<NU;i++){
+    if (!MASK[i]) continue;
+    cU[S_U.co[i]]++; cR[S_U.co[i]] += (S_U.iap[i]+S_U.adr[i])*MU;
+    if (S_U.fo[i]){ newu[S_U.fd[i]]++; coh[S_U.fd[i]].push(i); }
+  }
+  const daily = DAYS.map((d,i)=>({d, dau:dau[i], new_users:newu[i], sessions:sess[i],
+    iaa_rev:+(iaa[i]*MU).toFixed(4), iap_rev:+(iap[i]*MU).toFixed(2),
+    impressions:imps[i], ad_viewers:adv[i], payers:pay[i]}));
+  const retention = [];
+  coh.forEach((us,d)=>{ if (!us.length) return;
+    const r = {cohort:isoDay(DAYS[d]), size:us.length};
+    [1,3,7,14].forEach(n=>{ let a=0; for (const i of us) if (active(i,d+n)) a++;
+      r['d'+n] = +(100*a/us.length).toFixed(1); });
+    retention.push(r); });
+  const act=new Int32Array(21), elg=new Int32Array(21);
+  coh.forEach((us,d)=>{ for (const i of us) for (let dd=0; dd<=20; dd++){
+    if (d+dd>LASTDAY) break; elg[dd]++; if (active(i,d+dd)) act[dd]++; } });
+  const ret_curve = Array.from({length:21},(_,dd)=>({dd, active:act[dd], eligible:elg[dd]}));
+  const dau_version = [];
+  dv.forEach((n,key)=> dau_version.push({d:DAYS[(key/100)|0], v:VERS[key%100], users:n}));
+  dau_version.sort((a,b)=> a.d<b.d?-1 : a.d>b.d?1 : a.v-b.v);
+  const geo = SEG.countries.map((n,i)=>({country:n, users:cU[i], rev:+cR[i].toFixed(2)}))
+    .filter(r=>r.users>0).sort((a,b)=>b.users-a.users).slice(0,12);
+  return {daily, retention, ret_curve, dau_version, geo};
+}
+
+/* ---- per-build daily metrics, for the version comparison ---- */
+function versionDaily(v){
+  const dau=new Int32Array(NDAY), pay=new Int32Array(NDAY), inst=new Int32Array(NDAY),
+        iap=new Float64Array(NDAY), rev=new Float64Array(NDAY);
+  const lD=new Int32Array(NU).fill(-1), lP=new Int32Array(NU).fill(-1);
+  for (let k=0;k<NF;k++){
+    if (S_F.v[k]!==v) continue;
+    const u=S_F.u[k]; if (!MASK[u]) continue;
+    const d=S_F.d[k];
+    if (lD[u]!==d){ dau[d]++; lD[u]=d; }
+    iap[d]+=S_F.iap[k]*MU; rev[d]+=(S_F.iap[k]+S_F.adr[k])*MU;
+    if (S_F.iap[k]>0 && lP[u]!==d){ pay[d]++; lP[u]=d; }
+  }
+  // installs and retention are keyed on the build the user INSTALLED on
+  const coh=[]; for (let i=0;i<NDAY;i++) coh.push([]);
+  for (let i=0;i<NU;i++)
+    if (MASK[i] && S_U.fo[i] && S_U.fv[i]===v){ inst[S_U.fd[i]]++; coh[S_U.fd[i]].push(i); }
+  const ret = {};
+  [1,3,7].forEach(n=>{ ret[n] = DAYS.map((_,d)=>{
+    const us=coh[d]; if (!us.length || d+n>LASTDAY) return null;
+    let a=0; for (const i of us) if (active(i,d+n)) a++;
+    return 100*a/us.length; }); });
+  return {dau, pay, inst, iap, rev, ret};
+}
+
+/* ---- swimlane rows: one lane per user, x measured from their own install ---- */
+function laneSet(v, minHours, kind){
+  const cut = NOWMIN - minHours*60, out = [];
+  let n = 0;
+  for (let i=0;i<NU;i++){
+    if (!MASK[i] || S_U.fv[i]!==v || S_U.ft[i] > cut) continue;
+    n++;
+    if (kind==='life'){ out.push([0, (S_U.lt[i]-S_U.ft[i])/60]); }
+    else if (S_U.frt[i] >= 0){ out.push([(S_U.frt[i]-S_U.ft[i])/60, (S_U.lrt[i]-S_U.ft[i])/60]); }
+  }
+  out.sort((a,b)=> (b[1]-b[0]) - (a[1]-a[0]) || b[1]-a[1]);
+  return {lanes:out, n};                       // n = all eligible players (the denominator)
+}
+
+/* ---- multi-select control ---- */
+const MS_RESET = [];
+function multiSelect(host, label, names, cnts, sel, onChange){
+  const wrap = document.createElement('div'); wrap.className = 'ms';
+  wrap.innerHTML = `<button></button><div class="panel">
+    <input type="search" placeholder="Search ${esc(label.toLowerCase())}…">
+    <div class="acts"><a data-a="all">Select all shown</a><a data-a="none">Clear</a></div>
+    <div class="list"></div></div>`;
+  host.appendChild(wrap);
+  const btn=wrap.querySelector('button'), panel=wrap.querySelector('.panel'),
+        list=wrap.querySelector('.list'), search=wrap.querySelector('input');
+  const order = names.map((_,i)=>i).sort((a,b)=> cnts[b]-cnts[a] || (names[a]<names[b]?-1:1));
+  const paint = ()=>{ btn.innerHTML = esc(label) +
+    (sel.size ? `<span class="cnt">${sel.size}</span>` : ` <span class="dim">all</span>`); };
+  list.innerHTML = order.map(i =>
+    `<label class="opt" data-i="${i}"><input type="checkbox" value="${i}"${sel.has(i)?' checked':''}>` +
+    `<span>${esc(names[i])}</span><span class="n">${cnts[i].toLocaleString()}</span></label>`).join('');
+  list.addEventListener('change', e=>{
+    const i = +e.target.value;
+    e.target.checked ? sel.add(i) : sel.delete(i);
+    paint(); onChange(); });
+  search.addEventListener('input', ()=>{ const q = search.value.toLowerCase();
+    list.querySelectorAll('.opt').forEach(o=>{
+      o.style.display = names[+o.dataset.i].toLowerCase().includes(q) ? '' : 'none'; }); });
+  wrap.querySelector('.acts').addEventListener('click', e=>{
+    const a = e.target.dataset.a; if (!a) return;
+    list.querySelectorAll('.opt').forEach(o=>{
+      if (o.style.display === 'none') return;
+      const i = +o.dataset.i, box = o.querySelector('input');
+      if (a==='all'){ sel.add(i); box.checked = true; } else { sel.delete(i); box.checked = false; } });
+    paint(); onChange(); });
+  btn.addEventListener('click', e=>{ e.stopPropagation();
+    document.querySelectorAll('.ms.open').forEach(m=>{ if (m!==wrap) m.classList.remove('open'); });
+    wrap.classList.toggle('open'); });
+  panel.addEventListener('click', e=>e.stopPropagation());
+  MS_RESET.push(()=>{ sel.clear(); list.querySelectorAll('input[type=checkbox]').forEach(b=>b.checked=false); paint(); });
+  paint();
+}
+document.addEventListener('click', ()=>
+  document.querySelectorAll('.ms.open').forEach(m=>m.classList.remove('open')));
+
+/* ---- filter bar ---- */
+{
+  const cnt = f => { const c = new Int32Array(f==='co'?SEG.countries.length:SEG.campaigns.length);
+    for (let i=0;i<NU;i++) c[S_U[f][i]]++; return c; };
+  const host = document.getElementById('filters');
+  multiSelect(host, 'Country',  SEG.countries, cnt('co'), FIL.co, refresh);
+  multiSelect(host, 'Campaign', SEG.campaigns, cnt('ca'), FIL.ca, refresh);
+  const b = document.createElement('button'); b.className='btn'; b.textContent='Reset';
+  b.onclick = ()=>{ MS_RESET.forEach(f=>f()); refresh(); };
+  host.appendChild(b);
+  const s = document.createElement('div'); s.className='fstat'; s.id='fstat'; host.appendChild(s);
+}
+
+function refresh(){
+  buildMask();
+  AGG = computeAgg();
+  const pct = (100*NSEL/NU).toFixed(NSEL===NU?0:1);
+  document.getElementById('fstat').innerHTML =
+    `<b>${NSEL.toLocaleString()}</b> of ${NU.toLocaleString()} users (${pct}%)` +
+    (FIL.ca.size ? ' · campaign known for 45% of users only' : '');
+  renderAll();
+}
+
 /* ---------- data prep ---------- */
-const daily = DATA.daily;
+function renderAll(){
+document.getElementById('grid').innerHTML = '';
+const daily = AGG.daily;
 const dates = daily.map(r=>r.d);
 const lastFull = daily[daily.length-2], today = daily[daily.length-1];
 const totIAP = daily.reduce((s,r)=>s+r.iap_rev,0);
@@ -167,9 +405,9 @@ const LAST = new Date(String(dates[dates.length-1]).replace(/(\d{4})(\d{2})(\d{2
 const isoD = s => String(s).replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3');
 const monthDay = s => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+String(s).slice(4,6)-1]+' '+ +String(s).slice(6,8);
 // weighted retention from mature cohorts
-const mature = k => { const rows = DATA.retention.filter(r=>r[k]>0 || (r.size>50 && r[k]===0));
+const mature = k => { const rows = AGG.retention.filter(r=>r[k]>0 || (r.size>50 && r[k]===0));
   const cut = {d1:1,d3:3,d7:7,d14:14}[k];
-  const ok = DATA.retention.filter(r=>{
+  const ok = AGG.retention.filter(r=>{
     const age = (LAST - new Date(r.cohort))/864e5; return age>cut && r.size>=50; });
   const num = ok.reduce((s,r)=>s+r.size*r[k]/100,0), den = ok.reduce((s,r)=>s+r.size,0);
   return den? (100*num/den):0; };
@@ -193,12 +431,13 @@ document.getElementById('tiles').innerHTML = tiles.map(t=>
 /* ---------- 1. DAU by version (ordinal blue ramp — version is ordered) ---------- */
 {
 const ramp = ['#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab','#104281'];
-const vers = [...new Set(DATA.dau_version.map(r=>r.v))].filter(v=>v!=null).sort((a,b)=>a-b);
-const byVol = {}; DATA.dau_version.forEach(r=>{ byVol[r.v]=(byVol[r.v]||0)+r.users; });
-const top = vers.filter(v=>byVol[v]>500);
+const vers = [...new Set(AGG.dau_version.map(r=>r.v))].filter(v=>v!=null).sort((a,b)=>a-b);
+const byVol = {}; AGG.dau_version.forEach(r=>{ byVol[r.v]=(byVol[r.v]||0)+r.users; });
+const totUD = vers.reduce((s,v)=>s+byVol[v],0);
+const top = vers.filter(v=>byVol[v] > Math.max(20, totUD*0.02)).slice(-8);
 const groups = [...top]; // ascending version order
 const c = card('DAU by app version', 'Distinct users per day, stacked by build (users on several builds in one day count once per build). Minor builds (<500 user-days) folded into “older”. Darker = newer build.', {wide:true});
-const map = {}; DATA.dau_version.forEach(r=>{ map[r.d] = map[r.d]||{}; map[r.d][r.v]=r.users; });
+const map = {}; AGG.dau_version.forEach(r=>{ map[r.d] = map[r.d]||{}; map[r.d][r.v]=r.users; });
 const stacks = [{name:'older', color:'#9a988f',
     values: dates.map(d=> vers.filter(v=>!groups.includes(v)).reduce((s,v)=>s+(map[d]?.[v]||0),0))}]
   .concat(groups.map((v,i)=>({name:'v'+v, color: ramp[Math.min(i, ramp.length-1)],
@@ -233,7 +472,7 @@ timeChart(c, {dates, yFmt:fmt$,
 /* ---------- 4. Retention curve ---------- */
 {
 const c = card('Retention curve', '% of eligible installs active exactly N days after first_open (classic day-N). Cohorts only count toward day N once they are old enough.');
-const pts = DATA.ret_curve.filter(r=>r.dd<=14).map(r=>({dd:r.dd, v: 100*r.active/Math.max(r.eligible,1)}));
+const pts = AGG.ret_curve.filter(r=>r.dd<=14).map(r=>({dd:r.dd, v: 100*r.active/Math.max(r.eligible,1)}));
 const W=860,H=230,P={l:44,r:14,t:10,b:22};
 const svg = el('svg',{viewBox:`0 0 ${W} ${H}`},c);
 const max = 30;
@@ -257,7 +496,7 @@ pts.slice(1).forEach(p=>{
 {
 const c = card('Retention by install cohort', 'Rows = install day (cohorts ≥50 installs). Cells blank where the cohort is not old enough yet.', {wide:true});
 const ramp=['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab'];
-const rows = DATA.retention.filter(r=>r.size>=50);
+const rows = AGG.retention.filter(r=>r.size>=50);
 const today_ = LAST;
 const cell = (r,k,cut)=>{
   const age = (today_ - new Date(r.cohort))/864e5;
@@ -273,7 +512,7 @@ c.insertAdjacentHTML('beforeend',
 
 /* ---------- 6. Ad funnel ---------- */
 {
-const c = card('Ad fill rate — interstitial is broken', 'Fill rate = successful ad_request_status ÷ ad_request. Interstitial fills <2% and almost never shows; rewarded fills ~20–30%.');
+const c = card('Ad fill rate — interstitial is broken<span class="badge" title="Event-level metric with no user dimension in the payload - the country/campaign filter does not apply">whole app</span>', 'Fill rate = successful ad_request_status ÷ ad_request. Interstitial fills <2% and almost never shows; rewarded fills ~20–30%.');
 const days2 = [...new Set(DATA.ad_funnel.map(r=>r.d))].sort();
 const get = (d,t)=> DATA.ad_funnel.find(r=>r.d===d && r.ad_type===t) || {requests:0,fills:0,shows:0};
 const fr = t => days2.map(d=>{ const r=get(d,t); return r.requests? 100*r.fills/r.requests : null; });
@@ -288,21 +527,21 @@ timeChart(c, {dates: days2, yFmt:v=>v.toFixed(0)+'%',
 
 /* ---------- 7. IAA by placement ---------- */
 {
-const c = card('Ad revenue by placement', 'ad_impression_MAX rewarded placements, whole window. “(none)” = impressions missing the ad_placement param.');
+const c = card('Ad revenue by placement<span class="badge" title="Event-level metric with no user dimension in the payload - the country/campaign filter does not apply">whole app</span>', 'ad_impression_MAX rewarded placements, whole window. “(none)” = impressions missing the ad_placement param.');
 hbars(c, DATA.iaa_by_placement.slice(0,10).map(r=>({name:r.pl, v:r.rev, imps:r.imps})),
   {color:css('--series-2'), vFmt:fmt$, tipRow:r=>`<b>${r.name}</b><br>${fmt$(r.v)} · ${r.imps} impressions<br>eCPM ${fmt$(1000*r.v/r.imps)}`});
 }
 
 /* ---------- 8. IAP by product ---------- */
 {
-const c = card('IAP revenue by product', 'Store-validated purchases (since ~Jul 20 only). Product ids shortened by their com.idle.tiny prefix.');
+const c = card('IAP revenue by product<span class="badge" title="Event-level metric with no user dimension in the payload - the country/campaign filter does not apply">whole app</span>', 'Store-validated purchases (since ~Jul 20 only). Product ids shortened by their com.idle.tiny prefix.');
 hbars(c, DATA.iap_by_product.map(r=>({name:r.product.replace('com.idle.tiny.',''), v:r.rev, buys:r.buys, buyers:r.buyers})),
   {color:css('--series-1'), vFmt:fmt$, tipRow:r=>`<b>${r.name}</b><br>${fmt$(r.v)} · ${r.buys} buys · ${r.buyers} buyers`});
 }
 
 /* ---------- 9. Levels ---------- */
 {
-const c = card('Level funnel & difficulty', 'Line = distinct users starting each level (levels 2–60). Bars = loss rate (losses ÷ attempts). Spikes mark difficulty walls.', {wide:true});
+const c = card('Level funnel & difficulty<span class="badge" title="Event-level metric with no user dimension in the payload - the country/campaign filter does not apply">whole app</span>', 'Line = distinct users starting each level (levels 2–60). Bars = loss rate (losses ÷ attempts). Spikes mark difficulty walls.', {wide:true});
 const rows = DATA.levels.filter(r=>r.lvl>=2);
 const lr = rows.map(r=> (r.wins+r.losses)? 100*r.losses/(r.wins+r.losses) : 0);
 const maxS = Math.max(...rows.map(r=>r.starters));
@@ -333,8 +572,178 @@ rows.forEach((r,i)=>{ const dot=el('circle',{cx:x(i),cy:yS(r.starters),r:2.4,fil
 const c = card('Users vs revenue by country', 'Traffic is low-monetizing geos; nearly all revenue is US/UK. Top 12 countries by users.', {wide:true});
 c.insertAdjacentHTML('beforeend',
   `<div style="overflow-x:auto"><table><tr><th>country</th><th>users</th><th>revenue</th><th>rev / 1k users</th></tr>`+
-  DATA.geo.map(r=>`<tr><td>${r.country}</td><td>${r.users.toLocaleString()}</td><td>${fmt$(r.rev)}</td><td>${fmt$(1000*r.rev/r.users)}</td></tr>`).join('')+
+  AGG.geo.map(r=>`<tr><td>${r.country}</td><td>${r.users.toLocaleString()}</td><td>${fmt$(r.rev)}</td><td>${fmt$(1000*r.rev/r.users)}</td></tr>`).join('')+
   `</table></div>`);
+}
+
+/* ---------- 11. Build A vs build B ---------- */
+const fmtDur = h => h>=48 ? (h/24).toFixed(1)+'d' : h>=1 ? h.toFixed(1)+'h' : (h*60).toFixed(0)+'m';
+const vName = i => 'v' + VERS[i];
+
+// Default to the two most RECENT builds that each took a real share of installs.
+// (Picking the two biggest by volume tends to pair an old build with a new one,
+// whose lifetimes barely overlap, so almost every cell would be blank.)
+if (VS.a === null){
+  const ic = new Int32Array(VERS.length);
+  let tot = 0;
+  for (let i=0;i<NU;i++) if (S_U.fo[i] && S_U.fv[i]>=0){ ic[S_U.fv[i]]++; tot++; }
+  const floor = Math.max(30, tot*0.01);
+  let recent = [...ic.keys()].filter(i=>ic[i]>=floor);
+  if (recent.length < 2) recent = [...ic.keys()].filter(i=>ic[i]>0);
+  recent.sort((x,y)=>x-y);
+  VS.b = recent[recent.length-1] ?? VERS.length-1;
+  VS.a = recent[recent.length-2] ?? VS.b;
+}
+
+{
+const c = card('Build comparison — day by day',
+  'Two builds side by side over the same days, under the filters above. DAU, revenue and ARPU count activity <i>on that build</i>; ' +
+  'Installs and D1/D3/D7 are keyed on the build the player <i>installed</i> on, so a cohort keeps its build even after it updates. ' +
+  'Retention cells stay blank until the cohort is old enough. ARPU = (IAP + ads) ÷ DAU; ARPPU = IAP ÷ distinct IAP payers.',
+  {wide:true});
+
+const METS = [
+  {k:'dau',   h:'DAU',      f:(S,d)=> S.dau[d] || null,   cnt:1,              fmt:v=>fmtK(v)},
+  {k:'inst',  h:'Installs', f:(S,d)=> S.inst[d] || null,  cnt:1,              fmt:v=>fmtK(v)},
+  {k:'arpu',  h:'ARPU',     f:(S,d)=> S.dau[d] ? S.rev[d]/S.dau[d] : null,    fmt:v=>'$'+v.toFixed(3)},
+  {k:'arppu', h:'ARPPU',    f:(S,d)=> S.pay[d] ? S.iap[d]/S.pay[d] : null,    fmt:v=>'$'+v.toFixed(2)},
+  {k:'d1',    h:'D1',       f:(S,d)=> S.ret[1][d],                            fmt:v=>v.toFixed(1)+'%'},
+  {k:'d3',    h:'D3',       f:(S,d)=> S.ret[3][d],                            fmt:v=>v.toFixed(1)+'%'},
+  {k:'d7',    h:'D7',       f:(S,d)=> S.ret[7][d],                            fmt:v=>v.toFixed(1)+'%'},
+];
+const shown = METS.filter(m=>VS.mets.has(m.k));
+
+const opts = sel => VERS.map((v,i)=>`<option value="${i}"${i===sel?' selected':''}>v${v}</option>`).join('');
+const ctl = document.createElement('div'); ctl.className='ctrls';
+ctl.innerHTML =
+  `<label><span class="vA">■</span> Build A <select class="vsel" id="vselA">${opts(VS.a)}</select></label>` +
+  `<label><span class="vB">■</span> Build B <select class="vsel" id="vselB">${opts(VS.b)}</select></label>` +
+  `<span style="opacity:.6">|</span>` +
+  METS.map(m=>`<label><input type="checkbox" data-m="${m.k}"${VS.mets.has(m.k)?' checked':''}>${m.h}</label>`).join('');
+c.appendChild(ctl);
+ctl.querySelector('#vselA').onchange = e => { VS.a = +e.target.value; renderAll(); };
+ctl.querySelector('#vselB').onchange = e => { VS.b = +e.target.value; renderAll(); };
+ctl.querySelectorAll('input[data-m]').forEach(b => b.onchange = e => {
+  e.target.checked ? VS.mets.add(e.target.dataset.m) : VS.mets.delete(e.target.dataset.m);
+  renderAll(); });
+
+if (!shown.length){
+  c.insertAdjacentHTML('beforeend', `<div class="empty">Pick at least one metric.</div>`);
+} else {
+  const A = versionDaily(VS.a), B = versionDaily(VS.b);
+  const rows = DAYS.map((_,d)=>d).filter(d =>
+    A.dau[d] || B.dau[d] || A.inst[d] || B.inst[d]);
+  if (!rows.length){
+    c.insertAdjacentHTML('beforeend',
+      `<div class="empty">No activity on ${vName(VS.a)} or ${vName(VS.b)} for this selection.</div>`);
+  } else {
+    const cell = (S, other, d, m) => {
+      const v = m.f(S,d);
+      if (v === null || v === undefined) return '<td class="na">·</td>';
+      const o = other ? m.f(other,d) : null;
+      let mark = '';
+      // A tiny A-side base turns every delta into a meaningless four-digit percent
+      if (other && o !== null && o !== undefined && o !== 0 && !(m.cnt && o < 30)){
+        const rel = (v-o)/Math.abs(o);
+        if (Math.abs(rel) >= 0.05)
+          mark = ` <span class="${rel>0?'up':'dn'}" style="font-size:10px">${rel>0?'▲':'▼'}${(100*Math.abs(rel)).toFixed(0)}%</span>`;
+      }
+      return `<td>${m.fmt(v)}${mark}</td>`;
+    };
+    const head =
+      `<tr><th></th><th class="grp vA" colspan="${shown.length}" style="border-bottom:2px solid var(--series-1)">${vName(VS.a)}</th>` +
+      `<th class="grp vB" colspan="${shown.length}" style="border-bottom:2px solid var(--series-2)">${vName(VS.b)} <span style="font-weight:400;color:var(--text-muted)">(vs A)</span></th></tr>` +
+      `<tr><th>date</th>${shown.map(m=>`<th>${m.h}</th>`).join('')}${shown.map(m=>`<th>${m.h}</th>`).join('')}</tr>`;
+    const body = rows.map(d =>
+      `<tr><td>${isoDay(DAYS[d]).slice(5)}</td>` +
+      shown.map(m=>cell(A,null,d,m)).join('') +
+      shown.map(m=>cell(B,A,d,m)).join('') + `</tr>`).join('');
+    c.insertAdjacentHTML('beforeend',
+      `<div style="overflow-x:auto;max-height:520px"><table>${head}${body}</table></div>`);
+  }
+}
+}
+
+/* ---------- 12 & 13. Swimlanes ---------- */
+function swimlane(c, series, {h=300, unit='h'}){
+  const W=860, P={l:44,r:12,t:8,b:26};
+  const svg = el('svg',{viewBox:`0 0 ${W} ${h}`}, c);
+  const ih = h-P.t-P.b, iw = W-P.l-P.r;
+  let xmax = 0;
+  series.forEach(s=>s.lanes.forEach(l=>{ if (l[1]>xmax) xmax=l[1]; }));
+  if (!(xmax>0)) xmax = 1;
+  const x = v => P.l + Math.min(v,xmax)/xmax*iw;
+  for (let t=0;t<=4;t++){
+    const v = xmax*t/4, xx = x(v);
+    el('line',{x1:xx,x2:xx,y1:P.t,y2:P.t+ih,class:'gridline'},svg);
+    el('text',{x:xx,y:h-8,'text-anchor':'middle'},svg).textContent = fmtDur(v);
+  }
+  for (let t=0;t<=4;t++){
+    const yy = P.t + ih*t/4;
+    el('text',{x:P.l-6,y:yy+3,'text-anchor':'end'},svg).textContent = (t*25)+'%';
+  }
+  el('line',{x1:P.l,x2:P.l,y1:P.t,y2:P.t+ih,class:'axis'},svg);
+  series.forEach(s=>{
+    if (!s.n || !s.lanes.length) return;
+    // Lanes occupy ranks 0..lanes.length-1 of s.n players; ranks past the end are
+    // players with nothing to draw (never monetized), so the filled height itself
+    // is the share of the build that has a lane. Walk the lanes we do have rather
+    // than sampling ranks, or a thin band would mostly be missed.
+    const L = s.lanes.length, stride = Math.max(1, Math.ceil(L/1200));
+    const rh = Math.max(1, ih*stride/s.n);
+    for (let r=0; r<L; r+=stride){
+      const lane = s.lanes[r];
+      el('rect',{x:x(lane[0]), y:P.t + ih*r/s.n, width:Math.max(1, x(lane[1])-x(lane[0])),
+        height:rh, fill:s.color, opacity:0.5},svg);
+    }
+  });
+  const hit = el('rect',{x:P.l,y:P.t,width:iw,height:ih,fill:'transparent'},svg);
+  hit.addEventListener('mousemove', ev=>{
+    const box = svg.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(0.999, ((ev.clientY-box.top)/box.height*h - P.t)/ih));
+    showTip(series.map(s=>{
+      if (!s.n) return `<b>${s.name}</b>: no players`;
+      const lane = s.lanes[Math.floor(pct*s.n)];
+      return `<b>${s.name}</b> — ${(100*pct).toFixed(0)}th pct of ${s.n.toLocaleString()}<br>` +
+        (lane ? `lasted ${fmtDur(lane[1]-lane[0])}` + (lane[0]>0 ? ` · started +${fmtDur(lane[0])}` : '')
+              : 'never monetized');
+    }).join('<br>'), ev);
+  });
+  hit.addEventListener('mouseleave', hideTip);
+}
+
+{
+const HOPTS = [0,6,12,24,48,72,168];
+const mk = (c, kind) => {
+  const ctl = document.createElement('div'); ctl.className='ctrls';
+  ctl.innerHTML = `<label>Only players first seen at least
+    <select class="vsel" id="hsel_${kind}">${HOPTS.map(o=>
+      `<option value="${o}"${o===VS.hours?' selected':''}>${o===0?'0h (all)':o+'h'}</option>`).join('')}
+    </select> ago</label>`;
+  c.appendChild(ctl);
+  ctl.querySelector('select').onchange = e => { VS.hours = +e.target.value; renderAll(); };
+  const A = laneSet(VS.a, VS.hours, kind), B = laneSet(VS.b, VS.hours, kind);
+  legend(c, [{name:`${vName(VS.a)} (${A.n.toLocaleString()} players)`, color:css('--series-1')},
+             {name:`${vName(VS.b)} (${B.n.toLocaleString()} players)`, color:css('--series-2')}]);
+  if (!A.n && !B.n){
+    c.insertAdjacentHTML('beforeend', `<div class="empty">No players match this selection.</div>`);
+    return;
+  }
+  swimlane(c, [{name:vName(VS.a), color:css('--series-1'), lanes:A.lanes, n:A.n},
+               {name:vName(VS.b), color:css('--series-2'), lanes:B.lanes, n:B.n}], {});
+};
+
+mk(card('Lifetime swimlanes — ' + vName(VS.a) + ' vs ' + vName(VS.b),
+  'One horizontal lane per player: from their first event (x=0) to their last. Players are sorted longest-lived first and stacked by ' +
+  '<b>normalized rank</b> — the y axis is “top N% of this build’s players”, so two builds with very different player counts overlay directly. ' +
+  'x is time since that player’s own install, not calendar time. The “at least X hours” cut drops players too new to have had a chance to churn.',
+  {wide:true}), 'life');
+
+mk(card('Revenue swimlanes — ' + vName(VS.a) + ' vs ' + vName(VS.b),
+  'Same normalization, but each lane spans a player’s <b>first to last revenue event</b> (IAP or ad impression), measured from their install. ' +
+  'Players who never earned revenue occupy their rank with no lane, so the filled height is the share of the build that ever monetized ' +
+  'and the width is how long they kept monetizing.',
+  {wide:true}), 'rev');
 }
 
 document.getElementById('caveats').innerHTML =
@@ -342,7 +751,16 @@ document.getElementById('caveats').innerHTML =
   `Users = user_pseudo_id (device-scoped; player_id coverage is too low to use). ` +
   `IAA revenue uses ad_impression_MAX only — ad_impression and ad_impression_rocket are duplicate logs of the same impressions (~$80 each, not additive). ` +
   `IAP revenue = event_value_in_usd on in_app_purchase, which only started reporting with build 15 (~Jul 20); earlier real IAP revenue, if any, is not in BigQuery. ` +
-  `Retention is day-N (active exactly N days after install), cohorted by first_open. All figures UTC.`;
+  `Retention is day-N (active exactly N days after install), cohorted by first_open. All figures UTC. ` +
+  `<b>Filters.</b> Country is the geo of the player's first event (IP-based, so it is a rough proxy). ` +
+  `Campaign comes from the AppsFlyer install exports joined on appsflyer_id and is only known for ` +
+  `${(100*SEG.users.ca.filter(i=>SEG.campaigns[i]!=='(unattributed)').length/NU).toFixed(0)}% of users — ` +
+  `the rest sit in “(unattributed)”, so a campaign selection can never sum back to the app total. ` +
+  `Cards marked “whole app” are event-level metrics with no user dimension and ignore the filters. ` +
+  `In the build comparison, DAU/ARPU/ARPPU count activity on that build while Installs and D1/D3/D7 follow the build the player installed on.`;
+}
+
+refresh();
 </script>
 </body>
 </html>
