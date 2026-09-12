@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Regenerate the Tiny Knight Fall KPI dashboard (index.html) from BigQuery.
+"""Regenerate the Tiny Knight Fall KPI dashboard (kpi.html) from BigQuery.
 
 The dashboard is a single self-contained HTML file whose data lives in one baked-in
 `const DATA = {...}` object. This script re-runs every underlying query against the
@@ -10,7 +10,7 @@ GA4/Firebase export and rewrites that object, so refreshing the dashboard is:
 
 Queries go through `bq_helper.run` (read-only, byte-capped, your own Google identity
 via Mirror). `template.html` holds the page with a `/*__DATA__*/` placeholder and
-self-updating date logic; it is created from index.html on first run and reused after.
+self-updating date logic; it is created from kpi.html on first run and reused after.
 
 All metric definitions were validated to reproduce the prior dashboard exactly on
 overlapping days. See README.md for the full definitions and caveats.
@@ -366,7 +366,9 @@ def make_template(index_html: str) -> str:
 
 
 def main():
-    index = HERE / "index.html"
+    # kpi.html, not index.html: index.html is the hand-written hub that links the
+    # reports together, and is not generated from this template.
+    index = HERE / "kpi.html"
     template = HERE / "template.html"
     if not template.exists():
         template.write_text(make_template(index.read_text(encoding="utf-8")),
