@@ -209,7 +209,7 @@ def player_summaries(lo: str, hi: str):
     WHERE u.af_id IS NOT NULL
     """
     dry_run_bytes(sql)
-    return run(sql, gib=4.5, max_rows=100_000)
+    return run(sql, gib=6, max_rows=100_000)
 
 
 def main() -> None:
