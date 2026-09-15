@@ -29,6 +29,17 @@ DATASET = "analytics_538412813"
 TBL = f"`{PROJECT}.{DATASET}.events_intraday_*`"
 HERE = Path(__file__).parent
 
+# Major app version as an integer.
+# app_info.version was a bare integer string ("24", "25") up to v25, but v26 ships
+# as "26.2". A plain SAFE_CAST(... AS INT64) returns NULL for that, and the
+# IS NOT NULL filters below then dropped the entire version from every chart and
+# from the segment cube. Take the part before the first dot instead.
+# NOTE: this deliberately folds any 26.x build into a single "26". If the game ever
+# ships two 26.x builds at once and you need to tell them apart, the cube's version
+# axis has to become a string, which also means touching computeAgg() in
+# template.html - see the version comparison UI.
+VER = "SAFE_CAST(SPLIT(app_info.version, '.')[OFFSET(0)] AS INT64)"
+
 # Reusable SQL fragments -------------------------------------------------------
 # scalar extract of an event_param by key
 P_STR = lambda k: f"(SELECT p.value.string_value FROM UNNEST(event_params) p WHERE p.key='{k}')"
@@ -51,10 +62,10 @@ def build_data(lo: str, hi: str) -> dict:
 
     # 1. DAU by app version --------------------------------------------------
     data["dau_version"] = js(run(f"""
-        SELECT event_date d, SAFE_CAST(app_info.version AS INT64) v,
+        SELECT event_date d, {VER} v,
                COUNT(DISTINCT user_pseudo_id) users
         FROM {TBL}
-        WHERE {suffix} AND SAFE_CAST(app_info.version AS INT64) IS NOT NULL
+        WHERE {suffix} AND {VER} IS NOT NULL
         GROUP BY d, v ORDER BY d, v"""))
 
     # 2. Daily KPIs ----------------------------------------------------------
@@ -215,7 +226,7 @@ def build_segments(lo: str, hi: str) -> dict:
     users = run(f"""
         WITH ev AS (
           SELECT user_pseudo_id u, event_timestamp ts, event_name e, event_date d,
-                 SAFE_CAST(app_info.version AS INT64) v,
+                 {VER} v,
                  NULLIF(geo.country,'') c,
                  (SELECT value.string_value FROM UNNEST(user_properties)
                     WHERE key='appsflyer_id') af,
@@ -233,7 +244,7 @@ def build_segments(lo: str, hi: str) -> dict:
         FROM ev GROUP BY u""", gib=6)
 
     facts = run(f"""
-        SELECT user_pseudo_id u, event_date d, SAFE_CAST(app_info.version AS INT64) v,
+        SELECT user_pseudo_id u, event_date d, {VER} v,
                SUM({iap_expr}) iap, SUM({rev_expr} - ({iap_expr})) adr,
                COUNTIF(event_name='session_start') sess,
                COUNTIF(event_name='ad_impression_MAX') imp
