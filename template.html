@@ -280,8 +280,10 @@ function computeAgg(){
     if (d+dd>LASTDAY) break; elg[dd]++; if (active(i,d+dd)) act[dd]++; } });
   const ret_curve = Array.from({length:21},(_,dd)=>({dd, active:act[dd], eligible:elg[dd]}));
   const dau_version = [];
-  dv.forEach((n,key)=> dau_version.push({d:DAYS[(key/100)|0], v:VERS[key%100], users:n}));
-  dau_version.sort((a,b)=> a.d<b.d?-1 : a.d>b.d?1 : a.v-b.v);
+  // vi is the index into VERS; order by it, never by the label. Version labels are
+  // strings ("24", "26.2") and sorting those numerically or lexicographically is wrong.
+  dv.forEach((n,key)=> dau_version.push({d:DAYS[(key/100)|0], vi:key%100, v:VERS[key%100], users:n}));
+  dau_version.sort((a,b)=> a.d<b.d?-1 : a.d>b.d?1 : a.vi-b.vi);
   const geo = SEG.countries.map((n,i)=>({country:n, users:cU[i], rev:+cR[i].toFixed(2)}))
     .filter(r=>r.users>0).sort((a,b)=>b.users-a.users).slice(0,12);
   return {daily, retention, ret_curve, dau_version, geo};
@@ -431,16 +433,17 @@ document.getElementById('tiles').innerHTML = tiles.map(t=>
 /* ---------- 1. DAU by version (ordinal blue ramp — version is ordered) ---------- */
 {
 const ramp = ['#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab','#104281'];
-const vers = [...new Set(AGG.dau_version.map(r=>r.v))].filter(v=>v!=null).sort((a,b)=>a-b);
-const byVol = {}; AGG.dau_version.forEach(r=>{ byVol[r.v]=(byVol[r.v]||0)+r.users; });
+// Work in VERS indices throughout: ascending index == ascending version.
+const vers = [...new Set(AGG.dau_version.map(r=>r.vi))].filter(v=>v!=null).sort((a,b)=>a-b);
+const byVol = {}; AGG.dau_version.forEach(r=>{ byVol[r.vi]=(byVol[r.vi]||0)+r.users; });
 const totUD = vers.reduce((s,v)=>s+byVol[v],0);
 const top = vers.filter(v=>byVol[v] > Math.max(20, totUD*0.02)).slice(-8);
 const groups = [...top]; // ascending version order
 const c = card('DAU by app version', 'Distinct users per day, stacked by build (users on several builds in one day count once per build). Minor builds (<500 user-days) folded into “older”. Darker = newer build.', {wide:true});
-const map = {}; AGG.dau_version.forEach(r=>{ map[r.d] = map[r.d]||{}; map[r.d][r.v]=r.users; });
+const map = {}; AGG.dau_version.forEach(r=>{ map[r.d] = map[r.d]||{}; map[r.d][r.vi]=r.users; });
 const stacks = [{name:'older', color:'#9a988f',
     values: dates.map(d=> vers.filter(v=>!groups.includes(v)).reduce((s,v)=>s+(map[d]?.[v]||0),0))}]
-  .concat(groups.map((v,i)=>({name:'v'+v, color: ramp[Math.min(i, ramp.length-1)],
+  .concat(groups.map((v,i)=>({name:'v'+VERS[v], color: ramp[Math.min(i, ramp.length-1)],
     values: dates.map(d=> map[d]?.[v]||0)})));
 legend(c, stacks.map(s=>({name:s.name, color:s.color})));
 timeChart(c, {dates, stacks, h:250, tipRow: i=>

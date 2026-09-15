@@ -29,16 +29,23 @@ DATASET = "analytics_538412813"
 TBL = f"`{PROJECT}.{DATASET}.events_intraday_*`"
 HERE = Path(__file__).parent
 
-# Major app version as an integer.
-# app_info.version was a bare integer string ("24", "25") up to v25, but v26 ships
-# as "26.2". A plain SAFE_CAST(... AS INT64) returns NULL for that, and the
-# IS NOT NULL filters below then dropped the entire version from every chart and
-# from the segment cube. Take the part before the first dot instead.
-# NOTE: this deliberately folds any 26.x build into a single "26". If the game ever
-# ships two 26.x builds at once and you need to tell them apart, the cube's version
-# axis has to become a string, which also means touching computeAgg() in
-# template.html - see the version comparison UI.
-VER = "SAFE_CAST(SPLIT(app_info.version, '.')[OFFSET(0)] AS INT64)"
+# App version, kept verbatim as the string the app reports.
+# It was a bare integer through v25 ("24", "25") and became dotted at v26 ("26.2"),
+# so anything that casts it to INT64 silently drops the dotted builds. Treat it as
+# an opaque label everywhere and order it with version_key() below; the cube stores
+# version *indices* into a sorted vocabulary, so the labels never need to be numbers.
+VER = "NULLIF(app_info.version, '')"
+
+
+def version_key(v: str) -> tuple:
+    """Order versions the way a human reads them: 9 < 10 < 24 < 26.2 < 26.10.
+
+    Compares dot-separated parts numerically where they are numeric, so plain
+    lexicographic ordering ("10" < "9") never happens. Non-numeric parts sort
+    after numeric ones at the same position rather than raising.
+    """
+    return tuple((0, int(p), "") if p.isdigit() else (1, 0, p)
+                 for p in str(v).split("."))
 
 # Reusable SQL fragments -------------------------------------------------------
 # scalar extract of an event_param by key
@@ -272,7 +279,7 @@ def build_segments(lo: str, hi: str) -> dict:
     ]
     campaigns, p_ix, u_camp = vocab(camp_vals, "(unattributed)")
 
-    versions = sorted({int(v) for v in facts["v"].dropna().unique()})
+    versions = sorted({str(v) for v in facts["v"].dropna().unique()}, key=version_key)
     v_ix = {v: i for i, v in enumerate(versions)}
 
     t0 = int(users["ft"].min())  # microseconds; all timestamps become minutes from here
@@ -283,7 +290,7 @@ def build_segments(lo: str, hi: str) -> dict:
     U = {
         "co": [c_ix[v] for v in u_country],
         "ca": [p_ix[v] for v in u_camp],
-        "fv": [v_ix.get(int(v), -1) if pd.notna(v) else -1 for v in users["fv"]],
+        "fv": [v_ix.get(str(v), -1) if pd.notna(v) else -1 for v in users["fv"]],
         "fd": [day_ix[str(d)] for d in users["fd"]],
         "fo": [int(v) for v in users["fo"]],
         "ft": [mins(t) for t in users["ft"]],
@@ -306,7 +313,7 @@ def build_segments(lo: str, hi: str) -> dict:
     F = {
         "u": [u_ix[u] for u in facts["u"]],
         "d": [day_ix[str(d)] for d in facts["d"]],
-        "v": [v_ix.get(int(v), -1) if pd.notna(v) else -1 for v in facts["v"]],
+        "v": [v_ix.get(str(v), -1) if pd.notna(v) else -1 for v in facts["v"]],
         "iap": [micro(x) for x in facts["iap"]],
         "adr": [micro(x) for x in facts["adr"]],
         "sess": [int(x) for x in facts["sess"]],
