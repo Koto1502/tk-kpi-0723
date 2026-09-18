@@ -209,7 +209,8 @@ def player_summaries(lo: str, hi: str):
     WHERE u.af_id IS NOT NULL
     """
     dry_run_bytes(sql)
-    return run(sql, gib=6, max_rows=100_000)
+    # Grows ~0.4 GiB/week: 4.57 on 2026-09-15, so 6 was about to start failing.
+    return run(sql, gib=8, max_rows=100_000)
 
 
 def main() -> None:

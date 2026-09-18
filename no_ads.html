@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tiny Knight Fall — the no-ads sale packs</title>
+<style>
+.viz-root{color-scheme:light;
+  --surface-1:#fcfcfb; --surface-2:#f4f3f0; --border:#e3e1dc;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#78766f;
+  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a;
+  --good:#137a4d; --bad:#c0362f;}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{
+  color-scheme:dark;
+  --surface-1:#1a1a19; --surface-2:#232320; --border:#3a3935;
+  --text-primary:#fff; --text-secondary:#c3c2b7; --text-muted:#96948a;
+  --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+  --good:#4bbd86; --bad:#e66767;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-1)}
+.viz-root{background:var(--surface-1);color:var(--text-primary);
+  font:15px/1.62 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:34px 24px 72px;}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font-size:30px;line-height:1.22;margin:0 0 10px;letter-spacing:-.02em}
+h2{font-size:20px;margin:46px 0 6px;letter-spacing:-.01em;padding-top:18px;
+   border-top:1px solid var(--border)}
+p{margin:10px 0;color:var(--text-secondary);max-width:74ch}
+.sub{color:var(--text-muted);font-size:14px;margin-bottom:8px}
+strong{color:var(--text-primary)}
+a{color:var(--series-1)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:12px;margin:26px 0 8px}
+.tile{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.tile .k{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.tile .v{font-size:26px;font-weight:650;margin:4px 0 2px;letter-spacing:-.02em}
+.tile .n{font-size:12.5px;color:var(--text-muted)}
+.verdict{border-left:3px solid var(--series-2);background:var(--surface-2);
+  padding:14px 18px;border-radius:0 10px 10px 0;margin:22px 0}
+.verdict p{margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:16px 0}
+th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--text-muted);font-weight:600;font-size:12px;text-transform:uppercase;
+   letter-spacing:.04em}
+tr.hl td{background:var(--surface-2);font-weight:600;color:var(--text-primary)}
+.bar{height:15px;border-radius:3px;background:var(--series-1);display:inline-block;
+  vertical-align:middle}
+.bar.sale{background:var(--series-2)}
+.legend{font-size:12.5px;color:var(--text-muted);margin:6px 0 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;
+  margin:0 5px 0 14px;vertical-align:baseline}
+.legend i:first-child{margin-left:0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:0 4px}
+footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--border);
+  font-size:12.5px;color:var(--text-muted)}
+ul{color:var(--text-secondary);max-width:74ch}li{margin:6px 0}
+</style></head>
+<body><div class="viz-root"><div class="wrap">
+
+<div style="font-size:12.5px;margin-bottom:14px">
+  <a href="index.html" style="text-decoration:none">&larr; All reports</a></div>
+
+<h1>The no-ads sale packs</h1>
+<div class="sub">Did v28 remove them, and what would removing them cost?<br>
+  <code>tiny-knightfall-idle-rpg-game</code> · GA4 <code>analytics_538412813</code>
+  + live Play storefront · generated 2026-09-18</div>
+
+<div class="verdict">
+<p><strong>They were not removed.</strong> Two new builds did ship —
+<strong>v28 on 2026-09-16</strong> and <strong>v29 on 2026-09-17</strong> — but players on
+both are still opening and completing purchases of
+<code>skip.ad.permanent.sale</code>, most recently <strong>2026-09-18</strong>.
+All three <code>.sale</code> SKUs are still <code>ACTIVE</code> / <code>AVAILABLE</code> on
+the live Play storefront, and the 2026-09-15 export from game source still specifies them.</p>
+<p><strong>And they are worth far more than they look.</strong> Ad-removal SKUs are
+36.7% of all tracked IAP revenue; the sale variants alone are
+24.6%. Over the last 28 days <code>permanent.sale</code> by itself was
+22% of total revenue. Removing it is a bet on roughly a fifth of the
+game's income.</p>
+</div>
+
+<div class="tiles">
+  <div class="tile"><div class="k">New build live since</div><div class="v">16 Sep</div>
+    <div class="n">v28; v29 followed 17 Sep</div></div>
+  <div class="tile"><div class="k">Ad-removal share of revenue</div>
+    <div class="v">36.7%</div>
+    <div class="n">$5,820 of $15,841 lifetime</div></div>
+  <div class="tile"><div class="k">Sale packs alone</div>
+    <div class="v">24.6%</div><div class="n">of all IAP revenue</div></div>
+  <div class="tile"><div class="k">permanent.sale, last 28d</div>
+    <div class="v">$1,223</div>
+    <div class="n">22% of the period's $5,609</div></div>
+</div>
+
+<h2>1 · Which build, and since when</h2>
+<p>Versions are opaque strings in this export — v26 stamps itself <code>26.2</code>, so any
+integer cast silently drops the newest release. Three builds are newer than v26.2:</p>
+<table><tr><th>Build</th><th>First seen</th><th>Devices (Sept)</th></tr>
+<tr><td>v28</td><td>2026-09-16</td><td>316</td></tr>
+<tr><td>v27.2</td><td>2026-09-16</td><td>7</td></tr>
+<tr><td>v29</td><td>2026-09-17</td><td>206</td></tr></table>
+<p><strong>v28 is the release, live 2026-09-16</strong>, with v29 a day later.
+<code>27.2</code> reached seven devices on one day and looks internal. Combined adoption is
+still only ~500 devices against v24's 3,280 — this player base updates slowly, which caps
+what three days of data can say.</p>
+
+<h2>2 · The packs are still being sold on those builds</h2>
+<p><code>purchase_click</code> shows what the client still <em>offers</em>;
+<code>in_app_purchase</code> shows what Play actually <em>billed</em>. If v28 removed the
+packs, neither should carry a <code>.sale</code> SKU tagged with version 28 or 29.
+Both do:</p>
+<table>
+<tr><th>Signal</th><th>Events</th><th>Last seen</th><th>App versions</th></tr>
+<tr><td>permanent.sale — shop taps</td><td>383</td><td>2026-09-18</td>
+  <td style="text-align:left;font-size:12px">10,15,16,17,18,19,20,21,22,24,25,26.2,28,29,4,8,9</td></tr>
+<tr><td>permanent.sale — purchases</td><td>275</td><td>2026-09-17</td>
+  <td style="text-align:left;font-size:12px">16,17,18,19,20,21,22,24,25,26.2,28,29</td></tr>
+</table>
+<p>The live Play catalogue was re-pulled for this report and diffed against the copy
+committed on 2026-09-16: <strong>82 products, nothing added, removed, repriced or
+deactivated.</strong> Three independent surfaces agree the packs are live. Worth checking
+whether the change actually made the build that was submitted.</p>
+<p><strong>One free win:</strong> <code>skip.ad.annual.sale</code> has never been tapped or
+bought once in the entire export, despite being active on the storefront. If the goal is
+pruning dead sale SKUs, that is the genuinely dead one — and it costs nothing to remove.</p>
+
+<h2>3 · What the packs are actually worth</h2>
+<table>
+<tr><th>SKU</th><th>Purchases</th><th>Revenue</th><th>Share</th><th style="text-align:left">&nbsp;</th></tr>
+<tr><td>permanent.sale</td><td>275</td><td>$3,406</td><td>58.5%</td><td style="text-align:left"><span class="bar sale" style="width:280px"></span></td></tr>
+<tr><td>permanent</td><td>36</td><td>$1,165</td><td>20.0%</td><td style="text-align:left"><span class="bar" style="width:96px"></span></td></tr>
+<tr><td>30days.sale</td><td>87</td><td>$492</td><td>8.5%</td><td style="text-align:left"><span class="bar sale" style="width:40px"></span></td></tr>
+<tr><td>30days</td><td>24</td><td>$285</td><td>4.9%</td><td style="text-align:left"><span class="bar" style="width:23px"></span></td></tr>
+<tr><td>3days</td><td>75</td><td>$249</td><td>4.3%</td><td style="text-align:left"><span class="bar" style="width:20px"></span></td></tr>
+<tr><td>10days</td><td>40</td><td>$223</td><td>3.8%</td><td style="text-align:left"><span class="bar" style="width:18px"></span></td></tr></table>
+<p class="legend"><i style="background:var(--series-2)"></i>sale variants
+  <i style="background:var(--series-1)"></i>full price</p>
+<p><strong>How to read it:</strong> one row per ad-removal product, over the whole tracking
+period (2026-07-20 onward). Revenue is gross USD, not a rate. The shape is the finding —
+<code>permanent.sale</code> at $10.99 out-earns every other ad-removal SKU combined, and
+earns roughly 3&times; its own full-price twin <code>permanent</code> at $29.99, which grants
+the <em>identical</em> reward. The cheap version is not a leak around the expensive one; it
+is the product.</p>
+
+<h2>4 · Why "they'll just buy the $29.99 one" is unlikely</h2>
+<p>This price point already moved once. At <strong>v21 (2026-08-08)</strong> the offer mix
+flipped from mostly-$29.99 to mostly-$10.99: revenue for the $29.99 option fell ~70% per
+capita, but <strong>combined buyers per 1,000 users rose, 9.3 &rarr; 10.5</strong>. That is
+price expanding the market, not cannibalising it — the $10.99 buyers were largely people who
+were never going to pay $29.99. No user has ever bought both SKUs.</p>
+<p>So the question is what share of sale buyers would re-convert at 2.7&times; the price.
+Applied to the last 28 days ($1,223 across ~111 purchases):</p>
+<table>
+<tr><th>If this share re-buys at $29.99</th><th>28-day ad-removal revenue</th>
+  <th>vs $2,042 today</th></tr>
+<tr><td>100%</td><td>$4,155</td><td style="color:var(--good)">+104%</td></tr>
+<tr><td>50%</td><td>$2,487</td><td style="color:var(--good)">+22%</td></tr>
+<tr><td>40%</td><td>$2,154</td><td style="color:var(--good)">+5%</td></tr>
+<tr class="hl"><td>37%</td><td>$2,061</td><td style="color:var(--good)">+1%</td></tr>
+<tr><td>20%</td><td>$1,486</td><td style="color:var(--bad)">-27%</td></tr>
+<tr><td>0%</td><td>$819</td><td style="color:var(--bad)">-60%</td></tr></table>
+<p><strong>More than ~37% of sale buyers must convert at the higher price just to break
+even</strong>, and the v21 episode points the other way. This is arithmetic on a bracket, not
+a forecast — but it frames the bet honestly, and the downside is a fifth of total revenue.</p>
+
+<h2>5 · A trap: do not read v28's ARPDAU as the effect</h2>
+<table>
+<tr><th>Build</th><th>DAU</th><th>Ad-removal taps</th><th>…of which sale</th>
+  <th>Purchases</th><th>…of which sale</th><th>IAP rev / 1k DAU</th></tr>
+<tr><td>v26.2</td><td>679</td><td>3</td><td>0</td><td>1</td><td>1</td><td>$182</td></tr>
+<tr><td>v28</td><td>316</td><td>14</td><td>5</td><td>6</td><td>3</td><td>$820</td></tr>
+<tr><td>v29</td><td>206</td><td>6</td><td>1</td><td>3</td><td>1</td><td>$580</td></tr></table>
+<p>Over the same three days v28 shows roughly 4.5&times; v26.2's revenue per 1,000 DAU and ten
+times the ad-removal tap rate. <strong>None of that is caused by the release.</strong> Three
+days after a rollout, the people on the new build are the ones whose auto-update fired first
+— which correlates with opening the game daily, i.e. the engaged core, who are also the
+payers. Everyone still on v26.2 is the laggard tail. The comparison measures who updates
+fast, not what changed in the build.</p>
+<p>A clean read needs install-date cohorts matched across builds, or simply waiting until
+v28/v29 reach majority adoption — about a week here, judging by v25 and v26.2.</p>
+
+<h2>6 · What to do</h2>
+<ul>
+<li><strong>Confirm the change shipped at all.</strong> Three surfaces say it did not. Check
+  the submitted build before assuming the data is wrong.</li>
+<li><strong>Remove <code>annual.sale</code> now</strong> — zero taps, zero revenue, zero risk.</li>
+<li><strong>Do not remove <code>permanent.sale</code> in one shot.</strong> It is ~22%
+  of revenue. Stage it: drop <code>30days.sale</code> first, or run it as a price test rather
+  than a deletion.</li>
+<li><strong>Wait a week before scoring any of it.</strong> Three days and ~500 devices cannot
+  separate the change from update-speed selection.</li>
+</ul>
+
+<footer>
+Revenue is <strong>gross</strong> — this export has no refund or cancellation event, so
+reconcile against Play Console before booking any figure. SKU comes from
+<code>event_params.product_id</code>; the <code>items</code> array is empty in this app.
+Only <code>events_intraday_*</code> shards exist, so the current day is always partial.
+Full working: <code>notebooks/12_no_ads_sale_pack_removal.ipynb</code>.
+Regenerate: <code>uv run python dashboard/build_no_ads_report.py</code>.
+</footer>
+
+</div></div></body></html>

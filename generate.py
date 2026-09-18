@@ -248,7 +248,7 @@ def build_segments(lo: str, hi: str) -> dict:
           ARRAY_AGG(c  IGNORE NULLS ORDER BY ts LIMIT 1)[SAFE_OFFSET(0)] country,
           ARRAY_AGG(v  IGNORE NULLS ORDER BY ts LIMIT 1)[SAFE_OFFSET(0)] fv,
           ARRAY_AGG(af IGNORE NULLS ORDER BY ts LIMIT 1)[SAFE_OFFSET(0)] af
-        FROM ev GROUP BY u""", gib=6)
+        FROM ev GROUP BY u""", gib=8)
 
     facts = run(f"""
         SELECT user_pseudo_id u, event_date d, {VER} v,
@@ -256,7 +256,7 @@ def build_segments(lo: str, hi: str) -> dict:
                COUNTIF(event_name='session_start') sess,
                COUNTIF(event_name='ad_impression_MAX') imp
         FROM {TBL} WHERE {suffix}
-        GROUP BY u, d, v""", gib=6)
+        GROUP BY u, d, v""", gib=8)
 
     camp_map = campaign_by_af()
 
