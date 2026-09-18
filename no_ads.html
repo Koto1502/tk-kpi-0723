@@ -181,7 +181,49 @@ Applied to the last 28 days ($1,223 across ~111 purchases):</p>
 even</strong>, and the v21 episode points the other way. This is arithmetic on a bracket, not
 a forecast — but it frames the bet honestly, and the downside is a fifth of total revenue.</p>
 
-<h2>5 · A trap: do not read v28's ARPDAU as the effect</h2>
+<h2>5 · Refunds — and the reason this SKU may deserve removal after all</h2>
+<p>GA4 has no refund event, so everything above is gross. The Play Developer API does have
+them: <code>purchases.voidedpurchases.list</code> gives the voided orders and
+<code>orders.get</code> turns each into a SKU and an amount. <strong>Play only serves a
+30-day rolling window</strong> — it rejects any earlier start — so this is a running
+ledger, not a backfill.</p>
+<p>In that window <code>skip.ad.permanent.sale</code> is <strong>the single
+most-refunded SKU in the game</strong>, 7 of 18 refunds:</p>
+<table>
+<tr><th>SKU</th><th>Purchases (30d)</th><th>Refunds</th><th>Rate</th></tr>
+<tr class='hl'><td>skip.ad.permanent.sale</td><td>105</td><td>7</td><td>6.7%</td></tr>
+<tr><td>campaign.51</td><td>57</td><td>3</td><td>5.3%</td></tr>
+<tr><td>membership</td><td>61</td><td>2</td><td>3.3%</td></tr>
+<tr><td>auto.blessing</td><td>50</td><td>2</td><td>4.0%</td></tr>
+<tr><td>package.combo.mythic</td><td>28</td><td>2</td><td>7.1%</td></tr>
+<tr><td>package.promotion</td><td>14</td><td>1</td><td>7.1%</td></tr>
+<tr><td>skip.ad.30days.sale</td><td>33</td><td>1</td><td>3.0%</td></tr>
+<tr><td><em>all SKUs</em></td><td>802</td><td>18</td>
+  <td>2.2%</td></tr></table>
+<p><strong>The reasons are the finding, not the rate.</strong> Across the full ledger,
+<code>permanent.sale</code>'s refunds are <strong>4&times;</strong> not received, <strong>2&times;</strong> defective, <strong>1&times;</strong> 8 — almost all of them players saying
+they <em>paid and did not receive it</em>, or that it was broken. Every other refunded SKU
+in the window shows ordinary noise instead: accidental purchase, friendly fraud, chargeback.
+A 6.7% refund rate against 2.2% overall is elevated; a refund rate
+made of <em>non-delivery claims</em> is a different kind of problem.</p>
+<p>Two readings fit, and this data cannot separate them:</p>
+<ul>
+<li><strong>A delivery bug on the sale SKU's grant path</strong> — players are charged and
+  the entitlement never lands.</li>
+<li><strong>Refund abuse of a cheap permanent entitlement</strong> — buy permanent ad
+  removal at $10.99, claim non-delivery, keep the benefit. "Not received" is the standard
+  claim for this, and a permanent unlock is the natural target.</li>
+</ul>
+<p>Tempting to point at the full-price twin, which shows 0 refunds on 14 purchases — but
+that is too few to mean anything (you would see zero about 37% of the time even at the same
+rate). Client-side grant coverage does not settle it either: it runs ~30% for
+<code>permanent.sale</code> against ~64% for <code>permanent</code>, but per-SKU grant
+coverage is a known instrumentation artifact in this app, ranging 9–73% for reasons that
+have nothing to do with delivery. <strong>Whether players actually receive the entitlement
+is a client and Play Console question, not a telemetry one</strong> — check the order
+status on one of these refunded orders against what the account was granted.</p>
+
+<h2>6 · A trap: do not read v28's ARPDAU as the effect</h2>
 <table>
 <tr><th>Build</th><th>DAU</th><th>Ad-removal taps</th><th>…of which sale</th>
   <th>Purchases</th><th>…of which sale</th><th>IAP rev / 1k DAU</th></tr>
@@ -197,16 +239,30 @@ fast, not what changed in the build.</p>
 <p>A clean read needs install-date cohorts matched across builds, or simply waiting until
 v28/v29 reach majority adoption — about a week here, judging by v25 and v26.2.</p>
 
-<h2>6 · What to do</h2>
+<h2>7 · What to do</h2>
 <ul>
-<li><strong>Confirm the change shipped at all.</strong> Three surfaces say it did not. Check
-  the submitted build before assuming the data is wrong.</li>
+<li><strong>Answer the delivery question first — it decides everything else.</strong> Take
+  one refunded <code>permanent.sale</code> order from the ledger, check in Play Console
+  whether the purchase was acknowledged, and check whether that account holds the
+  entitlement. If players genuinely are not receiving it, that is a bug to fix now and it
+  outranks the pricing question entirely. If they are receiving it and refunding anyway,
+  this is abuse of a cheap permanent unlock — and <em>that</em> is a real argument for
+  removing or restructuring the SKU, independent of revenue.</li>
+<li><strong>Confirm the removal shipped at all.</strong> Four independent signals say it did
+  not, including the client paying out the reward on v28 and v29. Check the submitted build
+  before assuming the data is wrong.</li>
 <li><strong>Remove <code>annual.sale</code> now</strong> — zero taps, zero revenue, zero risk.</li>
-<li><strong>Do not remove <code>permanent.sale</code> in one shot.</strong> It is ~22%
-  of revenue. Stage it: drop <code>30days.sale</code> first, or run it as a price test rather
-  than a deletion.</li>
+<li><strong>Do not delete <code>permanent.sale</code> purely on the pricing argument.</strong>
+  It is ~22% of revenue and break-even needs ~37% of its buyers to
+  re-convert at 2.7&times;. If the refunds turn out to be abuse, restructure it — a
+  non-permanent tier, or a lower-value permanent unlock — rather than removing the price
+  point that does the volume.</li>
 <li><strong>Wait a week before scoring any of it.</strong> Three days and ~500 devices cannot
   separate the change from update-speed selection.</li>
+<li><strong>Run the refund puller on a schedule.</strong> Play discards the window after 30
+  days, so refund history only exists if it is collected as it goes:
+  <code>uv run --with google-api-python-client --with google-auth python
+  dashboard/pull_play_refunds.py</code>.</li>
 </ul>
 
 <footer>
