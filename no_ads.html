@@ -104,10 +104,23 @@ still only ~500 devices against v24's 3,280 — this player base updates slowly,
 what three days of data can say.</p>
 
 <h2>2 · The packs are still being sold on those builds</h2>
-<p><code>purchase_click</code> shows what the client still <em>offers</em>;
-<code>in_app_purchase</code> shows what Play actually <em>billed</em>. If v28 removed the
-packs, neither should carry a <code>.sale</code> SKU tagged with version 28 or 29.
-Both do:</p>
+<p>Four independent signals can answer this, and they are not equally strong.
+<code>purchase_click</code> and <code>iap_purchase_success</code> are <strong>client custom
+events</strong> — good evidence the shop still shows the card, but in principle a stale
+logging call could outlive the UI. <code>in_app_purchase</code> is the
+<strong>Firebase SDK auto-log from Play Billing</strong> — it fires on the billing result
+regardless of what the client shop is displaying, so on its own it cannot prove the offer
+exists. The decisive one is <code>earn</code>: <code>earn.position</code> carries the SKU id
+for shop grants, so it is the client <em>actually paying out the reward</em>.</p>
+<p><strong>All four agree the packs are live on v28 and v29</strong>, including the payouts:</p>
+<table>
+<tr><th>Build</th><th>Reward granted for</th><th>Grants</th><th>Players</th><th>First</th></tr>
+<tr><td>v28</td><td>skip.ad.permanent.sale</td><td>1</td><td>1</td><td>2026-09-16</td></tr>
+<tr><td>v29</td><td>skip.ad.permanent</td><td>2</td><td>2</td><td>2026-09-17</td></tr>
+<tr><td>v28</td><td>skip.ad.permanent</td><td>1</td><td>1</td><td>2026-09-17</td></tr>
+<tr><td>v29</td><td>skip.ad.30days.sale</td><td>1</td><td>1</td><td>2026-09-17</td></tr>
+<tr><td>v29</td><td>skip.ad.permanent.sale</td><td>1</td><td>1</td><td>2026-09-17</td></tr></table>
+<p>And the raw purchase/tap trail:</p>
 <table>
 <tr><th>Signal</th><th>Events</th><th>Last seen</th><th>App versions</th></tr>
 <tr><td>permanent.sale — shop taps</td><td>383</td><td>2026-09-18</td>
@@ -117,8 +130,14 @@ Both do:</p>
 </table>
 <p>The live Play catalogue was re-pulled for this report and diffed against the copy
 committed on 2026-09-16: <strong>82 products, nothing added, removed, repriced or
-deactivated.</strong> Three independent surfaces agree the packs are live. Worth checking
-whether the change actually made the build that was submitted.</p>
+deactivated.</strong> Worth checking whether the change actually made the build that was
+submitted — v29 is the newest build in the data and it is still selling them.</p>
+<p>Two ways the data could have lied here, both ruled out. <strong>Mis-stamped versions</strong>
+(a purchase started before the update and logged after it): no — all nine users involved
+appear on exactly one build, with <code>first_open</code> on that same build, so none of them
+straddles an update. <strong>QA devices</strong>: no — they are nine separate installs in nine
+countries (Switzerland, Spain, Poland, United States &times;2, Germany, Indonesia, South Korea,
+Hong Kong).</p>
 <p><strong>One free win:</strong> <code>skip.ad.annual.sale</code> has never been tapped or
 bought once in the entire export, despite being active on the storefront. If the goal is
 pruning dead sale SKUs, that is the genuinely dead one — and it costs nothing to remove.</p>
