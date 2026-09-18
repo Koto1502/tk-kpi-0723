@@ -211,8 +211,18 @@ v28/v29 reach majority adoption — about a week here, judging by v25 and v26.2.
 
 <footer>
 Revenue is <strong>gross</strong> — this export has no refund or cancellation event, so
-reconcile against Play Console before booking any figure. SKU comes from
-<code>event_params.product_id</code>; the <code>items</code> array is empty in this app.
+reconcile against Play Console before booking any figure. It is also <strong>gross of
+VAT</strong>: Play bakes each country's VAT into the list price outside the US, and
+<strong>75.4% of ad-removal revenue ($4,391 of $5,820) is billed in non-USD</strong>, so
+roughly a tenth of the headline is tax that never becomes your money. The share figures
+above are gross over a gross denominator, and the two <code>permanent</code> variants sell
+into a similar country mix, so this moves absolute dollars rather than the comparison that
+drives the break-even bracket. <strong>Only <code>in_app_purchase</code> carries money</strong>
+— every client-side event (<code>purchase</code>, <code>purchase_click</code>,
+<code>iap_purchase_success</code>, <code>first_purchase</code>) has no value, price or
+currency field, so there is no second revenue signal inside GA4 to reconcile against.
+SKU comes from <code>event_params.product_id</code>; the <code>items</code> array is empty
+in this app.
 Only <code>events_intraday_*</code> shards exist, so the current day is always partial.
 Full working: <code>notebooks/12_no_ads_sale_pack_removal.ipynb</code>.
 Regenerate: <code>uv run python dashboard/build_no_ads_report.py</code>.
