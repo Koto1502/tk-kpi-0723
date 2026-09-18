@@ -17,7 +17,7 @@ body{margin:0;background:var(--surface-1)}
 .viz-root{background:var(--surface-1);color:var(--text-primary);
   font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   padding:30px 24px 64px;}
-.wrap{max-width:1000px;margin:0 auto}
+.wrap{max-width:1000px;margin:0 auto;width:100%;min-width:0}
 h1{font-size:28px;line-height:1.24;margin:0 0 8px;letter-spacing:-.02em}
 h2{font-size:18px;margin:38px 0 6px;letter-spacing:-.01em;padding-top:16px;
    border-top:1px solid var(--border)}
@@ -28,6 +28,13 @@ a{color:var(--series-1)}
 .verdict{border-left:3px solid var(--series-2);background:var(--surface-2);
   padding:14px 18px;border-radius:0 10px 10px 0;margin:20px 0}
 .verdict p{margin:6px 0}
+/* Cells never wrap (an order id or a timestamp splitting across lines is unreadable),
+   so on a narrow screen the table is wider than the viewport. It has to scroll inside
+   its own box — without this wrapper it widens the whole page instead, and the body
+   background stops at the viewport edge leaving a white band down the side. */
+.tw{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  margin:14px 0}
+.tw table{margin:0}
 table{border-collapse:collapse;width:100%;font-size:13px;margin:14px 0}
 th,td{text-align:right;padding:6px 9px;border-bottom:1px solid var(--border);
   white-space:nowrap}
@@ -38,13 +45,27 @@ tr.on td{background:color-mix(in srgb, var(--series-2) 9%, transparent)}
 .hit{color:var(--good);font-weight:650}
 td.zero{color:var(--text-muted)}
 pre{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
-  padding:13px 15px;overflow-x:auto;font:12px/1.5 ui-monospace,Consolas,monospace;
-  color:var(--text-primary);margin:12px 0}
+  padding:13px 15px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  font:12px/1.5 ui-monospace,Consolas,monospace;
+  color:var(--text-primary);margin:12px 0;max-width:100%}
 code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;
   background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:0 4px}
 ul{color:var(--text-secondary);max-width:76ch}li{margin:5px 0}
 footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--border);
   font-size:12.5px;color:var(--text-muted)}
+@media (max-width:640px){
+  .viz-root{padding:20px 14px 48px;font-size:14.5px}
+  h1{font-size:23px}
+  h2{font-size:16.5px;margin-top:30px}
+  .tw table{font-size:12px}
+  th,td{padding:5px 7px}
+  pre{font-size:11px;padding:11px 12px}
+  .verdict{padding:12px 14px}
+  /* the tables scroll sideways on a phone; say so rather than letting it look cut off */
+  .tw{position:relative}
+  .tw::after{content:"swipe the table sideways →";display:block;position:sticky;left:0;
+    font-size:11px;color:var(--text-muted);padding-top:4px}
+}
 </style></head>
 <body><div class="viz-root"><div class="wrap">
 
@@ -70,7 +91,7 @@ for, and the reward is handed out.</strong> 24 completed purchases and
 <code>rewarded</code> = <code>earn</code>, the game handing over the entitlement.
 Any one of them being non-zero means the pack exists on that build; all three means it
 works end to end.</p>
-<table>
+<div class="tw"><table>
 <tr><th class="l">Build</th><th class="l">Player installed…</th><th>Tapped</th><th>Paid</th>
   <th>Rewarded</th><th>Users</th><th>Last seen</th></tr>
 <tr class=""><td class='l'><strong>v26.2</strong></td><td class='l'>install version unknown</td><td class="zero">0</td><td class="hit">2</td><td class="zero">0</td><td>2</td><td>2026-09-16</td></tr>
@@ -78,7 +99,7 @@ works end to end.</p>
 <tr class=""><td class='l'><strong>v26.2</strong></td><td class='l'>installed on an EARLIER version</td><td class="hit">1</td><td class="hit">2</td><td class="hit">1</td><td>2</td><td>2026-09-11</td></tr>
 <tr class=""><td class='l'><strong>v28</strong></td><td class='l'>install version unknown</td><td class="zero">0</td><td class="hit">1</td><td class="zero">0</td><td>1</td><td>2026-09-16</td></tr>
 <tr class="on"><td class='l'><strong>v28</strong></td><td class='l'>installed ON this version</td><td class="hit">5</td><td class="hit">2</td><td class="hit">1</td><td>6</td><td>2026-09-17</td></tr>
-<tr class="on"><td class='l'><strong>v29</strong></td><td class='l'>installed ON this version</td><td class="hit">1</td><td class="hit">1</td><td class="hit">2</td><td>3</td><td>2026-09-18</td></tr></table>
+<tr class="on"><td class='l'><strong>v29</strong></td><td class='l'>installed ON this version</td><td class="hit">1</td><td class="hit">1</td><td class="hit">2</td><td>3</td><td>2026-09-18</td></tr></table></div>
 <p><strong>v27.2 returns no rows at all — that is not evidence of removal.</strong> That
 build only ever reached 7 devices, for a single day; there is no sample to find anything in.
 Treat v28 and v29 as the releases that matter.</p>
@@ -122,7 +143,7 @@ itself, so this was pulled straight from the <strong>Play Developer API</strong>
 than read off a dashboard. All 82 products came back, 14,186
 product&times;region price rows, and <strong>every one of the three <code>.sale</code> packs
 is <span class="hit">ACTIVE</span> and <code>AVAILABLE</code> with its price unchanged</strong>:</p>
-<table>
+<div class="tw"><table>
 <tr><th class="l">Product ID</th><th class="l">Purchase option</th><th>US price</th>
   <th class="l">State</th><th class="l">US availability</th><th>Regions available</th></tr>
 <tr class="on"><td class="l">skip.ad.30days.sale</td><td class="l">buy-no-ads-30-days-sale</td><td>USD 4.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
@@ -132,7 +153,7 @@ is <span class="hit">ACTIVE</span> and <code>AVAILABLE</code> with its price unc
 <tr class=""><td class="l">skip.ad.30days</td><td class="l">buy-no-ads-30-days</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
 <tr class=""><td class="l">skip.ad.3days</td><td class="l">buy-no-ads-3-days</td><td>USD 2.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
 <tr class=""><td class="l">skip.ad.annual</td><td class="l">buy-no-ads-annual</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class=""><td class="l">skip.ad.permanent</td><td class="l">buy-no-ads-permanent</td><td>USD 29.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr></table>
+<tr class=""><td class="l">skip.ad.permanent</td><td class="l">buy-no-ads-permanent</td><td>USD 29.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr></table></div>
 <p>The pull was also diffed against the copy committed on 2026-09-16, field by field across
 all 14,186 rows: <strong>zero products added, zero removed, zero price changes,
 zero state changes.</strong> Nothing has been deactivated or unpublished on the store side.</p>
@@ -147,7 +168,7 @@ different things, which is exactly why both were checked.</p>
 <h2>3 · Every single sale-pack event on v28 and v29</h2>
 <p>Not a sample and not an aggregate. This is the complete list, 15 events, nothing
 filtered out.</p>
-<table>
+<div class="tw"><table>
 <tr><th class="l">When (UTC)</th><th>Running</th><th>Installed on</th><th class="l">Event</th>
   <th class="l">SKU</th><th>USD</th><th class="l">Country</th></tr>
 <tr><td class="l">2026-09-16 13:25</td><td>v28</td><td>v28</td><td class="l">purchase_click</td><td class="l">skip.ad.permanent.sale</td><td></td><td class="l">Switzerland</td></tr>
@@ -164,7 +185,7 @@ filtered out.</p>
 <tr><td class="l">2026-09-17 21:00</td><td>v29</td><td>v29</td><td class="l">in_app_purchase</td><td class="l">skip.ad.permanent.sale</td><td>$13.29</td><td class="l">Poland</td></tr>
 <tr><td class="l">2026-09-17 22:16</td><td>v29</td><td>v29</td><td class="l">earn</td><td class="l">skip.ad.permanent.sale</td><td></td><td class="l">Australia</td></tr>
 <tr><td class="l">2026-09-17 22:16</td><td>v29</td><td>v29</td><td class="l">earn</td><td class="l">skip.ad.30days.sale</td><td></td><td class="l">Australia</td></tr>
-<tr><td class="l">2026-09-18 10:13</td><td>v29</td><td>v29</td><td class="l">purchase_click</td><td class="l">skip.ad.permanent.sale</td><td></td><td class="l">Germany</td></tr></table>
+<tr><td class="l">2026-09-18 10:13</td><td>v29</td><td>v29</td><td class="l">purchase_click</td><td class="l">skip.ad.permanent.sale</td><td></td><td class="l">Germany</td></tr></table></div>
 <p>Only <code>in_app_purchase</code> carries a USD value; the client-side events
 (<code>purchase_click</code>, <code>earn</code>, <code>iap_purchase_success</code>,
 <code>first_purchase</code>) have no money field at all, which is why that column is blank
