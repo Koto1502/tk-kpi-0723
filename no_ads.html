@@ -160,7 +160,43 @@ earns roughly 3&times; its own full-price twin <code>permanent</code> at $29.99,
 the <em>identical</em> reward. The cheap version is not a leak around the expensive one; it
 is the product.</p>
 
-<h2>4 · Why "they'll just buy the $29.99 one" is unlikely</h2>
+<h2>4 · Who buys it: new installs only, in their first 48 hours</h2>
+<p>The <code>.sale</code> variants are not a general shop item. They are a
+<strong>time-limited new-player offer</strong>, and the purchase timing says so with no
+ambiguity:</p>
+<table>
+<tr><th>SKU</th><th>Purchases</th><th>On install day</th><th>Day 1–2</th>
+  <th>Within 2 days</th><th>Latest ever</th></tr>
+<tr class='hl'><td>skip.ad.permanent.sale</td><td>257</td><td>170</td><td>82</td><td>98.1%</td><td>day 6</td></tr>
+<tr class='hl'><td>skip.ad.30days.sale</td><td>83</td><td>58</td><td>24</td><td>98.8%</td><td>day 3</td></tr>
+<tr><td>skip.ad.3days</td><td>73</td><td>43</td><td>5</td><td>65.8%</td><td>day 42</td></tr>
+<tr><td>skip.ad.10days</td><td>40</td><td>23</td><td>2</td><td>62.5%</td><td>day 45</td></tr>
+<tr><td>skip.ad.permanent</td><td>35</td><td>29</td><td>2</td><td>88.6%</td><td>day 22</td></tr>
+<tr><td>skip.ad.30days</td><td>23</td><td>13</td><td>3</td><td>69.6%</td><td>day 31</td></tr></table>
+<p>Across <strong>257 <code>permanent.sale</code> purchases, not one happened later
+than day 6</strong>; <code>30days.sale</code> stops at day 3. The full-price
+SKUs in the same table sell out to day 22, 31, 42 and 45. A ceiling that hard is not player
+behaviour tapering off — it is an offer window closing.</p>
+<p><strong>So the existing player base cannot buy these at all.</strong> Removing them is a
+change to the new-player funnel, not to the game's standing storefront — which also explains
+why nearly every buyer purchases on the same app version they installed on: they buy long
+before they would ever update.</p>
+<p>And new installs on the new build buy it at the <em>same rate as always</em>. Conversion
+by install cohort, every cohort measured over its own first three days, so the comparison is
+clean:</p>
+<table>
+<tr><th>Installed on</th><th>Installs</th><th>Bought permanent.sale (D0–2)</th>
+  <th>Conversion</th></tr>
+<tr><td>v24</td><td>3,963</td><td>48</td><td>1.21%</td></tr>
+<tr><td>v25</td><td>941</td><td>7</td><td>0.74%</td></tr>
+<tr><td>v26.2</td><td>1,201</td><td>15</td><td>1.25%</td></tr>
+<tr class='hl'><td>v28</td><td>164</td><td>2</td><td>1.22%</td></tr></table>
+<p>v28 installs convert at the same rate as v24 and v26.2. Treat that as
+<em>consistent with unchanged</em> rather than proven equal — 2 buyers on 164 installs has a
+wide confidence interval — but it firmly rules out the offer having been withdrawn for new
+players, which is what a removal would look like here.</p>
+
+<h2>5 · Why "they'll just buy the $29.99 one" is unlikely</h2>
 <p>This price point already moved once. At <strong>v21 (2026-08-08)</strong> the offer mix
 flipped from mostly-$29.99 to mostly-$10.99: revenue for the $29.99 option fell ~70% per
 capita, but <strong>combined buyers per 1,000 users rose, 9.3 &rarr; 10.5</strong>. That is
@@ -180,8 +216,13 @@ Applied to the last 28 days ($1,223 across ~111 purchases):</p>
 <p><strong>More than ~37% of sale buyers must convert at the higher price just to break
 even</strong>, and the v21 episode points the other way. This is arithmetic on a bracket, not
 a forecast — but it frames the bet honestly, and the downside is a fifth of total revenue.</p>
+<p><strong>Section 4 makes that threshold harder, not easier.</strong> The substitution
+question is not "would this buyer pay $29.99 eventually" — it is "would a player who
+installed less than 48 hours ago pay 2.7&times; more, inside the same window". Day-0 impulse
+buyers are the most price-sensitive population there is, and they have no investment in the
+game yet to justify a $29.99 commitment. If anything, 37% is the optimistic reading.</p>
 
-<h2>5 · Refunds — and the reason this SKU may deserve removal after all</h2>
+<h2>6 · Refunds — and the reason this SKU may deserve removal after all</h2>
 <p>GA4 has no refund event, so everything above is gross. The Play Developer API does have
 them: <code>purchases.voidedpurchases.list</code> gives the voided orders and
 <code>orders.get</code> turns each into a SKU and an amount. <strong>Play only serves a
@@ -223,7 +264,7 @@ have nothing to do with delivery. <strong>Whether players actually receive the e
 is a client and Play Console question, not a telemetry one</strong> — check the order
 status on one of these refunded orders against what the account was granted.</p>
 
-<h2>6 · A trap: do not read v28's ARPDAU as the effect</h2>
+<h2>7 · A trap: do not read v28's ARPDAU as the effect</h2>
 <table>
 <tr><th>Build</th><th>DAU</th><th>Ad-removal taps</th><th>…of which sale</th>
   <th>Purchases</th><th>…of which sale</th><th>IAP rev / 1k DAU</th></tr>
@@ -239,7 +280,7 @@ fast, not what changed in the build.</p>
 <p>A clean read needs install-date cohorts matched across builds, or simply waiting until
 v28/v29 reach majority adoption — about a week here, judging by v25 and v26.2.</p>
 
-<h2>7 · What to do</h2>
+<h2>8 · What to do</h2>
 <ul>
 <li><strong>Answer the delivery question first — it decides everything else.</strong> Take
   one refunded <code>permanent.sale</code> order from the ledger, check in Play Console
