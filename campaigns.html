@@ -25,6 +25,19 @@
  svg{display:block;width:100%}svg text{font:10.5px "Segoe UI",system-ui,sans-serif;fill:var(--text-secondary)}
  .legend{display:flex;gap:16px;font-size:11.5px;color:var(--text-secondary);margin:2px 0 6px;flex-wrap:wrap}
  .legend span{display:inline-flex;align-items:center;gap:6px}
+ .multi{position:relative}
+ .multi>button{min-width:230px;text-align:left;font-weight:600}
+ .multi .panel{display:none;position:absolute;z-index:20;top:calc(100% + 4px);left:0;min-width:340px;max-height:320px;
+  overflow:auto;background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.18)}
+ .multi.open .panel{display:block}
+ .multi .panel label{display:flex;gap:7px;align-items:center;font-size:12px;color:var(--text-primary);
+  padding:4px 6px;border-radius:6px;cursor:pointer;white-space:nowrap}
+ .multi .panel label:hover{background:var(--surface-0)}
+ .multi .panel input{cursor:pointer;margin:0}
+ .multi .panel hr{border:0;border-top:1px solid var(--border);margin:6px 2px}
+ .multi .qa{display:flex;gap:6px;padding:2px 4px 6px}
+ .multi .qa button{padding:.2rem .5rem;font-size:11px}
  table{border-collapse:collapse;width:100%;font-size:12px}th{text-align:right;color:var(--text-secondary);
   font-weight:600;padding:5px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
  th:first-child,td:first-child{text-align:left}td{text-align:right;padding:3px 8px;font-variant-numeric:tabular-nums}
@@ -34,7 +47,12 @@
 <h1>LTV by install cohort x campaign - Tiny Knight Fall</h1>
 <div class="sub" id="sub"></div>
 <div class="controls">
- <label class="ctl">Campaign <select id="camp"></select></label>
+ <span class="ctl">Campaigns <span class="multi" id="campwrap">
+   <button type="button" id="camptog">All</button>
+   <div class="panel" id="camppanel">
+     <div class="qa"><button type="button" id="campall">Select all</button>
+       <button type="button" id="campnone">Clear</button></div>
+     <div id="camplist"></div></div></span></span>
  <label class="ctl">Metric <select id="metric">
    <option value="total">Total (IAP + ads)</option><option value="iap">IAP only</option><option value="iaa">Ads only</option></select></label>
  <label class="ctl">Basis <select id="basis">
@@ -67,7 +85,36 @@ const ageOf=c=>Math.round((new Date(WEND)-new Date(c))/864e5);
 const RAMP=['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab'];
 const NS='http://www.w3.org/2000/svg';
 function elx(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
-const cur=()=>PAYLOAD.data[$('camp').value].cohorts;
+// --- campaign multi-select -------------------------------------------------
+// The payload carries one cohort map per campaign plus a pre-aggregated "All".
+// Selecting several campaigns merges their cohort maps in the browser (sizes,
+// cost, per-day iap/iaa, matched installs and retention counts all add), which
+// reproduces "All" exactly when everything is ticked. Nothing ticked = All.
+const CAMPS=PAYLOAD.campaigns.filter(c=>c!=='All');
+const selCamps=()=>Array.from(document.querySelectorAll('#camplist input:checked')).map(i=>i.value);
+function campLabel(){const s=selCamps();
+ return s.length===0?'All campaigns':s.length<=2?s.join(' + '):s.length+' campaigns';}
+let _mergeKey=null,_mergeVal=null;
+function mergeCohorts(names){
+ const out={};
+ names.forEach(n=>{const cs=((PAYLOAD.data[n]||{}).cohorts)||{};
+  for(const k in cs){const c=cs[k];
+   const o=out[k]||(out[k]={size:0,cost:0,dd:{},matched:0,ret:{}});
+   o.size+=c.size||0; o.cost+=c.cost||0; o.matched+=c.matched||0;
+   for(const dd in c.dd){const m=o.dd[dd]||(o.dd[dd]={iap:0,iaa:0});
+     m.iap+=c.dd[dd].iap||0; m.iaa+=c.dd[dd].iaa||0;}
+   for(const dd in c.ret) o.ret[dd]=(o.ret[dd]||0)+(c.ret[dd]||0);}});
+ return out;
+}
+function cur(){
+ const s=selCamps(), key=s.join('');
+ if(key===_mergeKey) return _mergeVal;                      // memo: cur() is called in loops
+ _mergeKey=key;
+ _mergeVal=s.length===0?(PAYLOAD.data['All']||{cohorts:{}}).cohorts
+   :s.length===1?((PAYLOAD.data[s[0]]||{cohorts:{}}).cohorts)
+   :mergeCohorts(s);
+ return _mergeVal;
+}
 const mval=(m,metric)=>metric==='iap'?m.iap:metric==='iaa'?m.iaa:(m.iap+m.iaa);
 function cumTo(c,N,metric){let s=0;for(let dd=0;dd<=N;dd++){const m=c.dd[dd];if(m)s+=mval(m,metric);}return s;}
 function totRev(c,metric){let s=0;for(const dd in c.dd)s+=mval(c.dd[dd],metric);return s;}
@@ -80,7 +127,7 @@ function render(){
  keys.forEach(k=>{const c=cohorts[k];tI+=c.size;tIap+=totRev(c,'iap');tIaa+=totRev(c,'iaa');tCost+=c.cost||0;});
  const tRev=tIap+tIaa, shown=metric==='iap'?tIap:metric==='iaa'?tIaa:tRev;
  $('tiles').innerHTML=[
-  {v:tI.toLocaleString(),l:'Installs',n:$('camp').value},
+  {v:tI.toLocaleString(),l:'Installs',n:campLabel()},
   {v:fmt$(tI?shown/tI:0),l:'LTV/install (to date)',n:metric+' , floor'},
   {v:fmt$(tCost),l:'Spend',n:fmt$(tI?tCost/tI:0)+' eCPI'},
   {v:(tCost?(tRev/tCost).toFixed(2):'-')+'x',l:'ROAS to date',n:fmt$(tRev)+' rev / '+fmt$(tCost)+' cost'},
@@ -98,7 +145,8 @@ function render(){
    +`<td><b>${fmt$(td)}</b></td><td>${fmt$(scale(totRev(c,'iap'),c.size))}</td><td>${fmt$(scale(totRev(c,'iaa'),c.size))}</td>`
    +`<td>${fmt$(scale(c.cost||0,c.size))}</td><td>${roas}</td></tr>`;}).join('');
  $('table').innerHTML=`<table>${head}${body}</table>`;
- $('tnote').textContent=`Campaign: ${$('camp').value} - metric: ${metric} - basis: ${basis==='per'?'per install':'total $'}. Blank = cohort too young (the triangle). cost/ROAS from AppsFlyer daily spend.`;
+ const csel=selCamps();
+ $('tnote').textContent=`Campaigns: ${csel.length?csel.join(', '):'All'} - metric: ${metric} - basis: ${basis==='per'?'per install':'total $'}. Blank = cohort too young (the triangle). cost/ROAS from AppsFlyer daily spend.`;
  renderProj(metric); renderRet();
 }
 
@@ -196,7 +244,8 @@ function downloadCSV(){
  const metric=$('metric').value,basis=$('basis').value,cohorts=cur(),keys=Object.keys(cohorts).sort();
  const scale=(v,s)=>basis==='per'?v/(s||1):v;
  const cols=['cohort','installs','age',...DAYS.map(d=>'D'+d),'to_date','IAP','ads','cost','ROAS'];
- const lines=['# metric='+metric+' basis='+(basis==='per'?'per_install':'total_usd'),cols.join(',')];
+ const lines=['# campaigns='+(selCamps().join('|')||'All')
+   +' metric='+metric+' basis='+(basis==='per'?'per_install':'total_usd'),cols.join(',')];
  keys.forEach(k=>{const c=cohorts[k],age=ageOf(k);const row=[k,c.size,age];
   DAYS.forEach(D=>row.push(age<D?'':scale(cumTo(c,D,metric),c.size).toFixed(4)));
   row.push(scale(totRev(c,metric),c.size).toFixed(4));row.push(scale(totRev(c,'iap'),c.size).toFixed(4));
@@ -204,12 +253,21 @@ function downloadCSV(){
   row.push(c.cost?(totRev(c,'total')/c.cost).toFixed(3):'');lines.push(row.join(','));});
  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
- a.download='ltv_'+$('camp').value.replace(/[^A-Za-z0-9]+/g,'_')+'_'+metric+'_'+basis+'.csv';a.click();URL.revokeObjectURL(a.href);
+ const s=selCamps(), tag=s.length===0?'All':s.length===1?s[0]:s.length+'campaigns';
+ a.download='ltv_'+tag.replace(/[^A-Za-z0-9]+/g,'_')+'_'+metric+'_'+basis+'.csv';a.click();URL.revokeObjectURL(a.href);
 }
-$('camp').innerHTML=PAYLOAD.campaigns.map(c=>'<option>'+c+'</option>').join('');
+$('camplist').innerHTML=CAMPS.map(c=>
+  '<label><input type="checkbox" value="'+c.replace(/"/g,'&quot;')+'"><span>'+c+'</span></label>').join('');
 $('sub').innerHTML=PAYLOAD.meta.app+' - '+PAYLOAD.meta.window+' - '+PAYLOAD.meta.source+' - generated '+PAYLOAD.meta.generated;
 $('caveats').innerHTML='<b>Definitions.</b> LTV = cumulative AppsFlyer-attributed revenue per install (IAP af_purchase + ad_revenue), cohorted by install date. Cost = AppsFlyer daily spend for that campaign/date; ROAS = revenue-to-date / cost. Cohorts are young so values are floors; last ~2-3 days lag in AppsFlyer. Organic has no spend (ROAS blank).';
-$('camp').onchange=()=>{populatePCohort();render();};
+function campChanged(){$('camptog').textContent=campLabel();populatePCohort();render();}
+$('camplist').onchange=campChanged;
+$('camptog').onclick=e=>{e.stopPropagation();$('campwrap').classList.toggle('open');};
+$('camppanel').onclick=e=>e.stopPropagation();
+document.addEventListener('click',()=>$('campwrap').classList.remove('open'));
+$('campall').onclick=()=>{document.querySelectorAll('#camplist input').forEach(i=>i.checked=true);campChanged();};
+$('campnone').onclick=()=>{document.querySelectorAll('#camplist input').forEach(i=>i.checked=false);campChanged();};
 $('metric').onchange=render;$('basis').onchange=render;$('pcohort').onchange=render;$('dl').onclick=downloadCSV;
+$('camptog').textContent=campLabel();
 populatePCohort();render();
 </script></body></html>
