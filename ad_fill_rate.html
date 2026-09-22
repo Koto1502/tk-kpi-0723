@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ad show / fail rate — interstitial vs rewarded</title>
+<style>
+.viz-root{color-scheme:light;
+  --surface-1:#fcfcfb; --surface-2:#f4f3f0; --border:#e3e1dc;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#78766f;
+  --series-1:#2a78d6; --series-3:#1baf7a; --series-2:#eb6834; --good:#137a4d;}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{
+  color-scheme:dark;
+  --surface-1:#1a1a19; --surface-2:#232320; --border:#3a3935;
+  --text-primary:#fff; --text-secondary:#c3c2b7; --text-muted:#96948a;
+  --series-1:#3987e5; --series-3:#4bbd86; --series-2:#d95926; --good:#4bbd86;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-1)}
+.viz-root{background:var(--surface-1);color:var(--text-primary);
+  font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:30px 24px 64px;}
+.wrap{max-width:1000px;margin:0 auto;width:100%;min-width:0}
+h1{font-size:28px;line-height:1.24;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:18px;margin:38px 0 6px;letter-spacing:-.01em;padding-top:16px;
+   border-top:1px solid var(--border)}
+p{margin:9px 0;color:var(--text-secondary);max-width:76ch}
+.sub{color:var(--text-muted);font-size:13.5px;margin-bottom:6px}
+strong{color:var(--text-primary)}
+a{color:var(--series-1)}
+.verdict{border-left:3px solid var(--series-2);background:var(--surface-2);
+  padding:14px 18px;border-radius:0 10px 10px 0;margin:20px 0}
+.verdict p{margin:6px 0}
+.tw{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  margin:14px 0}
+.tw table{margin:0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:14px 0}
+th,td{text-align:right;padding:6px 9px;border-bottom:1px solid var(--border);
+  white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+th{color:var(--text-muted);font-weight:600;font-size:11.5px;text-transform:uppercase;
+   letter-spacing:.04em}
+.bad{color:var(--series-2);font-weight:650}
+.hit{color:var(--good);font-weight:650}
+td.zero{color:var(--text-muted)}
+pre{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
+  padding:13px 15px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  font:12px/1.5 ui-monospace,Consolas,monospace;
+  color:var(--text-primary);margin:12px 0;max-width:100%}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:0 4px}
+ul{color:var(--text-secondary);max-width:76ch}li{margin:5px 0}
+.legend{display:flex;gap:18px;font-size:12.5px;color:var(--text-secondary);margin:6px 0 2px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:2px;border-radius:1px;display:inline-block}
+footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--border);
+  font-size:12.5px;color:var(--text-muted)}
+@media (max-width:640px){
+  .viz-root{padding:20px 14px 48px;font-size:14.5px}
+  h1{font-size:23px}
+  h2{font-size:16.5px;margin-top:30px}
+  .tw table{font-size:12px}
+  th,td{padding:5px 7px}
+  pre{font-size:11px;padding:11px 12px}
+  .verdict{padding:12px 14px}
+  .tw{position:relative}
+  .tw::after{content:"swipe the table sideways →";display:block;position:sticky;left:0;
+    font-size:11px;color:var(--text-muted);padding-top:4px}
+}
+</style></head>
+<body><div class="viz-root"><div class="wrap">
+
+<div style="font-size:12.5px;margin-bottom:12px">
+  <a href="index.html" style="text-decoration:none">&larr; All reports</a></div>
+
+<h1>Interstitial ads load successfully ~3% of the time</h1>
+<div class="sub">Ad request/show funnel · GA4 raw export <code>analytics_538412813</code>
+  · generated 2026-09-22</div>
+
+<div class="verdict">
+<p><strong>Interstitial ad loads succeed 3.0% of the time
+(28,449 of 943,813 attempts); rewarded video
+loads succeed 40.7% of the time
+(54,094 of 133,006).</strong>
+Measured from <code>ad_request_status</code> (<code>status</code> = <code>success</code>/
+<code>fail</code>), the whole export, 2026-07-01 to yesterday.</p>
+<p>The dominant cause isn't "no ad available" — it's the mediation SDK failing to reach its
+own server. <strong>591,164
+interstitial attempts (65%
+of all fails)</strong> error with a DNS/connect failure to <code>ms.applvn.com</code>,
+AppLovin MAX's own mediation host — not a shortage of ads, a networking problem.</p>
+<p>This affects a broad slice of the base, not a few looping devices:
+<strong>23%
+of users</strong> who requested an interstitial hit this failure at least once
+(5,416 of 23,436), averaging
+~109 failed attempts each —
+consistent with a client retry loop hammering an unreachable host.</p>
+</div>
+
+<h2>0 · What's changed in the last few days</h2>
+<p><strong>Engineering has already root-caused part of a fresh decline in rewarded fill,
+separate from the DNS/connect problem above:</strong> AppLovin's mediation server is
+returning ad responses for the <code>REWARDED_INTER</code> (Rewarded Interstitial) format
+without the <code>ad_format</code> field the client's MAX SDK expects. The SDK doesn't
+recognize the format, treats the response as <code>No Fill</code> (error 204), and the ad
+never becomes "ready" — a player who taps gets a "not ready" toast even though AppLovin did
+return something. This is a client-SDK/server-format mismatch, not a lack of inventory.</p>
+<p>The data shows a matching pattern over the last 10 days: rewarded fill rate slid from
+<strong>67%</strong> on 2026-09-13 to
+<strong>44%</strong> on 2026-09-21 (choppy day to day, but the
+last full day is well below the first), while interstitial <em>attempt volume</em> surged
+from a baseline around 3,383/day to a peak of
+<strong>15,946 attempts on 2026-09-20</strong> — roughly
+5&times; baseline — before easing back down, tracking
+the same days rewarded fill was at its worst. Interstitial <em>fill rate</em> stayed in the
+low single digits throughout, so this substitution is not recovering the failed ad
+opportunity, just changing what's being retried.</p>
+<div class="tw"><table>
+<tr><th class="l">Day</th><th class="l">Ad type</th><th>Attempts</th><th>Fill rate</th></tr>
+<tr><td class="l">2026-09-13</td><td class="l">inter</td><td>3,383</td><td class="bad">8.1%</td></tr><tr><td class="l">2026-09-14</td><td class="l">inter</td><td>3,639</td><td class="bad">7.3%</td></tr><tr><td class="l">2026-09-15</td><td class="l">inter</td><td>5,586</td><td class="bad">3.6%</td></tr><tr><td class="l">2026-09-16</td><td class="l">inter</td><td>5,747</td><td class="bad">3.7%</td></tr><tr><td class="l">2026-09-17</td><td class="l">inter</td><td>7,866</td><td class="bad">3.1%</td></tr><tr><td class="l">2026-09-18</td><td class="l">inter</td><td>11,462</td><td class="bad">2.1%</td></tr><tr><td class="l">2026-09-19</td><td class="l">inter</td><td>6,028</td><td class="bad">7.8%</td></tr><tr><td class="l">2026-09-20</td><td class="l">inter</td><td>15,946</td><td class="bad">3.3%</td></tr><tr><td class="l">2026-09-21</td><td class="l">inter</td><td>2,933</td><td class="bad">11.1%</td></tr><tr><td class="l">2026-09-22</td><td class="l">inter</td><td>768</td><td class="bad">19.0%</td></tr><tr><td class="l">2026-09-13</td><td class="l">rewarded</td><td>891</td><td class="hit">66.8%</td></tr><tr><td class="l">2026-09-14</td><td class="l">rewarded</td><td>805</td><td class="hit">56.5%</td></tr><tr><td class="l">2026-09-15</td><td class="l">rewarded</td><td>948</td><td class="hit">47.7%</td></tr><tr><td class="l">2026-09-16</td><td class="l">rewarded</td><td>972</td><td class="hit">63.6%</td></tr><tr><td class="l">2026-09-17</td><td class="l">rewarded</td><td>1,227</td><td class="hit">50.9%</td></tr><tr><td class="l">2026-09-18</td><td class="l">rewarded</td><td>1,292</td><td class="hit">35.3%</td></tr><tr><td class="l">2026-09-19</td><td class="l">rewarded</td><td>1,423</td><td class="hit">48.8%</td></tr><tr><td class="l">2026-09-20</td><td class="l">rewarded</td><td>2,156</td><td class="hit">35.9%</td></tr><tr><td class="l">2026-09-21</td><td class="l">rewarded</td><td>1,215</td><td class="hit">44.1%</td></tr><tr><td class="l">2026-09-22</td><td class="l">rewarded</td><td>463</td><td class="hit">62.4%</td></tr></table></div>
+<p class="sub">The last-10-days query:</p><pre>
+SELECT
+  PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) AS day,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_type&#x27;) AS ad_type,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;status&#x27;) AS status,
+  COUNT(*) AS n
+FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+WHERE event_name = &#x27;ad_request_status&#x27;
+  AND _TABLE_SUFFIX BETWEEN &#x27;20260913&#x27; AND &#x27;20260922&#x27;
+GROUP BY day, ad_type, status
+ORDER BY day, ad_type
+</pre>
+
+<h2>1 · Fill rate by ad type</h2>
+<p><code>ad_request_status</code> is the load <strong>outcome</strong> event —
+<code>status</code> = <code>success</code> or <code>fail</code>, with which network
+filled it and the raw SDK error on failure. This is the standard fill/fail-rate signal,
+and it's been live since build 5 (2026-07-01), so the whole export has consistent
+instrumentation.</p>
+<div class="tw"><table>
+<tr><th class="l">Ad type</th><th>Attempts</th><th>Success</th><th>Fail</th><th>Fill rate</th></tr>
+<tr><td class="l"><strong>inter</strong></td><td>943,813</td><td>28,449</td><td>915,364</td><td class="bad">3.0%</td></tr><tr><td class="l"><strong>rewarded</strong></td><td>133,006</td><td>54,094</td><td>78,912</td><td class="hit">40.7%</td></tr></table></div>
+
+<h2>2 · Daily fill-rate trend</h2>
+<p>Today's shard is partial and excluded. Both lines are consistently low across the whole
+window — this is not a one-day blip.</p>
+<div class="legend">
+  <span><i style="background:var(--series-1)"></i>interstitial</span>
+  <span><i style="background:var(--series-3)"></i>rewarded</span>
+</div>
+<svg viewBox="0 0 920 260" width="100%" role="img" aria-label="Daily ad load fill rate, interstitial vs rewarded"><line x1="40" y1="234.0" x2="910" y2="234.0" stroke="var(--border)" stroke-width="1"/><text x="32" y="238.0" text-anchor="end" font-size="10.5" fill="var(--text-muted)">0%</text><line x1="40" y1="179.0" x2="910" y2="179.0" stroke="var(--border)" stroke-width="1"/><text x="32" y="183.0" text-anchor="end" font-size="10.5" fill="var(--text-muted)">25%</text><line x1="40" y1="124.0" x2="910" y2="124.0" stroke="var(--border)" stroke-width="1"/><text x="32" y="128.0" text-anchor="end" font-size="10.5" fill="var(--text-muted)">50%</text><line x1="40" y1="69.0" x2="910" y2="69.0" stroke="var(--border)" stroke-width="1"/><text x="32" y="73.0" text-anchor="end" font-size="10.5" fill="var(--text-muted)">75%</text><line x1="40" y1="14.0" x2="910" y2="14.0" stroke="var(--border)" stroke-width="1"/><text x="32" y="18.0" text-anchor="end" font-size="10.5" fill="var(--text-muted)">100%</text><polyline points="40.0,14.0 71.8,199.5 82.4,214.6 93.0,223.1 103.7,228.7 114.3,230.8 124.9,228.9 135.5,230.0 146.1,227.2 156.7,226.3 167.3,228.9 177.9,230.9 188.5,228.2 199.1,229.5 209.8,230.5 220.4,228.2 231.0,231.0 241.6,231.0 252.2,230.0 262.8,227.0 273.4,224.1 284.0,229.8 294.6,228.2 305.2,222.5 315.9,227.6 326.5,228.0 337.1,224.2 347.7,228.8 358.3,225.5 368.9,226.8 379.5,230.4 390.1,228.7 400.7,230.0 411.3,227.3 422.0,228.8 432.6,229.5 443.2,229.5 453.8,230.1 464.4,230.3 475.0,229.8 485.6,222.2 496.2,228.4 506.8,221.9 517.4,221.6 528.0,224.4 538.7,217.0 549.3,228.1 559.9,227.3 570.5,222.6 581.1,217.5 591.7,217.5 602.3,225.9 612.9,226.5 623.5,225.4 634.1,229.4 644.8,226.4 655.4,229.1 666.0,229.9 676.6,222.1 687.2,210.6 697.8,219.9 708.4,222.7 719.0,218.1 729.6,226.7 740.2,224.3 750.9,223.5 761.5,221.7 772.1,226.2 782.7,219.5 793.3,223.2 803.9,219.0 814.5,226.7 825.1,216.2 835.7,217.9 846.3,226.1 857.0,225.9 867.6,227.2 878.2,229.4 888.8,216.7 899.4,226.8 910.0,209.5" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><polyline points="40.0,14.0 71.8,62.1 82.4,164.4 93.0,189.9 103.7,193.7 114.3,186.0 124.9,190.7 135.5,187.2 146.1,185.1 156.7,173.3 167.3,190.6 177.9,191.5 188.5,181.8 199.1,196.3 209.8,201.9 220.4,194.1 231.0,201.3 241.6,197.4 252.2,176.7 262.8,144.7 273.4,132.4 284.0,143.6 294.6,127.5 305.2,119.4 315.9,134.1 326.5,128.3 337.1,117.1 347.7,132.3 358.3,128.5 368.9,130.4 379.5,172.8 390.1,144.5 400.7,149.1 411.3,134.0 422.0,136.5 432.6,152.0 443.2,142.8 453.8,139.5 464.4,144.3 475.0,137.4 485.6,88.8 496.2,132.0 506.8,113.9 517.4,103.7 528.0,117.9 538.7,99.4 549.3,132.9 559.9,121.4 570.5,133.4 581.1,101.0 591.7,94.2 602.3,118.5 612.9,135.8 623.5,117.9 634.1,145.9 644.8,124.3 655.4,137.1 666.0,134.2 676.6,108.0 687.2,98.3 697.8,132.9 708.4,109.9 719.0,110.4 729.6,150.9 740.2,122.6 750.9,105.4 761.5,109.6 772.1,132.3 782.7,112.9 793.3,122.3 803.9,91.1 814.5,107.5 825.1,87.1 835.7,109.7 846.3,129.1 857.0,94.1 867.6,121.9 878.2,156.4 888.8,126.7 899.4,155.0 910.0,136.9" fill="none" stroke="var(--series-3)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="910.0" cy="209.5" r="3" fill="var(--series-1)"/><text x="917.0" y="213.5" font-size="11.5" fill="var(--series-1)" font-weight="650">interstitial 11%</text><circle cx="910.0" cy="136.9" r="3" fill="var(--series-3)"/><text x="917.0" y="140.9" font-size="11.5" fill="var(--series-3)" font-weight="650">rewarded 44%</text><text x="40.0" y="254" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">Jul 01</text><text x="177.9" y="254" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">Jul 14</text><text x="326.5" y="254" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">Jul 28</text><text x="475.0" y="254" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">Aug 11</text><text x="612.9" y="254" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">Aug 24</text><text x="761.5" y="254" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">Sep 07</text><text x="910.0" y="254" text-anchor="middle" font-size="10.5" fill="var(--text-muted)">Sep 21</text></svg>
+
+<p class="sub">The query behind sections 1, 2, 3 and 4 — copy and re-run it:</p><pre>
+SELECT
+  PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) AS day,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_type&#x27;) AS ad_type,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_network&#x27;) AS ad_network,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;status&#x27;) AS status,
+  CASE
+    WHEN (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) IS NULL THEN NULL
+    WHEN (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;%applvn.com%&#x27; THEN &#x27;AppLovin MAX mediation server unreachable (DNS/connect)&#x27;
+    WHEN (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;%No Fill%&#x27; OR (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;%no eligible ads%&#x27; THEN &#x27;No fill (no ad available)&#x27;
+    WHEN (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;%timeout%&#x27; OR (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;%timed out%&#x27; THEN &#x27;Timeout&#x27;
+    WHEN (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;%onnection%&#x27; OR (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;unexpected end of stream%&#x27; THEN &#x27;Connection dropped mid-request&#x27;
+    WHEN (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) LIKE &#x27;%JSONException%&#x27; THEN &#x27;Malformed mediation response (JSON parse error)&#x27;
+    ELSE &#x27;Other&#x27;
+  END AS error_bucket,
+  COUNT(*) AS n
+FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+WHERE event_name = &#x27;ad_request_status&#x27;
+GROUP BY day, ad_type, ad_network, status, error_bucket
+ORDER BY day
+</pre>
+
+<h2>3 · Which network fills, when a load does succeed</h2>
+<div class="tw"><table>
+<tr><th class="l">Ad type</th><th class="l">Network</th><th>Successful loads</th><th>Share</th></tr>
+<tr><td class="l">inter</td><td class="l">AppLovin</td><td>13,419</td><td>47.2%</td></tr><tr><td class="l">inter</td><td class="l">Mintegral</td><td>7,060</td><td>24.8%</td></tr><tr><td class="l">inter</td><td class="l">Google AdMob</td><td>5,399</td><td>19.0%</td></tr><tr><td class="l">inter</td><td class="l">DT Exchange</td><td>862</td><td>3.0%</td></tr><tr><td class="l">inter</td><td class="l">Liftoff Monetize</td><td>693</td><td>2.4%</td></tr><tr><td class="l">inter</td><td class="l">APPLOVIN_EXCHANGE</td><td>536</td><td>1.9%</td></tr><tr><td class="l">inter</td><td class="l">Facebook</td><td>480</td><td>1.7%</td></tr><tr><td class="l">rewarded</td><td class="l">AppLovin</td><td>24,358</td><td>45.0%</td></tr><tr><td class="l">rewarded</td><td class="l">Google AdMob</td><td>15,289</td><td>28.3%</td></tr><tr><td class="l">rewarded</td><td class="l">Mintegral</td><td>7,956</td><td>14.7%</td></tr><tr><td class="l">rewarded</td><td class="l">Facebook</td><td>3,746</td><td>6.9%</td></tr><tr><td class="l">rewarded</td><td class="l">DT Exchange</td><td>1,161</td><td>2.1%</td></tr><tr><td class="l">rewarded</td><td class="l">Liftoff Monetize</td><td>935</td><td>1.7%</td></tr><tr><td class="l">rewarded</td><td class="l">APPLOVIN_EXCHANGE</td><td>646</td><td>1.2%</td></tr><tr><td class="l">rewarded</td><td class="l">IronSource</td><td>3</td><td>0.0%</td></tr></table></div>
+
+<h2>4 · Why loads fail</h2>
+<div class="tw"><table>
+<tr><th class="l">Ad type</th><th class="l">Reason</th><th>Events</th><th>Share of fails</th></tr>
+<tr><td class="l">inter</td><td class="l">AppLovin MAX mediation server unreachable (DNS/connect)</td><td>591,164</td><td>64.6%</td></tr><tr><td class="l">inter</td><td class="l">(no error string recorded)</td><td>296,459</td><td>32.4%</td></tr><tr><td class="l">inter</td><td class="l">No fill (no ad available)</td><td>14,116</td><td>1.5%</td></tr><tr><td class="l">inter</td><td class="l">Connection dropped mid-request</td><td>10,079</td><td>1.1%</td></tr><tr><td class="l">inter</td><td class="l">Other</td><td>3,020</td><td>0.3%</td></tr><tr><td class="l">inter</td><td class="l">Timeout</td><td>526</td><td>0.1%</td></tr><tr><td class="l">rewarded</td><td class="l">AppLovin MAX mediation server unreachable (DNS/connect)</td><td>46,555</td><td>59.0%</td></tr><tr><td class="l">rewarded</td><td class="l">(no error string recorded)</td><td>28,837</td><td>36.5%</td></tr><tr><td class="l">rewarded</td><td class="l">Connection dropped mid-request</td><td>1,550</td><td>2.0%</td></tr><tr><td class="l">rewarded</td><td class="l">No fill (no ad available)</td><td>1,391</td><td>1.8%</td></tr><tr><td class="l">rewarded</td><td class="l">Other</td><td>329</td><td>0.4%</td></tr><tr><td class="l">rewarded</td><td class="l">Timeout</td><td>250</td><td>0.3%</td></tr></table></div>
+<p><strong>~32-37% of failures carry no error string at all</strong> (the SDK set
+<code>status=fail</code> but the <code>error</code> param is empty) — a real instrumentation
+gap; right now there's no way to tell what's behind that bucket. Genuine "no fill" (the
+network legitimately having nothing to serve) is a small minority of failures for both
+ad types.</p>
+
+<h2>5 · The rest of the funnel — and two unexplained gaps</h2>
+<div class="tw"><table>
+<tr><th class="l">Event</th><th>Count</th><th>Peak daily users</th><th class="l">First seen</th><th class="l">Last seen</th></tr>
+<tr><td class="l">ad_request</td><td>1,930,708</td><td>1,137</td><td class="l">2026-07-01</td><td class="l">2026-09-22</td></tr><tr><td class="l">ad_request_status</td><td>1,076,819</td><td>765</td><td class="l">2026-07-01</td><td class="l">2026-09-22</td></tr><tr><td class="l">ad_reward</td><td>41,214</td><td>172</td><td class="l">2026-07-15</td><td class="l">2026-09-22</td></tr><tr><td class="l">show_ad_click</td><td>34,474</td><td>197</td><td class="l">2026-06-29</td><td class="l">2026-09-22</td></tr><tr><td class="l">ad_show</td><td>29,107</td><td>153</td><td class="l">2026-07-04</td><td class="l">2026-09-22</td></tr><tr><td class="l">show_ad_inter_backup_failed</td><td>3,183</td><td>28</td><td class="l">2026-07-05</td><td class="l">2026-09-22</td></tr><tr><td class="l">show_ad_inter_backup</td><td>677</td><td>10</td><td class="l">2026-07-05</td><td class="l">2026-09-22</td></tr><tr><td class="l">ad_rewarded_show_failed</td><td>89</td><td>3</td><td class="l">2026-07-09</td><td class="l">2026-09-21</td></tr></table></div>
+<ul>
+<li><strong>Only 1,076,819 of 1,930,708 <code>ad_request</code> events
+(56%) have a matching <code>ad_request_status</code></strong> —
+the rest never resolve to a logged success or fail.</li>
+<li><strong>Of 82,543 successful loads, only 29,107
+(<code>ad_show</code>, 35%) are followed by an actual display.</strong>
+Plausibly SDK preloading/caching (a successful load doesn't have to be shown right away),
+but large enough that it's worth checking the client's ad-caching logic rather than assuming
+it's benign.</li>
+<li><strong>The backup-interstitial fallback — the path meant to catch players when the
+primary interstitial fails — fails 82.5% of the time itself</strong>
+(3,183 of 3,860), worse than the primary path's already-poor
+fill rate. This is tracked separately from <code>ad_request_status</code> and carries no
+network/error breakdown, so it needs its own investigation.</li>
+</ul>
+
+<p class="sub">The funnel query:</p><pre>
+SELECT
+  event_name,
+  PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) AS day,
+  COUNT(*) AS n,
+  COUNT(DISTINCT user_pseudo_id) AS users
+FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+WHERE event_name IN (&#x27;show_ad_click&#x27;,&#x27;ad_request&#x27;,&#x27;ad_request_status&#x27;,&#x27;ad_show&#x27;,&#x27;ad_reward&#x27;,
+                      &#x27;ad_rewarded_show_failed&#x27;,&#x27;show_ad_inter_backup&#x27;,&#x27;show_ad_inter_backup_failed&#x27;)
+GROUP BY event_name, day
+ORDER BY event_name, day
+</pre>
+<p class="sub">The concentration check (section verdict, para 3):</p><pre>
+WITH s AS (
+  SELECT
+    user_pseudo_id,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_type&#x27;) AS ad_type,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;status&#x27;) AS status,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;error&#x27;) AS error
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE event_name = &#x27;ad_request_status&#x27;
+)
+SELECT
+  ad_type,
+  COUNT(DISTINCT user_pseudo_id) AS users_total,
+  COUNT(DISTINCT IF(status=&#x27;fail&#x27; AND error LIKE &#x27;%applvn.com%&#x27;, user_pseudo_id, NULL)) AS users_with_dns_fail,
+  COUNTIF(status=&#x27;fail&#x27; AND error LIKE &#x27;%applvn.com%&#x27;) AS dns_fail_events
+FROM s
+GROUP BY ad_type
+</pre>
+
+<h2>6 · Reading this number</h2>
+<ul>
+<li><strong>This counts load/show attempts, not ad impressions delivered or revenue.</strong>
+Pair with <code>publisher.ad_revenue_in_usd</code> if the next question is how much this is
+costing.</li>
+<li><strong>The retry pattern inflates the attempt count.</strong> ~23% of users account for
+essentially all of the DNS-failure volume, at ~109 failed attempts each for interstitial —
+so the fill rate reflects the endpoint's reachability, not literally "97 in 100 ad breaks
+show nothing" to every player.</li>
+<li><strong><code>ad_network='unknown'</code> on every failed row is expected</strong> — no
+network filled the request, so none is attributed.</li>
+<li>Full working, including the daily-trend chart code and the pandas aggregation, is in
+<code>notebooks/13_ad_fill_show_rate.ipynb</code>.</li>
+</ul>
+
+<footer>
+Raw GA4 export only; this export has <code>events_intraday_*</code> shards exclusively, so
+the current day is always partial. Times are UTC as stored.
+Regenerate: <code>uv run python dashboard/build_ad_fill_report.py</code>.
+</footer>
+
+</div></div></body></html>
