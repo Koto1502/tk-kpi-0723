@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pandas as pd
@@ -65,18 +66,18 @@ def window() -> tuple[str, str]:
 
 def build_data(lo: str, hi: str) -> dict:
     suffix = f"_TABLE_SUFFIX BETWEEN '{lo}' AND '{hi}'"
-    data: dict = {}
+    q: dict[str, str] = {}
 
     # 1. DAU by app version --------------------------------------------------
-    data["dau_version"] = js(run(f"""
+    q["dau_version"] = f"""
         SELECT event_date d, {VER} v,
                COUNT(DISTINCT user_pseudo_id) users
         FROM {TBL}
         WHERE {suffix} AND {VER} IS NOT NULL
-        GROUP BY d, v ORDER BY d, v"""))
+        GROUP BY d, v ORDER BY d, v"""
 
     # 2. Daily KPIs ----------------------------------------------------------
-    data["daily"] = js(run(f"""
+    q["daily"] = f"""
         WITH base AS (
           SELECT event_date d, event_name e, user_pseudo_id u,
                  event_value_in_usd ev_usd, {P_NUM('value')} v_val
@@ -92,7 +93,7 @@ def build_data(lo: str, hi: str) -> dict:
           COUNT(DISTINCT IF(e='ad_impression_MAX', u, NULL)) ad_viewers,
           COUNTIF(e='in_app_purchase') iap_events,
           COUNT(DISTINCT IF(e='in_app_purchase', u, NULL)) payers
-        FROM base GROUP BY d ORDER BY d"""))
+        FROM base GROUP BY d ORDER BY d"""
 
     # first_open cohort + activity CTE reused by retention + curve
     cohort_cte = f"""
@@ -108,15 +109,15 @@ def build_data(lo: str, hi: str) -> dict:
     # 3. Retention by cohort (classic day-N) ---------------------------------
     dn = lambda n: (f"ROUND(100*COUNT(DISTINCT IF(DATE_DIFF(a.ad,f.cohort,DAY)={n},"
                     f"f.u,NULL))/COUNT(DISTINCT f.u),1)")
-    data["retention"] = js(run(f"""
+    q["retention"] = f"""
         WITH {cohort_cte}
         SELECT FORMAT_DATE('%Y-%m-%d', f.cohort) cohort, COUNT(DISTINCT f.u) size,
           {dn(1)} d1, {dn(3)} d3, {dn(7)} d7, {dn(14)} d14
         FROM fo f JOIN act a USING(u)
-        GROUP BY cohort ORDER BY cohort"""))
+        GROUP BY cohort ORDER BY cohort"""
 
     # 4. Retention curve (day-0..20) -----------------------------------------
-    data["ret_curve"] = js(run(f"""
+    q["ret_curve"] = f"""
         WITH {cohort_cte}
         SELECT dd, SUM(is_active) active, SUM(is_eligible) eligible FROM (
           SELECT f.u, dd,
@@ -125,30 +126,30 @@ def build_data(lo: str, hi: str) -> dict:
           FROM fo f CROSS JOIN UNNEST(GENERATE_ARRAY(0,20)) dd
           LEFT JOIN act a ON a.u=f.u
           GROUP BY f.u, f.cohort, dd
-        ) GROUP BY dd ORDER BY dd"""))
+        ) GROUP BY dd ORDER BY dd"""
 
     # 5. IAA revenue by ad format --------------------------------------------
-    data["iaa_by_format"] = js(run(f"""
+    q["iaa_by_format"] = f"""
         SELECT {P_STR('ad_format')} fmt, COUNT(*) imps, ROUND(SUM({P_NUM('value')}),4) rev
         FROM {TBL} WHERE {suffix} AND event_name='ad_impression_MAX'
-        GROUP BY fmt ORDER BY rev DESC"""))
+        GROUP BY fmt ORDER BY rev DESC"""
 
     # 6. IAA revenue by rewarded placement -----------------------------------
-    data["iaa_by_placement"] = js(run(f"""
+    q["iaa_by_placement"] = f"""
         SELECT COALESCE(pl,'(none)') pl, COUNT(*) imps, ROUND(SUM(val),4) rev FROM (
           SELECT {P_STR('ad_placement')} pl, {P_STR('ad_format')} fmt, {P_NUM('value')} val
           FROM {TBL} WHERE {suffix} AND event_name='ad_impression_MAX'
-        ) WHERE fmt='REWARDED' GROUP BY pl ORDER BY rev DESC"""))
+        ) WHERE fmt='REWARDED' GROUP BY pl ORDER BY rev DESC"""
 
     # 7. IAP revenue by product ----------------------------------------------
-    data["iap_by_product"] = js(run(f"""
+    q["iap_by_product"] = f"""
         SELECT {P_STR('product_id')} product, COUNT(*) buys,
                COUNT(DISTINCT user_pseudo_id) buyers, ROUND(SUM(event_value_in_usd),2) rev
         FROM {TBL} WHERE {suffix} AND event_name='in_app_purchase'
-        GROUP BY product ORDER BY rev DESC"""))
+        GROUP BY product ORDER BY rev DESC"""
 
     # 8. Ad request/fill/show funnel -----------------------------------------
-    data["ad_funnel"] = js(run(f"""
+    q["ad_funnel"] = f"""
         SELECT d, ad_type,
           COUNTIF(e='ad_request') requests,
           COUNTIF(e='ad_request_status' AND status='success') fills,
@@ -156,10 +157,10 @@ def build_data(lo: str, hi: str) -> dict:
         FROM (
           SELECT event_date d, event_name e, {P_STR('ad_type')} ad_type, {P_STR('status')} status
           FROM {TBL} WHERE {suffix} AND event_name IN ('ad_request','ad_request_status','ad_show')
-        ) WHERE ad_type IS NOT NULL GROUP BY d, ad_type ORDER BY d, ad_type"""))
+        ) WHERE ad_type IS NOT NULL GROUP BY d, ad_type ORDER BY d, ad_type"""
 
     # 9. Level funnel & difficulty -------------------------------------------
-    data["levels"] = js(run(f"""
+    q["levels"] = f"""
         SELECT lvl,
           COUNT(DISTINCT IF(e='level_start',u,NULL)) starters,
           COUNTIF(e='level_win') wins,
@@ -168,18 +169,28 @@ def build_data(lo: str, hi: str) -> dict:
         FROM (
           SELECT event_name e, user_pseudo_id u, {P_INT('level')} lvl, {P_NUM('time_play')} tp
           FROM {TBL} WHERE {suffix} AND event_name IN ('level_start','level_win','level_lose')
-        ) WHERE lvl BETWEEN 1 AND 60 GROUP BY lvl ORDER BY lvl"""))
+        ) WHERE lvl BETWEEN 1 AND 60 GROUP BY lvl ORDER BY lvl"""
 
     # 10. Users vs revenue by country ----------------------------------------
-    data["geo"] = js(run(f"""
+    q["geo"] = f"""
         SELECT country, COUNT(DISTINCT u) users, ROUND(SUM(rev),2) rev FROM (
           SELECT geo.country country, user_pseudo_id u,
             IF(event_name='in_app_purchase', COALESCE(event_value_in_usd,0),0)
             + IF(event_name='ad_impression_MAX', COALESCE({P_NUM('value')},0),0) rev
           FROM {TBL} WHERE {suffix}
-        ) GROUP BY country ORDER BY users DESC LIMIT 12"""))
+        ) GROUP BY country ORDER BY users DESC LIMIT 12"""
 
-    return data
+    # Every query is independent, so run them side by side: BigQuery does the
+    # work, and serially the page spent ~2 min waiting on one job at a time.
+    return {k: js(df) for k, df in run_parallel(q).items()}
+
+
+def run_parallel(queries: dict[str, str], workers: int = 6,
+                 **kw) -> dict[str, pd.DataFrame]:
+    """Run independent queries concurrently; results keep the dict's order."""
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futs = {k: pool.submit(run, sql, **kw) for k, sql in queries.items()}
+        return {k: f.result() for k, f in futs.items()}
 
 
 def js(df):
@@ -230,7 +241,8 @@ def build_segments(lo: str, hi: str) -> dict:
     )
     iap_expr = "IF(event_name='in_app_purchase', COALESCE(event_value_in_usd,0), 0)"
 
-    users = run(f"""
+    seg_q = {}
+    seg_q["users"] = f"""
         WITH ev AS (
           SELECT user_pseudo_id u, event_timestamp ts, event_name e, event_date d,
                  {VER} v,
@@ -248,15 +260,19 @@ def build_segments(lo: str, hi: str) -> dict:
           ARRAY_AGG(c  IGNORE NULLS ORDER BY ts LIMIT 1)[SAFE_OFFSET(0)] country,
           ARRAY_AGG(v  IGNORE NULLS ORDER BY ts LIMIT 1)[SAFE_OFFSET(0)] fv,
           ARRAY_AGG(af IGNORE NULLS ORDER BY ts LIMIT 1)[SAFE_OFFSET(0)] af
-        FROM ev GROUP BY u""", gib=8)
+        FROM ev GROUP BY u"""
 
-    facts = run(f"""
+    seg_q["facts"] = f"""
         SELECT user_pseudo_id u, event_date d, {VER} v,
                SUM({iap_expr}) iap, SUM({rev_expr} - ({iap_expr})) adr,
                COUNTIF(event_name='session_start') sess,
                COUNTIF(event_name='ad_impression_MAX') imp
         FROM {TBL} WHERE {suffix}
-        GROUP BY u, d, v""", gib=8)
+        GROUP BY u, d, v"""
+    # One row per user / per user-day-build: these outgrow bq_helper's 100k default
+    # (facts hit it exactly on 2026-09-25 and silently truncated the cube).
+    res = run_parallel(seg_q, gib=8, max_rows=1_000_000)
+    users, facts = res["users"], res["facts"]
 
     camp_map = campaign_by_af()
 
@@ -395,10 +411,13 @@ def main():
 
     lo, hi = window()
     print(f"export window: {lo} -> {hi}")
-    data = build_data(lo, hi)
-    for k, v in data.items():
-        print(f"  {k:16s} {len(v):4d} rows")
-    data.update(build_segments(lo, hi))
+    with ThreadPoolExecutor(max_workers=2) as pool:   # the two halves share nothing
+        f_data = pool.submit(build_data, lo, hi)
+        f_seg = pool.submit(build_segments, lo, hi)
+        data = f_data.result()
+        for k, v in data.items():
+            print(f"  {k:16s} {len(v):4d} rows")
+        data.update(f_seg.result())
 
     payload = json.dumps(data, separators=(",", ":"))  # compact: the segment cube adds ~1 MB of separators otherwise
     html = template.read_text(encoding="utf-8").replace("/*__DATA__*/", payload)
