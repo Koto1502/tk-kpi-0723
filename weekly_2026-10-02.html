@@ -338,6 +338,32 @@ GROUP BY x.u</pre></details>
 <div class="tw"><table><thead><tr><th class="l">group</th><th class="">users</th><th class="">IAP per user, 10 days before $</th><th class="">IAP per user, event $</th><th class="">% paying before</th><th class="">% paying during event</th><th class="">change %</th></tr></thead><tbody><tr class=""><td class="l">did not spin</td><td class="">402</td><td class="">1.3</td><td class="">1.1</td><td class="">6</td><td class="">3.5</td><td class="">-17</td></tr><tr class=""><td class="l">spun</td><td class="">62</td><td class="">3.7</td><td class="">4.1</td><td class="">17.7</td><td class="">14.5</td><td class="">11.9</td></tr></tbody></table></div>
 
 <h3>How ad tickets are granted</h3>
+<div class="claim"><p><strong>Normal: one event ad → one ticket. Actual: the daily cap of five tickets is granted in one burst, mostly without ads.</strong></p><p>Per user × day: ad tickets (<code>earn · ads_lucky_machine_ticket</code>) against event ads watched (impressions on <code>rewareded_mini_event</code>) and the game's own <code>ad_rewarded_rewareded_mini_event</code>. Users with 1–3 tickets match their ads; users with 5 tickets received them a few seconds apart with few or no ads — in China, where ads cannot load, with none at all.</p></div>
+<div class="tw"><table><thead><tr><th class="l">region</th><th class="">ad tickets per user-day</th><th class="">user-days</th><th class="">tickets</th><th class="">event ads watched</th><th class="">event ad rewards logged</th><th class="">median seconds, first to last ticket</th></tr></thead><tbody><tr class=""><td class="l">China</td><td class="">1</td><td class="">7</td><td class="">7</td><td class="">0</td><td class="">0</td><td class="">0</td></tr><tr class=""><td class="l">China</td><td class="">2</td><td class="">1</td><td class="">2</td><td class="">0</td><td class="">0</td><td class="">1.1</td></tr><tr class=""><td class="l">China</td><td class="">4</td><td class="">3</td><td class="">12</td><td class="">0</td><td class="">0</td><td class="">85.3</td></tr><tr class=""><td class="l">China</td><td class="">5</td><td class="">103</td><td class="">515</td><td class="">0</td><td class="">0</td><td class="">4.2</td></tr><tr class=""><td class="l">rest of world</td><td class="">1</td><td class="">2</td><td class="">2</td><td class="">1</td><td class="">1</td><td class="">0</td></tr><tr class=""><td class="l">rest of world</td><td class="">2</td><td class="">2</td><td class="">4</td><td class="">4</td><td class="">4</td><td class="">45.5</td></tr><tr class=""><td class="l">rest of world</td><td class="">3</td><td class="">2</td><td class="">6</td><td class="">3</td><td class="">3</td><td class="">2.7</td></tr><tr class=""><td class="l">rest of world</td><td class="">5</td><td class="">46</td><td class="">230</td><td class="">25</td><td class="">26</td><td class="">4.6</td></tr></tbody></table></div>
+<details><summary>Show the query</summary><pre>-- Lucky Machine ad tickets, time-free check, 2026-09-16 .. 2026-09-25: per user × day, tickets granted from ads
+-- vs event ads actually watched (impressions on rewareded_mini_event and the game&#x27;s own ad_rewarded_rewareded_mini_event).
+WITH x AS (
+  SELECT user_pseudo_id u, event_date d, event_name ev, event_timestamp ts, geo.country = &#x27;China&#x27; cn,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;position&#x27;) pos,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_placement&#x27;) placement
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE _TABLE_SUFFIX BETWEEN &#x27;20260916&#x27; AND &#x27;20260925&#x27;
+    AND event_name IN (&#x27;earn&#x27;, &#x27;ad_impression_MAX&#x27;, &#x27;ad_rewarded_rewareded_mini_event&#x27;)
+),
+c AS (
+  SELECT u, d, LOGICAL_OR(cn) cn,
+    COUNTIF(ev = &#x27;earn&#x27; AND pos = &#x27;ads_lucky_machine_ticket&#x27;)                       tickets,
+    COUNTIF(ev = &#x27;ad_impression_MAX&#x27; AND placement = &#x27;rewareded_mini_event&#x27;)        event_ads,
+    COUNTIF(ev = &#x27;ad_rewarded_rewareded_mini_event&#x27;)                                event_ad_rewards,
+    (MAX(IF(ev = &#x27;earn&#x27; AND pos = &#x27;ads_lucky_machine_ticket&#x27;, ts, NULL))
+     - MIN(IF(ev = &#x27;earn&#x27; AND pos = &#x27;ads_lucky_machine_ticket&#x27;, ts, NULL))) / 1e6   span_s
+  FROM x GROUP BY 1, 2
+)
+SELECT IF(cn, &#x27;China&#x27;, &#x27;rest of world&#x27;) region, tickets AS tickets_per_user_day,
+  COUNT(*) user_days, SUM(tickets) tickets, SUM(event_ads) event_ads_watched, SUM(event_ad_rewards) event_ad_rewards,
+  ROUND(APPROX_QUANTILES(span_s, 2)[OFFSET(1)], 1) median_seconds_first_to_last_ticket
+FROM c WHERE tickets &gt; 0
+GROUP BY 1, 2 ORDER BY 1, 2</pre></details>
 <div class="claim"><p><strong>87% of ad tickets outside China are granted with no ad activity beforehand.</strong></p><p>For each <code>ads_lucky_machine_ticket</code> grant, the same user's ad events from 60 seconds before to 30 seconds after are classified: an impression on the event placement (expected path), an impression elsewhere, an ad show or reward without impression, a failed load, a tap only, or nothing. Grants are issued in bursts roughly one second apart, approximately the full daily allowance at once, which is not compatible with one rewarded ad per ticket (a rewarded ad lasts 15–30 seconds).</p></div>
 <div class="tw"><table><thead><tr><th class="l">region</th><th class="l">what_preceded_the_grant</th><th class="">grants</th><th class="">users</th><th class="">share %</th></tr></thead><tbody><tr class=""><td class="l">China</td><td class="l">no ad: load failed, ticket granted anyway</td><td class="">86</td><td class="">18</td><td class="">16.1</td></tr><tr class=""><td class="l">China</td><td class="l">no ad activity from 60 s before to 30 s after</td><td class="">447</td><td class="">96</td><td class="">83.9</td></tr><tr class=""><td class="l">rest of world</td><td class="l">event ad shown (impression on rewareded_mini_event)</td><td class="">28</td><td class="">7</td><td class="">11.4</td></tr><tr class=""><td class="l">rest of world</td><td class="l">an ad was shown, but on another placement</td><td class="">2</td><td class="">1</td><td class="">0.800</td></tr><tr class=""><td class="l">rest of world</td><td class="l">ad show/reward logged, no impression</td><td class="">3</td><td class="">3</td><td class="">1.2</td></tr><tr class=""><td class="l">rest of world</td><td class="l">no ad: load failed, ticket granted anyway</td><td class="">16</td><td class="">4</td><td class="">6.5</td></tr><tr class=""><td class="l">rest of world</td><td class="l">no ad activity from 60 s before to 30 s after</td><td class="">196</td><td class="">41</td><td class="">80</td></tr></tbody></table></div>
 <details><summary>Show the query</summary><pre>-- For every Lucky Machine ad-ticket grant: what ad activity did the same user log from 60 s before to 30 s after it?
@@ -485,6 +511,70 @@ GROUP BY 1, 2 ORDER BY grants DESC</pre></details>
 </details><details class="sec" open><summary><h2>5 · Ad monetisation</h2></summary>
 <div class="claim"><p><strong>No rewarded-ad rewards are granted without an ad: 99.8% of 4,168 rewards have a matching impression.</strong></p><p>Every reward the game grants for a rewarded ad is logged as <code>ad_rewarded_&lt;placement&gt;</code>. For each one, the same user's ad events from 120 seconds before to 30 seconds after were checked (AppLovin MAX logs the impression 0.02–17 seconds <em>after</em> the reward callback, median 0.25 s, so the window must extend past the reward). 18 September – 1 October, excluding China.</p></div>
 <div class="tw"><table><thead><tr><th class="l">ad activity around the reward (−120 s … +30 s)</th><th class="">rewards</th><th class="">share %</th></tr></thead><tbody><tr class=""><td class="l">rewarded ad shown (same placement)</td><td class="">4,153</td><td class="">99.6</td></tr><tr class=""><td class="l">backup interstitial shown (same placement)</td><td class="">2</td><td class="">0.050</td></tr><tr class=""><td class="l">ad shown on another placement</td><td class="">3</td><td class="">0.070</td></tr><tr class=""><td class="l">ad_show logged, no impression</td><td class="">2</td><td class="">0.050</td></tr><tr class=""><td class="l">no ad: watch-ad tap only</td><td class="">8</td><td class="">0.190</td></tr></tbody></table></div>
+<p><strong>Proof 1 — timing.</strong> No id links an impression to a reward, so rewards are paired on user + placement +
+time. Gap from each reward to the next rewarded impression on the same placement, searching ±1 hour:</p>
+<div class="tw"><table><thead><tr><th class="l">gap_bucket</th><th class="">rewards</th><th class="">max_gap_s</th><th class="">also_impression_within_17s_before</th></tr></thead><tbody><tr class=""><td class="l">next impression 0–1 s after</td><td class="">3,732</td><td class="">0.998</td><td class="">25</td></tr><tr class=""><td class="l">1–5 s after</td><td class="">383</td><td class="">4.8</td><td class="">2</td></tr><tr class=""><td class="l">5–17 s after</td><td class="">28</td><td class="">16.6</td><td class="">0</td></tr><tr class=""><td class="l">17–60 s after</td><td class="">6</td><td class="">59.0</td><td class="">0</td></tr><tr class=""><td class="l">1–10 min after</td><td class="">4</td><td class="">110</td><td class="">1</td></tr><tr class=""><td class="l">no impression within 1 h after</td><td class="">15</td><td class="">–</td><td class="">0</td></tr></tbody></table></div>
+<p><strong>Proof 2 — counts, no timestamps.</strong> Per user × placement × day, rewards vs rewarded impressions. Never more
+impressions than rewards; the excess cells each hold exactly one reward:</p>
+<div class="tw"><table><thead><tr><th class="l">comparison</th><th class="">user_placement_days</th><th class="">rewards</th><th class="">impressions</th><th class="">excess_rewards</th></tr></thead><tbody><tr class=""><td class="l">equal</td><td class="">1,923</td><td class="">4,088</td><td class="">4,088</td><td class="">0</td></tr><tr class=""><td class="l">more rewards than impressions</td><td class="">26</td><td class="">80</td><td class="">54</td><td class="">26</td></tr></tbody></table></div>
+<details><summary>Query (proof 1)</summary><pre>-- Proof of the reward ↔ impression pairing, 2026-09-18 .. 2026-10-01, ex-China.
+-- No shared id exists, so pair on user + placement + time. For every reward (ad_rewarded_&lt;placement&gt;) find the
+-- nearest REWARDED impression on the same placement AFTER it and BEFORE it, searching ±1 hour, and bucket the gaps.
+WITH x AS (
+  SELECT user_pseudo_id u, event_name ev, event_timestamp ts,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_placement&#x27;) placement,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_format&#x27;) fmt
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE _TABLE_SUFFIX BETWEEN &#x27;20260918&#x27; AND &#x27;20261001&#x27; AND geo.country != &#x27;China&#x27;
+    AND (event_name LIKE &#x27;ad\\_rewarded\\_%&#x27; OR event_name = &#x27;ad_impression_MAX&#x27;)
+),
+r AS (SELECT u, ts, REGEXP_REPLACE(ev, r&#x27;^ad_rewarded_&#x27;, &#x27;&#x27;) placement
+      FROM x WHERE ev LIKE &#x27;ad\\_rewarded\\_%&#x27; AND ev != &#x27;ad_rewarded_show_failed&#x27;),
+imp AS (SELECT u, ts, placement FROM x WHERE ev = &#x27;ad_impression_MAX&#x27; AND fmt = &#x27;REWARDED&#x27;),
+pair AS (
+  SELECT r.u, r.ts, r.placement,
+    MIN(IF(i.ts &gt;= r.ts, (i.ts - r.ts) / 1e6, NULL)) next_s,     -- seconds to the next same-placement impression
+    MIN(IF(i.ts &lt;  r.ts, (r.ts - i.ts) / 1e6, NULL)) prev_s      -- seconds since the previous one
+  FROM r LEFT JOIN imp i ON i.u = r.u AND i.placement = r.placement AND ABS(i.ts - r.ts) &lt;= 3600000000
+  GROUP BY 1, 2, 3
+)
+SELECT
+  CASE
+    WHEN next_s IS NULL      THEN &#x27;9 no impression within 1 h after&#x27;
+    WHEN next_s &lt; 1          THEN &#x27;1 next impression 0–1 s after&#x27;
+    WHEN next_s &lt; 5          THEN &#x27;2 1–5 s after&#x27;
+    WHEN next_s &lt; 17         THEN &#x27;3 5–17 s after&#x27;
+    WHEN next_s &lt; 60         THEN &#x27;4 17–60 s after&#x27;
+    WHEN next_s &lt; 600        THEN &#x27;5 1–10 min after&#x27;
+    ELSE                          &#x27;6 10–60 min after&#x27;
+  END AS gap_bucket,
+  COUNT(*) rewards,
+  ROUND(MAX(next_s), 3) max_gap_s,
+  COUNTIF(prev_s &lt; 17) also_impression_within_17s_before
+FROM pair GROUP BY 1 ORDER BY 1</pre></details><details><summary>Query (proof 2)</summary><pre>-- Time-free check: per user × placement × day, number of rewards vs number of rewarded impressions.
+-- If every reward has exactly one impression, the counts are equal regardless of timestamps.
+WITH x AS (
+  SELECT user_pseudo_id u, event_date d, event_name ev,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_placement&#x27;) placement,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_format&#x27;) fmt
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE _TABLE_SUFFIX BETWEEN &#x27;20260918&#x27; AND &#x27;20261001&#x27; AND geo.country != &#x27;China&#x27;
+    AND (event_name LIKE &#x27;ad\\_rewarded\\_%&#x27; OR event_name = &#x27;ad_impression_MAX&#x27;)
+),
+c AS (
+  SELECT u, d, COALESCE(IF(ev = &#x27;ad_impression_MAX&#x27;, placement, NULL), REGEXP_REPLACE(ev, r&#x27;^ad_rewarded_&#x27;, &#x27;&#x27;)) placement,
+    COUNTIF(ev LIKE &#x27;ad\\_rewarded\\_%&#x27; AND ev != &#x27;ad_rewarded_show_failed&#x27;) rewards,
+    COUNTIF(ev = &#x27;ad_impression_MAX&#x27; AND fmt = &#x27;REWARDED&#x27;) impressions
+  FROM x GROUP BY 1, 2, 3
+)
+SELECT
+  CASE WHEN rewards = impressions THEN &#x27;1 equal&#x27;
+       WHEN rewards &gt; impressions THEN &#x27;2 more rewards than impressions&#x27;
+       ELSE &#x27;3 more impressions than rewards&#x27; END AS comparison,
+  COUNT(*) user_placement_days, SUM(rewards) rewards, SUM(impressions) impressions,
+  SUM(GREATEST(rewards - impressions, 0)) excess_rewards
+FROM c WHERE rewards &gt; 0 OR impressions &gt; 0
+GROUP BY 1 ORDER BY 1</pre></details>
 <h3>By build, placement, country and entitlement</h3>
 <p>No segment shows a systematic gap: the 10 unmatched rewards are spread across builds, placements and
 countries, one or two each. Owning a no-ads SKU or membership does not change the result.</p>
