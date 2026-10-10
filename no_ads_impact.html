@@ -30,6 +30,7 @@ a{color:var(--series-1)}
 .verdict{border-left:4px solid var(--good);background:var(--surface-2);
   padding:16px 20px;border-radius:0 10px 10px 0;margin:20px 0}
 .verdict h2{margin:0 0 8px;border:0;padding:0;font-size:20px}
+.verdict.bad{border-left-color:var(--series-2)}
 .verdict p{margin:7px 0}
 .claim{border-left:3px solid var(--series-2);padding:2px 0 2px 14px;margin:14px 0}
 .claim p{margin:5px 0}
@@ -72,75 +73,115 @@ footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--border);
 <h1>Should we revert the no-ads sale-pack removal?</h1>
 <div class="sub">v32 (live <strong>2026-09-21</strong>) removed <code>skip.ad.permanent.sale</code>
   ($10.99), <code>skip.ad.30days.sale</code> ($4.99) and <code>skip.ad.annual.sale</code> ($4.99).
-  This is the decision document: install-cohort &times; matched days-since-install, ex-China,
-  to <strong>2026-10-10</strong> — 19 post-removal days and 2,287 v32+ installs, up from
+  Data through <strong>2026-10-10</strong> — 19 post-removal days, 2,287 v32+ installs, up from
   255 installs / 3 payers on 2026-09-25.
-  Supersedes the 2026-09-25 early read that previously held this page name.</div>
+  <strong>The offer boundary is empirically v31&nbsp;|&nbsp;v32:</strong> the last <code>.sale</code>
+  purchase anywhere in the export is 2026-09-21 (Play's own order record), and every
+  build from v32 on shows zero <code>.sale</code> taps, purchases or grant payouts.</div>
 
-<div class="verdict">
-<h2>Verdict: keep it removed — do not revert now, and fix the acknowledgement bug first</h2>
-<p><strong>The removal is revenue-neutral within the precision this data supports, and it did
-not fix the refund defect it is usually credited with.</strong> Reverting would re-add a SKU
-whose orders refund at <strong>9.4%</strong>
-before that defect is fixed, in exchange for a revenue difference smaller than the measurement
-error. That makes this a <em>conditional</em> keep: ship the fix, then re-test the price point.</p>
-<ul>
-<li><strong>Net revenue effect: indistinguishable from zero.</strong> D0–D2
-  +0.0277 $/install (90% CI -0.1382 … +0.1993),
-  campaign-mix reweighted +0.0018; D0–D7
-  -0.0863 (CI -0.2949 … +0.1322).
-  At 843 installs/week that is
-  <strong>−$73 to $23/week</strong> — against the
-  <strong>$241/week</strong> of <code>.sale</code> revenue that vanished
-  (ex-China, offer-present window).</li>
-<li><strong>The break-even test fails outright.</strong> The $29.99 twin needs
-  <strong>&ge;36.6%</strong> of <code>.sale</code> buyers to re-convert. Observed:
-  full-price buyers went 1.9 &rarr; 1.5 per 1,000 installs, i.e.
-  <strong>-3.6%</strong> (CI -18.9% … +12.4%) —
-  the interval excludes break-even in every window. Play's accounting record agrees: the
-  $29.99 SKU sold 14
-  orders before the removal and
-  8 after.</li>
-<li><strong>What replaced it is a worse product at the same price.</strong> The lost volume went to the
-  surviving <code>skip.ad.30days</code> pack: the same $10.99 now buys <em>30 days</em>
-  of no ads instead of <em>permanent</em> — Play orders
+<div style="border:1px solid var(--border);background:var(--surface-2);border-radius:10px;
+            padding:16px 20px;margin:16px 0">
+  <h2 style="margin:0 0 8px;border:0;padding:0;font-size:18px">In plain language</h2>
+  <p><strong>What's happening.</strong> In v32 (21 September) we removed the three discounted
+  &ldquo;no-ads&rdquo; packs. The players who used to buy the $10.99 one did not move up to the
+  $29.99 pack — we needed 37% of them to trade up for the change to pay for itself, and about 0%
+  did. They moved sideways instead, to the surviving $10.99 <em>30-day</em> pack, which gives less
+  for the same money and gets refunded at 32% of orders against 9% for the pack we removed. Net
+  effect: roughly <strong>$241–$267 a week</strong> of discounted no-ads revenue
+  disappeared, and nothing we can measure replaced it. The one number that made the removal look
+  harmless — ad revenue went up — turns out to be a property of the new build, not of the shop
+  change: v34 earns $78.46 per 1,000 ad impressions against
+  $36.68 for v29 <em>in the same weeks</em>.</p>
+  <p><strong>What should happen.</strong> Put the <strong>$10.99 permanent</strong> no-ads pack back
+  as the new-player offer — the price point was working, and permanent is the better product than
+  the 30-day pack that absorbed the volume. Separately, fix the bug that makes Google auto-refund
+  purchases the client never acknowledged at exactly 72.17&nbsp;hours after the charge; that
+  bug is real, it is not specific to these packs, it is still live on the packs that remain, and
+  restoring the offer neither causes nor cures it. Then re-measure.</p>
+</div>
+<div style="border:1px solid #eb6834;background:#eb683414;border-radius:8px;padding:10px 14px;margin:14px 0;font-size:14px">
+  <strong>This reverses the direction of the two earlier reads of this page.</strong>
+  2026-09-25 said no-ads revenue per install was down 70–75% but called the net
+  &ldquo;not yet significant&rdquo;; the 2026-10-10 draft said keep it removed. Both leaned on an
+  ad-revenue increase as the offsetting term. <a href="#adtest">Section 4 tests that term directly
+  and withdraws it</a> — it is a property of the v32+ ad stack, not of the removal. With it
+  withdrawn, every window's point estimate is negative, the destroyed revenue line is the only
+  precisely measured term, and the trade-up thesis that justified the change fails by a factor of
+  ten.</div>
+
+<div class="verdict revert bad">
+<h2>Verdict: roll it back — restore ONE $10.99 permanent no-ads pack</h2>
+<p>This recommendation rests on <strong>three things that do not depend on the design-sensitive
+net-per-install estimate</strong>, followed by the two disclosures that make the page defensible
+(section 2). Restore <code>skip.ad.permanent.sale</code> — permanent ad removal plus the same
+20,000 gems as the $29.99 twin, at $10.99, as the standing new-player offer.
+<strong>Do not</strong> reinstate all three SKUs: <code>skip.ad.annual.sale</code> has never been
+tapped or bought once in the entire export, and <code>skip.ad.30days.sale</code> had already stopped
+selling of its own accord on 09-15. <code>skip.ad.30days</code> is a candidate to prune or fix on
+delivery grounds (it refunds at 31.6%).</p>
+<ol>
+<li><strong>The trade-up definitively did not happen.</strong> Break-even needed
+  <strong>&ge;36.6%</strong> of <code>.sale</code> buyers to re-convert at $29.99;
+  observed <strong>-3.6%</strong> (CI -18.9% …
+  +12.4%) — the interval excludes break-even in every window. Play's order record
+  agrees: the $29.99 twin went
+  14 &rarr;
+  8 orders,
+  while the $10.99 30-day pack went
   10 &rarr;
-  19,
-  and it refunds at
+  19.
+  Buyers took 30 days instead of permanent at the same price. The demand was price-driven.</li>
+<li><strong>The destroyed revenue has no demonstrated replacement.</strong>
+  <code>.sale</code> revenue fell <strong>−$0.15 per install</strong> over
+  D0–D2 (90% CI −$0.18 … −$0.11) — a
+  66% collapse of the no-ads IAP line — worth
+  <strong>$241–$267/week</strong> ex-China depending on whether devices with no
+  <code>first_open</code> are counted ($586–$648
+  over 17 days; August ran $280–632/wk). The offsetting terms are either not significant
+  (other IAP $0.06, CI −$0.04 … $0.18) or
+  withdrawn below as a build artifact (ads).</li>
+<li><strong>What replaced it is a worse product at the same price.</strong> The same
+  $10.99 now buys 30 days of no ads instead of permanent, and
+  <code>skip.ad.30days</code> refunds at
   <strong>31.6%</strong>
-  (Fisher p&nbsp;=&nbsp;0.026 vs the removed SKU's pre-removal rate).</li>
-<li><strong>Reverting buys no refund relief, and neither does keeping it removed.</strong> The game's
-  order refund rate <em>rose</em> from 3.7% to
-  5.4% while the non-ad-removal catalogue was
-  flat (2.3% &rarr;
-  2.9%). The defect is real and unfixed:
-  <strong>10 Google-initiated refunds, every one exactly 72.17&nbsp;h after the charge</strong> —
-  Play auto-refunding purchases the client never acknowledged — and 6 of the 10 are on the
-  <em>surviving</em> full-price SKUs.</li>
-<li><strong>Players are hunting for the offer and hitting a wall:</strong> no-ads card taps
-  25.6 &rarr; 73.4 per 1,000 installs
-  (2.9&times;), and
-  full-price card taps 9.7 &rarr;
-  28.7.</li>
-</ul>
-<p class="sub" style="margin-top:10px">The condition: fix the unacknowledged-purchase path, then re-run
-this page. If refunds on the surviving ad-removal SKUs clear and the D0–D7 revenue gap is still
-there, restore <em>one</em> $10.99 permanent pack — not the three-SKU discount bundle.
-The strongest counter-argument, and what would falsify this verdict, is in section 7.</p>
+  against 9.4%
+  for the pack that was removed (Fisher p&nbsp;=&nbsp;0.026);
+  order volume only partially transferred (19
+  post-removal orders in 20 days against
+  64 before).</li>
+</ol>
+<p><strong>Supporting, not decisive — the net-per-install estimate.</strong> With the ad term
+withdrawn the primary estimate is −$0.04/install over D0–D2
+(CI −$0.20 … $0.12) and −$0.13 over D0–D7
+(CI −$0.33 … $0.07) — −$112 to
+−$35/week at today's 843 installs/week,
+−$225 to −$70/week at the 1,691/week the game ran before the
+removal. <strong>Every one of those intervals spans zero, the design confounds the removal with
+calendar time, and a version-defined split of the same data says the opposite</strong> (section 2).
+Do not lead with this number; it is corroborating, not load-bearing.</p>
+<p><strong>Separate action item, not a condition of this verdict:</strong> the acknowledgement bug is
+real, unfixed, and hits the surviving full-price SKUs —
+<strong>10 Google-initiated refunds, every one 72.167–72.173&nbsp;h after the charge</strong>
+(<code>skip.ad.permanent</code> &times;3, <code>skip.ad.30days</code> &times;3,
+<code>skip.ad.30days.sale</code> &times;1, <code>skip.ad.permanent.sale</code> &times;1,
+<code>auto.blessing</code> &times;2), which is Play auto-refunding a purchase the client
+never acknowledged. It is not <code>.sale</code>-specific, restoring the offer neither causes nor
+cures it, and it must be fixed regardless of this decision (section 7). The strongest argument
+<em>against</em> rolling back is in section 8.</p>
 </div>
 
-<h2>0 · The six numbers this verdict rests on</h2>
-<div class="tw"><table><tr><th class="l">Number</th><th class="">Value</th><th class="">90% CI / detail</th><th class="">significant</th><th class="">sample</th></tr><tr class="on"><td class="l ">Net revenue per new install, D0–D2</td><td class="">+0.0277</td><td class="">-0.1382 … +0.1993</td><td class="">n.s.</td><td class="">1,988 vs 4,107</td></tr><tr><td class="l ">Net revenue per new install, D0–D7</td><td class="">-0.0863</td><td class="">-0.2949 … +0.1322</td><td class="">n.s.</td><td class="">1,409 vs 4,107</td></tr><tr><td class="l ">.sale revenue destroyed, D0–D2 $/install</td><td class="">-0.1457</td><td class="">-0.1823 … -0.1112</td><td class="">yes</td><td class="">50 buyers pre</td></tr><tr><td class="l ">Substitution (F−P)/S vs break-even</td><td class="">-3.6%</td><td class="">-18.9% … +12.4%</td><td class="">no</td><td class="">needs ≥36.6%; 3 buyers post</td></tr><tr class="on"><td class="l ">Implied net, $/week at current install rate</td><td class="">$23</td><td class="">−$116 … $168</td><td class="">n.s.</td><td class="">843 installs/wk</td></tr><tr><td class="l ">Play order refund rate, before → after</td><td class="">3.7% → 5.4%</td><td class="">17/461 → 13/239</td><td class="">worse</td><td class="">non-ad-removal flat 2.3% → 2.9%</td></tr></table></div>
+<h2>0 · The numbers this verdict rests on</h2>
+<div class="tw"><table><tr><th class="l">Number</th><th class="">Value</th><th class="">90% CI / detail</th><th class="">significant</th><th class="">sample</th></tr><tr><td class="l ">Trade-up achieved vs the 36.6% break-even</td><td class="">-3.6%</td><td class="">-18.9% … +12.4%</td><td class="">failed</td><td class="">50 .sale buyers lost; $29.99 orders 14 → 8</td></tr><tr><td class="l ">Where the volume went instead</td><td class="">skip.ad.30days</td><td class="">same $10.99, 30 days not permanent; orders 10 → 19</td><td class="">worse</td><td class="">refunds 6/19 = 31.6% (Fisher p=0.026)</td></tr><tr class="on"><td class="l ">.sale revenue destroyed</td><td class="">−$0.15/install</td><td class="">-0.1457 (−$0.18 … −$0.11)</td><td class="">yes</td><td class="">$241–$267/week; August $280–632/wk</td></tr><tr><td class="l ">.sale revenue destroyed, share of the no-ads line</td><td class="">66%</td><td class="">$0.22 → $0.12 per install</td><td class="">—</td><td class="">17d pre-window</td></tr><tr><td class="l ">Ad credit withdrawn: same week, v34 vs v29</td><td class="">$77.93</td><td class="">v29 $37.97 per 1k imps; fill 81.0% vs 65.1%</td><td class="">build</td><td class="">revenue per impression ≠ shop card</td></tr><tr><td class="l ">Net revenue per new install, ads withdrawn, D0–D2 (design-sensitive)</td><td class="">−$0.04</td><td class="">-0.1974 … +0.1177</td><td class="">n.s.</td><td class="">1,988 vs 4,107 installs</td></tr><tr><td class="l ">Net revenue per new install, ads withdrawn, D0–D7 (design-sensitive)</td><td class="">−$0.13</td><td class="">-0.3291 … +0.0739</td><td class="">n.s.</td><td class="">1,409 vs 4,107 installs</td></tr><tr><td class="l ">Naive version-defined split (a trap, not evidence)</td><td class="">$0.06</td><td class="">v32+ $0.35 IAP/install — would argue the opposite</td><td class="">invalid</td><td class="">47.1% of the v31-or-older arm is China mirror traffic</td></tr><tr><td class="l ">Play order refund rate, before → after</td><td class="">3.7% → 5.4%</td><td class="">17/461 → 13/239</td><td class="">worse</td><td class="">non-ad-removal flat 2.3% → 2.9%</td></tr></table></div>
 
 <h2>1 · What shipped, and what is left of the offer</h2>
 <div class="claim"><p><strong>Claim.</strong> The <code>.sale</code> packs stopped selling with v32
-2026-09-21) and have not been bought since. v32–v36 show
+(live 2026-09-21) and have not been bought since. v32–v36 show
 <strong>zero</strong> <code>.sale</code> taps, purchases, reward grants or purchase successes across
 2,311 installs, while v28 and v29 were
 still selling them right up to launch day (last <code>.sale</code> order 2026-09-21 22:52 UTC in Play's
 accounting record). <code>skip.ad.annual.sale</code> has never been tapped or bought once in the
 entire export despite being ACTIVE on Play — the one genuinely free prune.</p></div>
-<div class="tw"><table><tr><th class="l">build</th><th class="">first day</th><th class="">last day</th><th class="">users</th><th class="">installs</th><th class="">.sale taps</th><th class="">.sale buys</th><th class="">.sale grants</th><th class="">.sale $</th><th class="">full-price taps</th><th class="">full-price buys</th><th class="">full-price $</th><th class="l">last .sale buy</th></tr><tr><td class="l ">26.2</td><td class="">2026-09-14</td><td class="">2026-10-10</td><td class="">1,395</td><td class="">583</td><td class="">12</td><td class="">12</td><td class="">6</td><td class="">$147.51</td><td class="">21</td><td class="">1</td><td class="">$12.75</td><td class="l ">2026-09-16</td></tr><tr><td class="l ">28</td><td class="">2026-09-16</td><td class="">2026-10-10</td><td class="">356</td><td class="">180</td><td class="">6</td><td class="">3</td><td class="">1</td><td class="">$35.71</td><td class="">9</td><td class="">3</td><td class="">$100.58</td><td class="l ">2026-09-17</td></tr><tr><td class="l ">29</td><td class="">2026-09-17</td><td class="">2026-10-10</td><td class="">2,223</td><td class="">1,497</td><td class="">6</td><td class="">5</td><td class="">1,646</td><td class="">$62.82</td><td class="">19</td><td class="">3</td><td class="">$96.67</td><td class="l ">2026-09-21</td></tr><tr><td class="l ">32</td><td class="">2026-09-21</td><td class="">2026-10-09</td><td class="">493</td><td class="">243</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">$0.00</td><td class="">18</td><td class="">1</td><td class="">$13.77</td><td class="l ">NaT</td></tr><tr><td class="l ">33</td><td class="">2026-09-23</td><td class="">2026-10-10</td><td class="">589</td><td class="">345</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">$0.00</td><td class="">47</td><td class="">3</td><td class="">$54.44</td><td class="l ">NaT</td></tr><tr><td class="l ">34</td><td class="">2026-09-25</td><td class="">2026-10-10</td><td class="">2,644</td><td class="">1,707</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">$0.00</td><td class="">111</td><td class="">18</td><td class="">$329.68</td><td class="l ">NaT</td></tr></table></div>
+<div class="tw"><table><tr><th class="l">build</th><th class="">first day</th><th class="">last day</th><th class="">users</th><th class="">installs</th><th class="">.sale taps</th><th class="">.sale buys</th><th class="">.sale grants</th><th class="">.sale $</th><th class="">full-price taps</th><th class="">full-price buys</th><th class="">full-price $</th><th class="l">last .sale buy</th></tr><tr><td class="l ">26.2</td><td class="">2026-09-14</td><td class="">2026-10-10</td><td class="">1,395</td><td class="">583</td><td class="">12</td><td class="">12</td><td class="">6</td><td class="">$147.51</td><td class="">21</td><td class="">1</td><td class="">$12.75</td><td class="l ">2026-09-16</td></tr><tr><td class="l ">28</td><td class="">2026-09-16</td><td class="">2026-10-10</td><td class="">356</td><td class="">180</td><td class="">6</td><td class="">3</td><td class="">1</td><td class="">$35.71</td><td class="">9</td><td class="">3</td><td class="">$100.58</td><td class="l ">2026-09-17</td></tr><tr><td class="l ">29</td><td class="">2026-09-17</td><td class="">2026-10-10</td><td class="">2,223</td><td class="">1,497</td><td class="">6</td><td class="">5</td><td class="">1,646</td><td class="">$62.82</td><td class="">19</td><td class="">3</td><td class="">$96.67</td><td class="l ">2026-09-21</td></tr><tr><td class="l ">32</td><td class="">2026-09-21</td><td class="">2026-10-09</td><td class="">493</td><td class="">243</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">$0.00</td><td class="">18</td><td class="">1</td><td class="">$13.77</td><td class="l ">–</td></tr><tr><td class="l ">33</td><td class="">2026-09-23</td><td class="">2026-10-10</td><td class="">589</td><td class="">345</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">$0.00</td><td class="">47</td><td class="">3</td><td class="">$54.44</td><td class="l ">–</td></tr><tr><td class="l ">34</td><td class="">2026-09-25</td><td class="">2026-10-10</td><td class="">2,644</td><td class="">1,707</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">$0.00</td><td class="">111</td><td class="">18</td><td class="">$329.68</td><td class="l ">–</td></tr></table></div>
 <p><code>earn</code> is the decisive column: <code>position</code> holds the SKU for shop grants, so it
 is the client paying out the reward and cannot fire from a shop card that no longer exists. The
 1,646 <code>.sale</code> grants still visible on v29 are the known ~230&times; re-emission of
@@ -151,9 +192,10 @@ extended data across 252 <code>.sale</code> purchases:</p>
 <div class="tw"><table><tr><th class="l">days since install</th><th class="">purchases</th><th class="">buyers</th><th class="">cumulative %</th></tr><tr><td class="l ">0</td><td class="">160</td><td class="">159</td><td class="">63.5</td></tr><tr><td class="l ">1</td><td class="">68</td><td class="">65</td><td class="">90.5</td></tr><tr><td class="l ">2</td><td class="">18</td><td class="">18</td><td class="">97.6</td></tr><tr><td class="l ">3</td><td class="">3</td><td class="">3</td><td class="">98.8</td></tr><tr><td class="l ">5</td><td class="">1</td><td class="">1</td><td class="">99.2</td></tr><tr><td class="l ">6</td><td class="">2</td><td class="">2</td><td class="">100.0</td></tr></table></div>
 <p>90.5% of purchases land
 within one day of install and 97.6% within
-two — so <strong>D0–D2 is the window that can be attributed to the removal</strong>, and install
-cohorts are the only clean comparison (a version cut on active users is dominated by update-speed
-selection: early auto-updaters are the payers).</p>
+two — so <strong>D0–D2 is the window the offer actually occupied</strong> (97.6% of its purchases fit
+inside it), and that is the window every comparison on this page uses. Install cohorts at matched
+days-since-install are still the cleanest comparison available, but not a clean one — see the two
+design problems at the end of section 2.</p>
 <div class="tw"><table><tr><th class="l">wk</th><th class="">skip.ad.10days</th><th class="">skip.ad.30days</th><th class="">skip.ad.30days.sale</th><th class="">skip.ad.3days</th><th class="">skip.ad.permanent</th><th class="">skip.ad.permanent.sale</th></tr><tr><td class="l ">2026-08-03</td><td class="">$26.57</td><td class="">$10.99</td><td class="">$73.42</td><td class="">$24.01</td><td class="">$190.84</td><td class="">$359.37</td></tr><tr><td class="l ">2026-08-10</td><td class="">$32.43</td><td class="">$23.04</td><td class="">$89.72</td><td class="">$29.95</td><td class="">$94.62</td><td class="">$542.72</td></tr><tr><td class="l ">2026-08-17</td><td class="">$34.57</td><td class="">$37.91</td><td class="">$98.57</td><td class="">$43.74</td><td class="">$133.16</td><td class="">$282.24</td></tr><tr><td class="l ">2026-08-24</td><td class="">$35.22</td><td class="">$23.72</td><td class="">$39.26</td><td class="">$17.22</td><td class="">$29.99</td><td class="">$370.57</td></tr><tr><td class="l ">2026-08-31</td><td class="">$21.59</td><td class="">$37.55</td><td class="">$42.88</td><td class="">$27.50</td><td class="">$72.98</td><td class="">$237.14</td></tr><tr><td class="l ">2026-09-07</td><td class="">$22.81</td><td class="">$55.77</td><td class="">$24.14</td><td class="">$6.82</td><td class="">$88.91</td><td class="">$279.99</td></tr><tr><td class="l ">2026-09-14</td><td class="">$0.00</td><td class="">$12.75</td><td class="">$0.00</td><td class="">$0.00</td><td class="">$197.25</td><td class="">$221.54</td></tr><tr><td class="l ">2026-09-21</td><td class="">$0.00</td><td class="">$68.06</td><td class="">$0.00</td><td class="">$0.00</td><td class="">$32.46</td><td class="">$24.51</td></tr><tr><td class="l ">2026-09-28</td><td class="">$0.00</td><td class="">$10.99</td><td class="">$0.00</td><td class="">$0.00</td><td class="">$66.17</td><td class="">$0.00</td></tr><tr><td class="l ">2026-10-05</td><td class="">$0.00</td><td class="">$97.97</td><td class="">$0.00</td><td class="">$0.00</td><td class="">$122.24</td><td class="">$0.00</td></tr></table></div>
 <p class="sub">Ad-removal revenue by ISO week from GA4, ex-China, USD gross. Note what happened in the
 same weeks: <code>skip.ad.permanent</code> and <code>skip.ad.30days</code> keep selling,
@@ -213,11 +255,14 @@ GROUP BY wk, sku, geo_group
 ORDER BY wk, sku, geo_group</pre></details>
 
 
-<h2>2 · Design — install cohorts at matched days since install</h2>
+<h2>2 · Design — install cohorts at matched days since install, and the two things wrong with that</h2>
 <div class="claim"><p><strong>Claim.</strong> Because the offer only ever sold to players in their
 first few days, the fair comparison is install cohorts scored over the same days-since-install
-window, with China excluded and only completed windows counted. Active-user or version cuts are
-not usable here.</p></div>
+window, with China excluded and only completed windows counted. Active-user cuts are unusable for the
+<em>effect</em> — early auto-updaters are the engaged core, i.e. the payers — and a version-defined
+cut is unusable too, for the reason in the disclosures at the end of this section. Section 4 uses
+active users deliberately, for a different question (are the arms' ad economics a property of the
+build?), where who the users are cannot change revenue per impression.</p></div>
 <div class="tw"><table><tr><th class="l">Arm</th><th class="l">Install dates</th><th class="">Installs (ex-China)</th><th class="l">Note</th></tr><tr><td class="l ">Offer present</td><td class="l ">2026-09-04 … 2026-09-20</td><td class="">4,107</td><td class="l ">every build live then (v21–v29) sold the packs</td></tr><tr><td class="l ">Offer absent</td><td class="l ">2026-09-21 … 2026-10-07</td><td class="">1,988</td><td class="l ">installs whose `first_open` build is v32+</td></tr><tr><td class="l ">Offer absent, D0–D7</td><td class="l ">2026-09-21 … 2026-10-02</td><td class="">1,409</td><td class="l ">smaller: only installs whose day 7 had happened by 10-09</td></tr><tr><td class="l ">Offer absent, gap-free D0–D7</td><td class="l ">2026-09-21 … 10-02</td><td class="">1,307</td><td class="l ">excludes anyone whose window contains the 09-28 outage</td></tr><tr><td class="l ">Offer absent, all builds</td><td class="l ">2026-09-21 … 2026-10-07</td><td class="">2,318</td><td class="l ">includes 255 old-build (v29) installs that still show the offer</td></tr></table></div>
 <p>Windows are <strong>D0, D0–D2 and D0–D7</strong>; each arm is restricted to installs whose whole
 window finished by 2026-10-09 (10-10 is an intraday, partial shard), so the D0–D7
@@ -295,17 +340,49 @@ WHERE event_name = &#x27;first_open&#x27;
 GROUP BY u</pre></details>
 
 
+<h3>Two design problems, stated up front — read these before any number below</h3>
+<p><strong>1. This is not a natural experiment.</strong> The offer-present arm is installs
+2026-09-04…09-20 and the offer-absent arm is 2026-09-21…10-07, so
+<em>any</em> calendar trend — UA campaigns ending, traffic quality, the 09-28 data gap, a store
+algorithm change — loads onto the treatment. Install cohorts at matched days-since-install remove the
+update-speed selection that ruins a version cut, but they cannot remove time. Every net-per-install
+interval on this page spans zero, and the arms' install rate differs by 2×.</p>
+<p><strong>2. A version-defined split cannot measure this effect, and its face value is
+misleading.</strong> It looks like the clean cut — &ldquo;installs on a build that still has the
+offer&rdquo; vs &ldquo;installs on a build that does not&rdquo; — but once v32 shipped, Play would not
+serve an older build to a new device, so a post-removal install on v31-or-older is almost never a
+real Play install. In this data 47.1% of that arm's installs are the known China
+mirror/bot APK (294 of 624), against
+1.1% for v32+. The naive version split therefore reads <strong>IAP
+$0.06 per install for the arm whose client still has the offer versus
+$0.35 for the arm that lost it</strong> — which would argue for <em>keeping</em>
+the removal — while measuring a third-party APK spike, not the offer. <strong>It is disclosed here
+and used nowhere else in this document.</strong></p>
+<div class="tw"><table><tr><th class="l">post-removal installs by build</th><th class="">installs</th><th class="">China installs</th><th class="">IAP $/install</th><th class="">no-ads $/install</th><th class="">ad $/install</th><th class="">total $/install</th><th class="">China %</th></tr><tr><td class="l ">v31 or older (offer still in client)</td><td class="">624</td><td class="">294</td><td class="">$0.06</td><td class="">$0.02</td><td class="">$0.04</td><td class="">$0.10</td><td class="">47.1</td></tr><tr><td class="l ">v32+ (offer removed)</td><td class="">2,010</td><td class="">22</td><td class="">$0.35</td><td class="">$0.11</td><td class="">$0.13</td><td class="">$0.48</td><td class="">1.1</td></tr></table></div>
+<p class="sub">D0–D2 per install, all post-removal installs including China. The older-build row is
+what a version cut would report as the &ldquo;offer present&rdquo; counterfactual; it is an artifact of
+47.1% mirror traffic, and it is why this cut is not used as evidence anywhere on
+this page.</p>
+<h3>What that leaves</h3>
+<p>The per-install comparison below is the best available read, but it is <em>corroboration</em>, not
+the load-bearing argument. The argument is the failure of the trade-up plus the un-replaced revenue
+plus the worse replacement product.</p>
 <h2>3 · Per-install outcomes</h2>
 <div class="claim"><p><strong>Claim.</strong> The removed <code>.sale</code> line was worth
 $0.15 per install over D0–D2
-(−$0.18 … −$0.11, significant) — but total revenue per install did
-not move: +0.0277 over D0–D2 (CI −$0.14 … $0.20)
-and -0.0863 over D0–D7 (CI −$0.29 … $0.13).
-Other IAP, the surviving no-ads SKUs and ad revenue absorbed it.</p></div>
+(−$0.18 … −$0.11, significant) — a
+66% collapse of the no-ads IAP line, and the only
+precisely measured term in this whole comparison. Everything that appears to offset it is either not
+significant (other IAP $0.06, CI −$0.04 … $0.18)
+or is withdrawn in <a href="#adtest">section 4</a> (ads). <strong>On IAP alone the removal costs
+−$0.04 per install over D0–D2</strong> (CI −$0.20 …
+$0.12) <strong>and −$0.13 over D0–D7</strong>
+(CI −$0.33 … $0.07). The intervals span zero: this is a
+preponderance call, not a proven effect.</p></div>
 <div class="tw"><table><tr><th class="l">Per new install — D0–D2</th><th class="">offer present</th><th class="">offer absent (v32+)</th><th class="">change</th><th class="">ratio</th></tr><tr><td class="l ">New installs (ex-China)</td><td class="">4,107</td><td class="">1,988</td><td class=""></td><td class=""></td></tr><tr><td class="l ">IAP payer rate</td><td class="">2.0%</td><td class="">1.9%</td><td class="">-0.14 pp</td><td class=""></td></tr><tr><td class="l ">No-ads card taps / 1,000 installs</td><td class="">25.6</td><td class="">73.4</td><td class="">+47.9</td><td class="">2.9×</td></tr><tr><td class="l ">Full-price no-ads taps / 1,000</td><td class="">9.7</td><td class="">28.7</td><td class="">+18.9</td><td class=""></td></tr><tr><td class="l ">No-ads buyers / 1,000 installs</td><td class="">15.3</td><td class="">7.5</td><td class="">-7.8</td><td class=""></td></tr><tr><td class="l ">.sale buyers / 1,000 installs</td><td class="">12.2</td><td class="">0.0</td><td class="">−12.2</td><td class=""></td></tr><tr><td class="l ">Full-price $29.99 buyers / 1,000</td><td class="">1.9</td><td class="">1.5</td><td class="">-0.4</td><td class=""></td></tr><tr><td class="l ">No-ads IAP $ / install</td><td class="">$0.22</td><td class="">$0.12</td><td class="">-0.1056</td><td class=""></td></tr><tr><td class="l ">  .sale $ / install (removed line)</td><td class="">$0.15</td><td class="">$0.00</td><td class="">−0.1457</td><td class=""></td></tr><tr><td class="l ">  full-price twin $ / install</td><td class="">$0.06</td><td class="">$0.04</td><td class="">-0.0181</td><td class=""></td></tr><tr><td class="l ">Other IAP $ / install</td><td class="">$0.17</td><td class="">$0.23</td><td class="">+0.0644</td><td class=""></td></tr><tr><td class="l ">Ad revenue $ / install</td><td class="">$0.06</td><td class="">$0.13</td><td class="">+0.0690</td><td class=""></td></tr><tr class="on"><td class="l ">TOTAL $ / install</td><td class="">$0.46</td><td class="">$0.48</td><td class="">+0.0277</td><td class=""></td></tr><tr><td class="l ">TOTAL $ / install, excl. top payer</td><td class="">$0.43</td><td class="">$0.45</td><td class="">+0.0212</td><td class=""></td></tr></table></div>
-<div class="tw"><table><tr><th class="l">Per new install</th><th>offer present</th><th>offer absent (v32+)</th><th>change</th><th>90% CI</th><th>significant</th></tr><tr><td class="l">No-ads IAP $/install</td><td>$0.22</td><td>$0.12</td><td class="bad">−$0.11</td><td class="dim">−$0.18 … −$0.03</td><td>yes</td></tr><tr><td class="l">Ad revenue $/install</td><td>$0.06</td><td>$0.13</td><td class="good">$0.07</td><td class="dim">$0.04 … $0.10</td><td>yes</td></tr><tr><td class="l">Other IAP $/install</td><td>$0.17</td><td>$0.23</td><td class="good">$0.06</td><td class="dim">−$0.04 … $0.18</td><td>no</td></tr><tr><td class="l">All IAP $/install</td><td>$0.39</td><td>$0.35</td><td class="bad">−$0.04</td><td class="dim">−$0.20 … $0.12</td><td>no</td></tr><tr><td class="l">TOTAL $/install</td><td>$0.46</td><td>$0.48</td><td class="good">$0.03</td><td class="dim">−$0.14 … $0.20</td><td>no</td></tr><tr><td class="l">TOTAL $/install, excl. top payer</td><td>$0.43</td><td>$0.45</td><td class="good">$0.02</td><td class="dim">−$0.13 … $0.17</td><td>no</td></tr><tr><td class="l">No-ads IAP $/install, excl. top payer</td><td>$0.21</td><td>$0.11</td><td class="bad">−$0.10</td><td class="dim">−$0.18 … −$0.03</td><td>yes</td></tr></table></div>
-<div class="tw"><table><tr><th class="l">D0 only</th><th>offer present</th><th>offer absent (v32+)</th><th>change</th><th>90% CI</th><th>significant</th></tr><tr><td class="l">No-ads IAP $/install</td><td>$0.15</td><td>$0.12</td><td class="bad">−$0.03</td><td class="dim">−$0.10 … $0.04</td><td>no</td></tr><tr><td class="l">Ad revenue $/install</td><td>$0.06</td><td>$0.12</td><td class="good">$0.06</td><td class="dim">$0.04 … $0.09</td><td>yes</td></tr><tr><td class="l">Other IAP $/install</td><td>$0.09</td><td>$0.16</td><td class="good">$0.08</td><td class="dim">$0.01 … $0.15</td><td>yes</td></tr><tr><td class="l">TOTAL $/install</td><td>$0.30</td><td>$0.40</td><td class="good">$0.11</td><td class="dim">−$0.02 … $0.24</td><td>no</td></tr></table></div>
-<div class="tw"><table><tr><th class="l">D0–D7</th><th>offer present</th><th>offer absent (v32+)</th><th>change</th><th>90% CI</th><th>significant</th></tr><tr><td class="l">No-ads IAP $/install</td><td>$0.23</td><td>$0.08</td><td class="bad">−$0.15</td><td class="dim">−$0.22 … −$0.08</td><td>yes</td></tr><tr><td class="l">Ad revenue $/install</td><td>$0.07</td><td>$0.11</td><td class="good">$0.05</td><td class="dim">$0.02 … $0.08</td><td>yes</td></tr><tr><td class="l">Other IAP $/install</td><td>$0.24</td><td>$0.25</td><td class="good">$0.02</td><td class="dim">−$0.13 … $0.17</td><td>no</td></tr><tr><td class="l">All IAP $/install</td><td>$0.46</td><td>$0.33</td><td class="bad">−$0.13</td><td class="dim">−$0.33 … $0.07</td><td>no</td></tr><tr><td class="l">TOTAL $/install</td><td>$0.53</td><td>$0.44</td><td class="bad">−$0.09</td><td class="dim">−$0.29 … $0.13</td><td>no</td></tr><tr><td class="l">TOTAL $/install, excl. top payer</td><td>$0.49</td><td>$0.37</td><td class="bad">−$0.12</td><td class="dim">−$0.30 … $0.05</td><td>no</td></tr></table></div>
+<div class="tw"><table><tr><th class="l">Per new install</th><th>offer present</th><th>offer absent (v32+)</th><th>change</th><th>90% CI</th><th>significant</th></tr><tr><td class="l">No-ads IAP $/install</td><td>$0.22</td><td>$0.12</td><td class="bad">−$0.11</td><td class="dim">−$0.18 … −$0.03</td><td>yes</td></tr><tr><td class="l">Ad revenue $/install (withdrawn in §4)</td><td>$0.06</td><td>$0.13</td><td class="good">$0.07</td><td class="dim">$0.04 … $0.10</td><td>yes</td></tr><tr><td class="l">Other IAP $/install</td><td>$0.17</td><td>$0.23</td><td class="good">$0.06</td><td class="dim">−$0.04 … $0.18</td><td>no</td></tr><tr><td class="l">All IAP $/install — primary estimate</td><td>$0.39</td><td>$0.35</td><td class="bad">−$0.04</td><td class="dim">−$0.20 … $0.12</td><td>no</td></tr><tr><td class="l">TOTAL $/install (credits the build&#x27;s ad gain)</td><td>$0.46</td><td>$0.48</td><td class="good">$0.03</td><td class="dim">−$0.14 … $0.20</td><td>no</td></tr><tr><td class="l">All IAP $/install, excl. top payer</td><td>$0.36</td><td>$0.32</td><td class="bad">−$0.05</td><td class="dim">−$0.19 … $0.09</td><td>no</td></tr><tr><td class="l">No-ads IAP $/install, excl. top payer</td><td>$0.21</td><td>$0.11</td><td class="bad">−$0.10</td><td class="dim">−$0.18 … −$0.03</td><td>yes</td></tr></table></div>
+<div class="tw"><table><tr><th class="l">D0 only</th><th>offer present</th><th>offer absent (v32+)</th><th>change</th><th>90% CI</th><th>significant</th></tr><tr><td class="l">No-ads IAP $/install</td><td>$0.15</td><td>$0.12</td><td class="bad">−$0.03</td><td class="dim">−$0.10 … $0.04</td><td>no</td></tr><tr><td class="l">Ad revenue $/install</td><td>$0.06</td><td>$0.12</td><td class="good">$0.06</td><td class="dim">$0.04 … $0.09</td><td>yes</td></tr><tr><td class="l">Other IAP $/install</td><td>$0.09</td><td>$0.16</td><td class="good">$0.08</td><td class="dim">$0.01 … $0.15</td><td>yes</td></tr><tr><td class="l">All IAP $/install — primary estimate</td><td>$0.24</td><td>$0.28</td><td class="good">$0.04</td><td class="dim">−$0.07 … $0.17</td><td>no</td></tr><tr><td class="l">TOTAL $/install</td><td>$0.30</td><td>$0.40</td><td class="good">$0.11</td><td class="dim">−$0.02 … $0.24</td><td>no</td></tr></table></div>
+<div class="tw"><table><tr><th class="l">D0–D7</th><th>offer present</th><th>offer absent (v32+)</th><th>change</th><th>90% CI</th><th>significant</th></tr><tr><td class="l">No-ads IAP $/install</td><td>$0.23</td><td>$0.08</td><td class="bad">−$0.15</td><td class="dim">−$0.22 … −$0.08</td><td>yes</td></tr><tr><td class="l">Ad revenue $/install (withdrawn in §4)</td><td>$0.07</td><td>$0.11</td><td class="good">$0.05</td><td class="dim">$0.02 … $0.08</td><td>yes</td></tr><tr><td class="l">Other IAP $/install</td><td>$0.24</td><td>$0.25</td><td class="good">$0.02</td><td class="dim">−$0.13 … $0.17</td><td>no</td></tr><tr><td class="l">All IAP $/install — primary estimate</td><td>$0.46</td><td>$0.33</td><td class="bad">−$0.13</td><td class="dim">−$0.33 … $0.07</td><td>no</td></tr><tr><td class="l">TOTAL $/install (credits the build&#x27;s ad gain)</td><td>$0.53</td><td>$0.44</td><td class="bad">−$0.09</td><td class="dim">−$0.29 … $0.13</td><td>no</td></tr><tr><td class="l">All IAP $/install, excl. top payer</td><td>$0.43</td><td>$0.27</td><td class="bad">−$0.16</td><td class="dim">−$0.33 … $0.01</td><td>no</td></tr></table></div>
 <div class="tw"><table>
 <tr><th class="l">Robustness variant</th><th>installs present / absent</th>
   <th>no-ads $/install change</th><th>TOTAL $/install change</th><th>90% CI (total)</th>
@@ -328,7 +405,102 @@ per-1,000 installs, <code>.sale</code> buyers were
 universal, not a quirk of one build.</p>
 
 
-<h2>4 · The crux — did <code>.sale</code> buyers trade up to the $29.99 twin?</h2>
+<h2 id="adtest">4 · The decisive test — is the ad-revenue gain the removal, or the build?</h2>
+<div class="claim"><p><strong>Claim: the build.</strong> The offer-absent arm earns more ad revenue per
+install, and the earlier reads of this page treated that as the removal's doing — players who cannot
+buy ad removal watch more ads. Holding the <strong>calendar week fixed</strong> and varying only the
+build kills that reading: over 2026-09-21…10-07 the v32+ builds earn
+<strong>$78.46 per 1,000 impressions at 79.1%
+rewarded fill</strong> against
+<strong>$36.68 at 62.7%</strong> for the older
+builds that dominate the offer-present arm. <em>Removing a shop card cannot change revenue per
+impression.</em> The ad term is therefore withdrawn, and the primary net estimate becomes IAP-only
+(section 3).</p></div>
+<div class="tw"><table><tr><th class="l">build group</th><th class="">user-days</th><th class="">impressions</th><th class="">ad $</th><th class="">rewarded requests</th><th class="">filled</th><th class="">ad $ / DAU</th><th class="">imps / DAU</th><th class="">ad $ / 1k imps</th><th class="">rewarded fill %</th></tr><tr><td class="l ">builds before v21</td><td class="">109</td><td class="">0</td><td class="">$0.00</td><td class="">367</td><td class="">11</td><td class="">$0.00</td><td class="">0.0</td><td class="">–</td><td class="">3.0</td></tr><tr><td class="l ">v21–29 (offer present)</td><td class="">639</td><td class="">1,000</td><td class="">$36.68</td><td class="">2,436</td><td class="">1,528</td><td class="">$0.06</td><td class="">1.6</td><td class="">$36.68</td><td class="">62.7</td></tr><tr><td class="l ">v32+ (offer removed)</td><td class="">3,261</td><td class="">4,843</td><td class="">$380.00</td><td class="">10,131</td><td class="">8,013</td><td class="">$0.12</td><td class="">1.5</td><td class="">$78.46</td><td class="">79.1</td></tr></table></div>
+<p>Three checks, in increasing order of strictness:</p>
+<ol>
+<li><strong>Same week, by build.</strong> The two build groups are measured over exactly the same
+calendar days, so no time trend, UA campaign change or seasonal effect can produce the gap. v34 alone
+— 70% of the post arm — earns $77.93 per 1,000
+impressions at 81.0% fill.</li>
+<li><strong>Same week, the two builds side by side.</strong> In 09-21…09-27 alone, v34 earns
+$61.40 per 1,000 impressions at
+86.3% fill while v29 — the build whose client
+<em>still sells the pack</em> — earns $34.23 at
+65.8%.</li>
+<li><strong>The one build present on both sides of the removal.</strong> v29's client never lost the
+offer, so the removal is a non-event for it. Across the removal its ad revenue per DAU is flat
+($0.08 &rarr; $0.07)
+and its impressions per DAU are flat
+(1.7 &rarr; 1.8).
+Whatever moved ad revenue between the arms, it is not something the removal did to a build.</li>
+</ol>
+<p><strong>Is the gap bigger than ordinary build-to-build variation? No.</strong> In the
+<em>pre-removal</em> fortnight, with the offer on sale for everyone and no removal in existence, the
+same metric already ranged across builds —
+v26.2 $49.55, v25 $83.58, v24 $36.37, v29 $46.88, v28 $87.66 in the same two
+weeks. The arms' difference is inside the spread that builds produce on their own.</p>
+<div class="tw"><table><tr><th class="l">build</th><th class="">user-days</th><th class="">impressions</th><th class="">ad $</th><th class="">rewarded requests</th><th class="">filled</th><th class="">rewards</th><th class="">ad $ / DAU</th><th class="">imps / DAU</th><th class="">ad $ / 1k imps</th><th class="">rewarded fill %</th><th class="">rewards / DAU</th></tr><tr><td class="l ">26.2</td><td class="">1,632</td><td class="">2,345</td><td class="">$116.20</td><td class="">5,526</td><td class="">3,551</td><td class="">3,089</td><td class="">$0.07</td><td class="">1.4</td><td class="">$49.55</td><td class="">64.3</td><td class="">1.89</td></tr><tr><td class="l ">25</td><td class="">696</td><td class="">481</td><td class="">$40.20</td><td class="">1,697</td><td class="">1,104</td><td class="">530</td><td class="">$0.06</td><td class="">0.7</td><td class="">$83.58</td><td class="">65.1</td><td class="">0.76</td></tr><tr><td class="l ">24</td><td class="">656</td><td class="">556</td><td class="">$20.22</td><td class="">2,022</td><td class="">978</td><td class="">1,171</td><td class="">$0.03</td><td class="">0.8</td><td class="">$36.37</td><td class="">48.4</td><td class="">1.79</td></tr><tr><td class="l ">29</td><td class="">565</td><td class="">949</td><td class="">$44.49</td><td class="">3,272</td><td class="">1,423</td><td class="">685</td><td class="">$0.08</td><td class="">1.7</td><td class="">$46.88</td><td class="">43.5</td><td class="">1.21</td></tr><tr><td class="l ">28</td><td class="">195</td><td class="">231</td><td class="">$20.25</td><td class="">950</td><td class="">401</td><td class="">237</td><td class="">$0.10</td><td class="">1.2</td><td class="">$87.66</td><td class="">42.2</td><td class="">1.22</td></tr></table></div>
+<p class="sub">Pre-removal window 2026-09-07…09-20, offer present for every build.</p>
+<div class="tw"><table><tr><th class="l">build</th><th class="">user-days</th><th class="">impressions</th><th class="">ad $</th><th class="">rewarded requests</th><th class="">filled</th><th class="">rewards</th><th class="">ad $ / DAU</th><th class="">imps / DAU</th><th class="">ad $ / 1k imps</th><th class="">rewarded fill %</th><th class="">rewards / DAU</th></tr><tr><td class="l ">34</td><td class="">2,526</td><td class="">4,140</td><td class="">$322.63</td><td class="">8,169</td><td class="">6,618</td><td class="">4,217</td><td class="">$0.13</td><td class="">1.6</td><td class="">$77.93</td><td class="">81.0</td><td class="">1.67</td></tr><tr><td class="l ">29</td><td class="">491</td><td class="">881</td><td class="">$33.45</td><td class="">1,979</td><td class="">1,289</td><td class="">1,061</td><td class="">$0.07</td><td class="">1.8</td><td class="">$37.97</td><td class="">65.1</td><td class="">2.16</td></tr><tr><td class="l ">33</td><td class="">380</td><td class="">308</td><td class="">$35.13</td><td class="">943</td><td class="">685</td><td class="">321</td><td class="">$0.09</td><td class="">0.8</td><td class="">$114.06</td><td class="">72.6</td><td class="">0.84</td></tr><tr><td class="l ">32</td><td class="">352</td><td class="">394</td><td class="">$22.24</td><td class="">1,015</td><td class="">706</td><td class="">538</td><td class="">$0.06</td><td class="">1.1</td><td class="">$56.45</td><td class="">69.6</td><td class="">1.53</td></tr></table></div>
+<p class="sub">Post-removal window 2026-09-21…10-07.</p>
+<p class="sub">China excluded, as everywhere else on this page. Including the China mirror/bot APK's
+active users makes the older builds look <em>worse</em>, not better — v29's rewarded fill falls from
+65.1% to 46.2% and its impressions held roughly constant (881 &rarr; 903),
+while v34 barely moves (81.0% either way). The per-impression gap is 2.1&times; on either basis
+($77.93 vs $37.97 excluding China,
+$77.93 vs $37.11 including it).</p>
+<h3>What this does and does not settle</h3>
+<ul>
+<li><strong>Settled:</strong> the ~60% of the arm difference that is revenue <em>per impression</em>
+is a property of the v32+ ad stack (fill 79.1% vs
+62.7%), not of the removal — the mechanism makes that impossible.
+Counting it as compensation is what made the removal look neutral.</li>
+<li><strong>Not settled:</strong> a residual behavioural effect could exist for v32+ installs,
+because build and removal are perfectly collinear on the install side (every post-removal install is
+v32+, every pre-removal install is older). The check that would separate them is the
+country-standardised per-impression comparison below, and it is underpowered: the older builds
+contribute only ~20–180 impressions per country in the post window.</li>
+<li><strong>The country-controlled cells are mixed and noisy</strong> — v32+ higher in Germany,
+Indonesia, South Korea and the US; older builds higher in Italy and Spain; Brazil level. That is
+consistent with a build/traffic-composition story rather than a uniform removal effect, but it is
+not a clean control, so the honest treatment is to withdraw the whole ad term rather than try to
+allocate a share of it.</li>
+</ul>
+<div class="tw"><table><tr><th class="l">country</th><th class="">v21–29 — ad $ / 1k imps</th><th class="">v32+ — ad $ / 1k imps</th><th class="">v21–29 — imps</th><th class="">v32+ — imps</th></tr><tr><td class="l ">Brazil</td><td class="">10.72</td><td class="">10.58</td><td class="">180</td><td class="">378</td></tr><tr><td class="l ">Germany</td><td class="">59.85</td><td class="">106.05</td><td class="">66</td><td class="">172</td></tr><tr><td class="l ">Indonesia</td><td class="">6.36</td><td class="">26.80</td><td class="">151</td><td class="">440</td></tr><tr><td class="l ">Italy</td><td class="">17.37</td><td class="">14.29</td><td class="">19</td><td class="">238</td></tr><tr><td class="l ">Qatar</td><td class="">–</td><td class="">4.55</td><td class="">–</td><td class="">198</td></tr><tr><td class="l ">South Korea</td><td class="">18.59</td><td class="">183.10</td><td class="">85</td><td class="">174</td></tr><tr><td class="l ">Spain</td><td class="">56.47</td><td class="">21.59</td><td class="">17</td><td class="">415</td></tr><tr><td class="l ">United States</td><td class="">40.12</td><td class="">244.40</td><td class="">85</td><td class="">332</td></tr></table></div>
+<details><summary>The same-week-by-build query:</summary><pre>-- Same-calendar-week ad economics by build — the decisive attribution test.
+--
+-- The question: the offer-absent arm earns more ad revenue per install than the
+-- offer-present arm. Is that the removal (players who cannot buy ad-removal watch more
+-- ads) or a property of the build (v32+ has much better rewarded fill than v29)?
+--
+-- Holding the calendar week fixed and grouping by build answers it, because a shop-card
+-- change cannot alter revenue *per impression*. The window deliberately starts before the
+-- removal so the same build gradient can be measured while the offer was still on sale.
+WITH ev AS (
+  SELECT app_info.version v, user_pseudo_id u, PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) d,
+    event_name e, geo.country country,
+    (SELECT COALESCE(value.double_value, value.float_value, CAST(value.int_value AS FLOAT64))
+       FROM UNNEST(event_params) WHERE key=&#x27;value&#x27;) val,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;ad_type&#x27;) ad_type,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;status&#x27;) status
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE _TABLE_SUFFIX BETWEEN &#x27;20260901&#x27; AND &#x27;20261012&#x27;
+    AND event_name IN (&#x27;ad_impression_MAX&#x27;, &#x27;ad_request_status&#x27;, &#x27;ad_reward&#x27;)
+)
+SELECT DATE_TRUNC(d, WEEK(MONDAY)) wk, v AS version, country,
+  COUNT(DISTINCT CONCAT(u, &#x27;|&#x27;, CAST(d AS STRING))) user_days,
+  COUNTIF(e = &#x27;ad_impression_MAX&#x27;) imps,
+  ROUND(SUM(IF(e = &#x27;ad_impression_MAX&#x27;, COALESCE(val, 0), 0)), 2) ad_usd,
+  COUNTIF(e = &#x27;ad_request_status&#x27; AND ad_type = &#x27;rewarded&#x27;) rew_req,
+  COUNTIF(e = &#x27;ad_request_status&#x27; AND ad_type = &#x27;rewarded&#x27; AND status = &#x27;success&#x27;) rew_ok,
+  COUNTIF(e = &#x27;ad_reward&#x27;) rewards
+FROM ev
+GROUP BY wk, version, country
+ORDER BY wk, version, country</pre></details>
+
+
+<h2>5 · The crux — did <code>.sale</code> buyers trade up to the $29.99 twin?</h2>
 <div class="claim"><p><strong>Claim: no, and not close.</strong> Break-even on removing a $10.99 pack
 in favour of its identical-reward $29.99 twin needs <strong>&ge;36.6%</strong> of the
 <code>.sale</code> buyers to re-convert at 2.7&times; the price. The measured trade-up is
@@ -363,48 +535,46 @@ cost the product real demand, and it did not come back at $29.99. And the one SK
 is a strictly worse product for the same money: 30 days of no ads instead of permanent.</p>
 
 
-<h2>5 · Net per install, per week, against the revenue that vanished</h2>
+<h2>6 · Net per install, per week, against the revenue that vanished</h2>
 <div class="claim"><p><strong>Claim.</strong> The <code>.sale</code> line was worth
-$241/week (ex-China, offer-present window). The net effect on the
-game is between <strong>−$73/week</strong> (D0–D7) and
-<strong>$23/week</strong> (D0–D2), with a 90% interval of
-−$116 to $168/week at the
-current 843 installs/week — i.e. indistinguishable from zero either way, and
-far smaller than the gross line that disappeared because most of it was replaced.</p></div>
+$241/week (ex-China, offer-present window). With the ad term
+withdrawn (section 4) the net effect is <strong>−$112 to −$35/week</strong>
+at today's 843 installs/week, or
+<strong>−$225 to −$70/week</strong> at the 1,691 installs/week
+the game was running before the removal. The intervals span zero — but note the asymmetry: the
+$241/week that disappeared is measured tightly, while the terms that
+appear to replace it are either not significant or (ads) a property of the build.</p></div>
 <div class="tw"><table>
 <tr><th class="l">Money, per week</th><th>value</th><th>note</th></tr>
 <tr><td class="l"><code>.sale</code> revenue that vanished</td>
   <td>$241</td>
   <td class="dim">ex-China, 09-04…09-20 run-rate ($586 over 17 days)</td></tr>
-<tr><td class="l">net effect, D0–D2 point estimate</td><td>$23</td>
-  <td class="dim">+0.0277 $/install × 843</td></tr>
-<tr><td class="l">net effect, D0–D7 point estimate</td><td>−$73</td>
-  <td class="dim">-0.0863 $/install × 843</td></tr>
-<tr class="tot"><td class="l">net effect, 90% interval</td>
-  <td>−$116 … $168</td><td class="dim">D0–D2 interval × install rate</td></tr>
-<tr><td class="l">worst case if the ad gain is <em>not</em> yours</td>
-  <td>−$112 … −$35</td>
-  <td class="dim">IAP only: −$0.04 over D0–D2, −$0.13 over D0–D7</td></tr>
+<tr class="tot"><td class="l">net, IAP only — primary estimate, D0–D2</td><td>−$35</td>
+  <td class="dim">−$0.04 $/install × 843 installs/wk</td></tr>
+<tr class="tot"><td class="l">net, IAP only — primary estimate, D0–D7</td><td>−$112</td>
+  <td class="dim">−$0.13 $/install × 843 installs/wk</td></tr>
+<tr><td class="l">the same two, at the pre-removal install rate</td>
+  <td>−$225 … −$70</td>
+  <td class="dim">× 1,691/843 — what it would have cost then</td></tr>
+<tr><td class="l">for reference, crediting the build's ad gain</td>
+  <td>$23 to −$73</td>
+  <td class="dim">the earlier reading; not used (section 4)</td></tr>
 </table></div>
-<p><strong>Where the replacement came from (D0–D2, $/install):</strong> the lost
-$0.15 of <code>.sale</code> revenue was more than offset in the raw
-figures by the surviving no-ads SKUs $0.05
+<p><strong>Where the apparent replacement came from (D0–D2, $/install):</strong> the surviving no-ads
+SKUs $0.05
 ($0.01 … $0.08, significant — it is
-<code>skip.ad.30days</code> picking up), other IAP $0.06
-(−$0.04 … $0.18, not significant) and ad revenue
-$0.07 ($0.04 … $0.10, significant).</p>
-<p><strong>But a large part of the ad gain is not attributable to the removal.</strong> Splitting it:
-impressions per 1,000 installs 1,043.3 &rarr;
-1,368.7 (+31%), but revenue per 1,000 impressions
-$60.32 &rarr; $96.39
-(+60%). <em>Removing a shop card cannot raise revenue per impression</em> — that is fill/eCPM, and
-this build is known to have much better rewarded fill than v29 (70–76% vs 50%, 2026-10-02 weekly
-report). Per install build it is plain: the offer-present arm's ad revenue is
-$0.05 on v24 and
-$0.04 on v25, while the offer-absent arm is
-$0.15 on v34 (70% of it). The arms'
-build mixes differ, so the ad line is <strong>confounded</strong> — treat the D0–D2 "neutral"
-reading as optimistic and the "ad line set to zero" bound above as the honest pessimistic one.</p>
+<code>skip.ad.30days</code> picking up, i.e. a worse product at the same price), other IAP
+$0.06 (−$0.04 … $0.18, not
+significant) and ad revenue $0.07
+($0.04 … $0.10, significant but withdrawn — see section 4).</p>
+<p><strong>The ad term, in one paragraph.</strong> Impressions per 1,000 installs rose
+1,043.3 &rarr; 1,368.7
+(+31%) and revenue per 1,000 impressions $60.32 &rarr;
+$96.39 (+60%). The second of those is the larger half and is
+mechanically impossible to attribute to a shop-card change; section 4 shows it is present in the same
+calendar week against every older build. The arms' build mixes differ (the offer-present arm is
+v24/v25/v26.2, the offer-absent arm is 70% v34), so the whole line is withdrawn from the primary
+estimate rather than partly credited.</p>
 <div class="tw"><table><tr><th class="l">arm</th><th class="">installs</th><th class="">impr /1k installs</th><th class="">installs with any impr %</th><th class="">ad $ /1k installs</th><th class="">ad $ per 1k impr</th></tr><tr><td class="l ">offer present</td><td class="">4,107</td><td class="">1,043.3</td><td class="">17.4</td><td class="">$62.94</td><td class="">$60.32</td></tr><tr><td class="l ">offer absent (v32+)</td><td class="">1,988</td><td class="">1,368.7</td><td class="">21.0</td><td class="">$131.93</td><td class="">$96.39</td></tr></table></div>
 <h3>Per-install outcomes in removal-aligned buckets (D0–D7)</h3>
 <div class="tw"><table><tr><th class="l">installs from</th><th class="l">to</th><th class="l">arm</th><th class="">n</th><th class="">no-ads $</th><th class="">.sale $</th><th class="">full-price $</th><th class="">other IAP $</th><th class="">ad $</th><th class="">total $</th><th class="">no-ads taps/1k</th><th class="">full-price buyers/1k</th><th class="">.sale buyers/1k</th><th class="">gap</th></tr><tr><td class="l ">09-01</td><td class="l ">09-07</td><td class="l ">present</td><td class="">1,782</td><td class="">$0.26</td><td class="">$0.19</td><td class="">$0.04</td><td class="">$0.34</td><td class="">$0.06</td><td class="">$0.67</td><td class="">18.5</td><td class="">1.1</td><td class="">15.7</td><td class="">yes</td></tr><tr><td class="l ">09-08</td><td class="l ">09-14</td><td class="l ">present</td><td class="">1,991</td><td class="">$0.18</td><td class="">$0.12</td><td class="">$0.03</td><td class="">$0.20</td><td class="">$0.06</td><td class="">$0.45</td><td class="">23.1</td><td class="">1.0</td><td class="">11.0</td><td class="">yes</td></tr><tr><td class="l ">09-15</td><td class="l ">09-20</td><td class="l ">present</td><td class="">1,029</td><td class="">$0.29</td><td class="">$0.13</td><td class="">$0.16</td><td class="">$0.28</td><td class="">$0.08</td><td class="">$0.65</td><td class="">39.8</td><td class="">4.9</td><td class="">10.7</td><td class="">yes</td></tr><tr><td class="l ">09-21</td><td class="l ">09-27</td><td class="l ">removed</td><td class="">868</td><td class="">$0.08</td><td class="">$0.00</td><td class="">$0.00</td><td class="">$0.29</td><td class="">$0.11</td><td class="">$0.48</td><td class="">79.5</td><td class="">0.0</td><td class="">0.0</td><td class="">yes</td></tr><tr><td class="l ">09-28</td><td class="l ">10-04</td><td class="l ">removed</td><td class="">541</td><td class="">$0.08</td><td class="">$0.00</td><td class="">$0.06</td><td class="">$0.19</td><td class="">$0.11</td><td class="">$0.38</td><td class="">79.5</td><td class="">1.8</td><td class="">0.0</td><td class="">yes</td></tr></table></div>
@@ -413,7 +583,11 @@ reading as optimistic and the "ad line set to zero" bound above as the honest pe
 <p class="sub">Revenue is gross: <code>event_value_in_usd</code> on <code>in_app_purchase</code> is
 VAT-inclusive outside the US (75.4% of ad-removal revenue is non-USD) and the GA4 export has no
 refund event. VAT largely cancels in the twin-vs-sale comparison because both sell into a similar
-country mix, and refunds are handled separately in section 6.</p>
+country mix, and refunds are handled separately in section 7. These weekly rows are restricted to
+devices with a <code>first_open</code>, so revenue and installs describe the same population; counted
+over the whole export the same weeks are 9–11% higher — <code>.sale</code> $277.43 &rarr; $304.13 in
+the 09-07 week and $197.55 &rarr; $221.54 in 09-14 — which is why the destroyed run-rate is quoted
+here as $241–$267/week rather than as one number.</p>
 <h3>Campaign mix — the arms are consecutive weeks, not a randomisation</h3>
 <p>The offer-absent arm has more Tier-1 ROAS traffic, which monetises better. Reweighting each arm's
 per-campaign outcome to the offer-present mix ((unattributed): 71%, GA_TinyKnightfa_A_ROAS_Global_20072026: 26%, GA_TinyKnightfa_A_ROAS_Tier1_150926: 3%
@@ -425,9 +599,13 @@ vs +0.0277 raw) and leaves the D0–D7 direction unchanged
 (-0.0819).</p>
 
 
-<h2>6 · Refunds — the finding that is entangled with this decision</h2>
+<h2>7 · Refunds — a separate action item, not a condition of the rollback</h2>
 <div class="claim"><p><strong>Claim.</strong> Two distinct delivery defects are visible in Play's own
-records, and <strong>the removal fixed neither of them</strong>. It removed one SKU that refunded at
+records. <strong>Neither is caused by the <code>.sale</code> SKUs and neither was fixed by removing
+them</strong> — the volume simply migrated onto a pack that refunds worse. Restoring the discounted
+offer is therefore <em>not</em> a trade against this problem, and it is not a substitute for fixing it:
+put the rollback and the purchase-completion fix in the same release.</p></div>
+<div class="claim"><p>What the removal did to refunds: it removed one SKU that refunded at
 9.4%
 and replaced its volume with a SKU that refunds at
 31.6%
@@ -437,13 +615,16 @@ and replaced its volume with a SKU that refunds at
 ad-removal family (non-ad-removal: 2.3% &rarr;
 2.9%).</p></div>
 <p><strong>Defect 1 — the client never acknowledges one-time-product purchases.</strong>
-10 refunds in the ledger were initiated by Google, and every single one lands
-<strong>72.17&nbsp;h</strong> (3 days + 10 minutes) after the charge — a machine, not a player. That is the
+10 refunds in the ledger were initiated by Google, and every single one lands between
+<strong>72.167&nbsp;h and 72.173&nbsp;h</strong> after the charge (mean 72.169&nbsp;h) —
+a machine, not a player. That is the
 signature of Play's automatic refund for a purchase the client never acknowledged inside the 3-day
-deadline, and it is already on the
-<em>surviving</em> SKUs: <code>skip.ad.permanent</code> (&times;3),
-<code>skip.ad.30days</code> (&times;3), plus <code>auto.blessing</code> (&times;2)
-which is not an ad-removal SKU at all. Removing the <code>.sale</code> packs cannot fix this.</p>
+deadline. <strong>By SKU:</strong> <code>skip.ad.permanent</code> &times;3,
+<code>skip.ad.30days</code> &times;3, <code>skip.ad.30days.sale</code> &times;1,
+<code>skip.ad.permanent.sale</code> &times;1 — i.e. one of the ten is on the pack
+that was removed and <strong>six are on the two SKUs that remain on sale</strong> — plus
+<code>auto.blessing</code> &times;2, which is not an ad-removal SKU at all. Removing the
+<code>.sale</code> packs cannot fix this, and it is not <code>.sale</code>-specific.</p>
 <div class="tw"><table><tr><th class="l">SKU</th><th class="l">charged</th><th class="l">refunded by Google</th><th class="">lag (h)</th><th class="">currency</th><th class="">amount</th></tr><tr><td class="l ">auto.blessing</td><td class="l ">2026-08-29</td><td class="l ">2026-09-01</td><td class="">72.2</td><td class="">USD</td><td class="">$5.99</td></tr><tr><td class="l ">permanent.sale</td><td class="l ">2026-09-12</td><td class="l ">2026-09-15</td><td class="">72.2</td><td class="">EUR</td><td class="">$11.99</td></tr><tr><td class="l ">30days.sale</td><td class="l ">2026-09-13</td><td class="l ">2026-09-16</td><td class="">72.2</td><td class="">TRY</td><td class="">$279.99</td></tr><tr><td class="l ">auto.blessing</td><td class="l ">2026-09-16</td><td class="l ">2026-09-19</td><td class="">72.2</td><td class="">EUR</td><td class="">$5.49</td></tr><tr><td class="l ">permanent</td><td class="l ">2026-09-16</td><td class="l ">2026-09-19</td><td class="">72.2</td><td class="">CHF</td><td class="">$24.00</td></tr><tr><td class="l ">permanent</td><td class="l ">2026-09-18</td><td class="l ">2026-09-21</td><td class="">72.2</td><td class="">JPY</td><td class="">$5,300.00</td></tr><tr><td class="l ">30days</td><td class="l ">2026-09-24</td><td class="l ">2026-09-27</td><td class="">72.2</td><td class="">USD</td><td class="">$10.99</td></tr><tr><td class="l ">30days</td><td class="l ">2026-09-27</td><td class="l ">2026-09-30</td><td class="">72.2</td><td class="">ILS</td><td class="">$32.00</td></tr><tr><td class="l ">30days</td><td class="l ">2026-09-27</td><td class="l ">2026-09-30</td><td class="">72.2</td><td class="">USD</td><td class="">$10.99</td></tr><tr><td class="l ">permanent</td><td class="l ">2026-10-05</td><td class="l ">2026-10-08</td><td class="">72.2</td><td class="">USD</td><td class="">$21.31</td></tr></table></div>
 <p><strong>Defect 2 — the <code>.sale</code> pack's own grants went missing.</strong> Its ledger refunds
 are dominated by <em>player</em>-initiated reasons: 4&times; <code>not_received</code>,
@@ -457,94 +638,137 @@ check its acknowledgement state, and check what the account was actually granted
 <div class="tw"><table><tr><th class="l">sku</th><th class="l">voided_reason</th><th class="">refunds</th></tr><tr><td class="l ">auto.blessing</td><td class="l ">accidental_purchase</td><td class="">2</td></tr><tr><td class="l ">auto.blessing</td><td class="l ">defective</td><td class="">1</td></tr><tr><td class="l ">auto.blessing</td><td class="l ">undocumented_code_8</td><td class="">2</td></tr><tr><td class="l ">campaign.101</td><td class="l ">accidental_purchase</td><td class="">1</td></tr><tr><td class="l ">campaign.401</td><td class="l ">not_received</td><td class="">1</td></tr><tr><td class="l ">campaign.51</td><td class="l ">not_received</td><td class="">3</td></tr><tr><td class="l ">daily.challenge.key.1</td><td class="l ">chargeback</td><td class="">1</td></tr><tr><td class="l ">membership</td><td class="l ">accidental_purchase</td><td class="">3</td></tr><tr><td class="l ">membership</td><td class="l ">not_received</td><td class="">2</td></tr><tr><td class="l ">package.combo.mythic</td><td class="l ">accidental_purchase</td><td class="">1</td></tr><tr><td class="l ">package.combo.mythic</td><td class="l ">friendly_fraud</td><td class="">1</td></tr><tr><td class="l ">package.combo.mythic</td><td class="l ">not_received</td><td class="">1</td></tr><tr><td class="l ">package.promotion</td><td class="l ">friendly_fraud</td><td class="">1</td></tr><tr><td class="l ">skip.ad.30days</td><td class="l ">not_received</td><td class="">2</td></tr><tr><td class="l ">skip.ad.30days</td><td class="l ">remorse</td><td class="">1</td></tr><tr><td class="l ">skip.ad.30days</td><td class="l ">undocumented_code_8</td><td class="">3</td></tr><tr><td class="l ">skip.ad.30days.sale</td><td class="l ">undocumented_code_8</td><td class="">1</td></tr><tr><td class="l ">skip.ad.permanent</td><td class="l ">undocumented_code_8</td><td class="">3</td></tr><tr><td class="l ">skip.ad.permanent.sale</td><td class="l ">defective</td><td class="">2</td></tr><tr><td class="l ">skip.ad.permanent.sale</td><td class="l ">not_received</td><td class="">4</td></tr><tr><td class="l ">skip.ad.permanent.sale</td><td class="l ">undocumented_code_8</td><td class="">1</td></tr><tr><td class="l ">time.limit.mega.summon</td><td class="l ">not_received</td><td class="">2</td></tr><tr><td class="l ">time.limit.mega.summon</td><td class="l ">remorse</td><td class="">1</td></tr></table></div>
 <p class="sub">The ledger is an accumulation of Play's 30-day <code>voidedpurchases</code> window
 (re-pulled 2026-10-10 20:29, 40 refunds; earlier pulls cannot be recovered). Play's monthly
-sales report, which <em>is</em> complete, is the table in section 4 and is the better denominator:
+sales report, which <em>is</em> complete, is the table in section 5 and is the better denominator:
 30 refunds on 700
 orders, 4.3%, of which ad-removal SKUs are
 16.</p>
 
 
-<h2>7 · Verdict, the counter-argument, and what would falsify it</h2>
-<div class="verdict">
-<h2>Keep it removed — conditional on fixing the acknowledgement path</h2>
-<p><strong>Why not revert.</strong> There is no measurable revenue to win back: the net effect is
-+0.0277 $/install over D0–D2 (CI -0.1382 … +0.1993)
-and -0.0863 over D0–D7 (CI -0.2949 … +0.1322) —
-a range of roughly −$116 to $168/week at today's install rate, against
-$241/week of <code>.sale</code> revenue destroyed. Meanwhile reverting
-restores a SKU that refunds at 9.4%
-on player complaints of non-delivery, with the underlying defect still live.</p>
-<p><strong>Why "conditional" and not simply keep.</strong> The reason normally given for keeping it
-removed — fewer refunds — is <em>false on this data</em>: refunds rose
-(3.7% &rarr; 5.4%),
-and the volume migrated to a worse product at the same price. So <strong>the decision must be
-re-taken after the acknowledgement fix ships</strong>, using this same page. If the fix works and
-refunds on the ad-removal family fall below the catalogue rate, the choice becomes purely the
-revenue question — and at that point restoring <em>one</em> $10.99 permanent pack (not the three-SKU
-sale bundle) is the better product and the better price point.</p>
-<p><strong>What to do in the next build:</strong> (1) fix the acknowledgement/consume path for
-one-time products and verify against the three <code>skip.ad.permanent</code> and three
-<code>skip.ad.30days</code> orders above; (2) confirm the <code>.sale</code> grant path is genuinely
-dead rather than merely unsold; (3) re-run this page two weeks after the fix.</p>
+<h2>8 · Verdict, the counter-argument, and what would falsify it</h2>
+<div class="verdict revert">
+<h2>Roll back: restore ONE $10.99 permanent ad-removal pack (<code>skip.ad.permanent.sale</code>)</h2>
+<p><strong>Why roll back.</strong> Three things point the same way, and none of them depends on the
+one term that made the earlier reads look neutral:</p>
+<ul>
+<li><strong>The destroyed revenue is real and precisely measured.</strong>
+  $0.15/install over D0–D2 (CI −$0.18 …
+  −$0.11), $241/week ex-China — a
+  66% collapse of the no-ads IAP line, and 36.7% of
+  tracked IAP revenue historically.</li>
+<li><strong>The change did not do what it was for.</strong> The trade-up failed by a factor of ten
+  (-3.6% against a 36.6% break-even) and the refund problem it
+  was credited with fixing got <em>worse</em> (3.7% &rarr;
+  5.4%, with the non-ad-removal catalogue flat).
+  Nothing the removal was supposed to buy actually happened.</li>
+<li><strong>The compensation was bookkeeping, not behaviour.</strong> The ad gain is a property of the
+  v32+ ad stack (section 4). Once withdrawn, the point estimate is negative in every window:
+  −$0.04/install over D0–D2, −$0.13 over D0–D7 —
+  −$112 to −$35/week at today's 843 installs/week,
+  −$225 to −$70/week at the 1,691/week the game was running
+  before the removal.</li>
+</ul>
+<p><strong>Why this form and not the three-SKU bundle.</strong> The price point was never the
+problem — the twin at $29.99 converts at roughly a tenth of the rate
+(8
+Play orders in 20 post-removal days against
+64
+for the $10.99 pack in the 20 before it). What the surviving $10.99 offer got wrong is the
+<em>product</em>: 30 days instead of permanent, refunding at
+31.6%
+(Fisher p&nbsp;=&nbsp;0.026). So restore the permanent form at
+$10.99 inside the same new-player window. Leave <code>skip.ad.annual.sale</code> deleted — never
+tapped or bought once in the entire export — and leave <code>skip.ad.30days.sale</code> deleted
+unless the 30-day form is wanted for a different job.</p>
+<p><strong>How much it should recover:</strong> the mirror of the measured loss —
+$0.04 to $0.13 per install, i.e. roughly
+−$112 to −$35/week at today's volumes, plus the product-quality gain
+from selling permanence rather than a 30-day rental. Treat that as an expected value, not a promise:
+install volume is now half what it was and the traffic mix has changed.</p>
+<p><strong>What rolling back does NOT do.</strong> It does not fix the acknowledgement bug, and it is
+not a substitute for fixing it: 10 Google-initiated refunds land exactly 72.17&nbsp;h after the
+charge on the <em>surviving</em> full-price SKUs (section 7). Restoring the pack adds a SKU that
+refunds at 9.4%
+on player complaints of non-delivery, so the two actions belong in the same release: restore the
+offer <em>and</em> fix the purchase-completion path, then confirm both against this page.</p>
+<p><strong>Honesty about the strength of this call:</strong> every net point estimate here has a 90%
+interval that spans zero. The reason to act anyway is that the individual pieces are not symmetric —
+the destroyed line is measured with a tight interval, the mechanism behind the offsetting ad term is
+disproved, and the stated rationale for the removal is falsified. That is a preponderance-of-evidence
+recommendation, not a statistically significant effect.</p>
 </div>
-<h3>The strongest counter-argument to this verdict</h3>
-<p>The "revenue-neutral" conclusion depends on crediting a
-$0.07/install ad-revenue gain to the removal. <strong>It probably isn't
-the removal's.</strong> 60% of that gain is revenue <em>per impression</em>
-($60.32 &rarr; $96.39),
-which no shop-card change can cause, and the two arms are dominated by different builds (v24/v25 vs
-v34) with known fill differences. Strip the ad line and the removal costs
-−$0.04/install over D0–D2 and −$0.13 over D0–D7 —
-about −$112 to −$35/week, roughly
-−$5,832 to −$1,808/year, in exchange for nothing
-except a worse substitute product. On that reading the right answer is to restore a single
-$10.99 permanent pack as soon as the acknowledgement bug is fixed. Note also that the discounted
-pack <em>expanded</em> the market the last time the price mix moved (v21: combined ad-removal buyers
-rose 9.3 &rarr; 10.5 per 1,000 users), so the removal may be suppressing demand rather than
-redirecting it.</p>
+<h3>The strongest argument against rolling back</h3>
+<p>Two things, and they are why this is written as a preponderance call. <strong>First, the raw
+D0–D2 point estimate is positive</strong> — total revenue per install
++0.0277 (CI −$0.14 … $0.20), and
+campaign-mix reweighted +0.0018. If even part of the ad gain
+is real behaviour rather than the build — players who cannot buy ad removal watching more rewarded
+ads, which the data cannot rule out because build and removal are collinear on the install side —
+then the removal is closer to neutral than to a loss, and a rollback would be undoing a change that
+paid for itself. <strong>Second, the arms are consecutive time periods, not a randomisation:</strong>
+UA campaigns ended, traffic quality moved (post-removal D1 retention was ~5&nbsp;pts lower), and the
+install rate halved, so no observational cut here is a clean counterfactual. If the removal's real
+purpose was to stop refund abuse rather than to reprice, the case for undoing it must rest on the
+refund numbers, and those are small (13 post-removal refunds against 17 before).</p>
 <h3>What would falsify this verdict</h3>
 <ul>
-<li><strong>Clean ad attribution.</strong> Ad revenue per DAU and fill rate by build in the same
-calendar week (v29 vs v34 active users). If v34's advantage disappears when the week is held
-fixed, the ad gain belongs to the removal and the neutral reading stands. If it holds, the removal
-cost −$73/week and reverting is right.</li>
-<li><strong>A holdout.</strong> Ship a build that keeps the removal but exposes
-<code>skip.ad.permanent</code> at $10.99 to a random half of new installs for two weeks. That
-measures the price elasticity and the substitution directly; no observational cut can, because the
-arms here are consecutive time periods with different traffic.</li>
-<li><strong>After the acknowledgement fix:</strong> if refunds on <code>skip.ad.permanent</code> and
-<code>skip.ad.30days</code> fall below the catalogue rate while
-<code>permanent.sale</code>'s <code>not_received</code>/<code>defective</code> cluster persists,
-the defect <em>is</em> <code>.sale</code>-specific and the removal should stand on its own merit.
-If it does not persist, the refund rationale for the removal was never real.</li>
-<li><strong>Whale and mix checks already done:</strong> excluding the top payer moves the D0–D2 net
-from +0.0277 to +0.0212, and campaign-mix reweighting to
-+0.0018. Neither reopens the case for reverting.</li>
+<li><strong>A holdout, the only clean test.</strong> Ship a build that exposes
+<code>skip.ad.permanent</code> at $10.99 to a random half of new installs for two weeks. If the
+treated half does not out-earn the control, the destroyed <code>.sale</code> line was being replaced
+by something the measurement cannot see, and the rollback is wrong.</li>
+<li><strong>Ad attribution, measured properly.</strong> Ad revenue per DAU and rewarded fill by build
+within the same calendar week, with enough old-build users to control for country. Section 4 already
+shows the per-impression gap is a build property ($78.46 vs
+$36.68 per 1,000 impressions at 79.1% vs
+62.7% fill); if a properly powered country-controlled version showed the
+gap vanishes, the removal's neutrality would be back on the table.</li>
+<li><strong>Price elasticity, measured directly.</strong> The v21 precedent cuts against the removal
+(combined ad-removal buyers <em>rose</em> 9.3 &rarr; 10.5 per 1,000 users when the mix flipped to
+$10.99). If a test of $10.99 against $29.99 showed the $29.99 tier converting comparably once the
+offer is present, restoring the discount would be unnecessary.</li>
+<li><strong>Refund causality.</strong> If a client audit shows <code>permanent.sale</code>'s
+<code>not_received</code>/<code>defective</code> refunds were refund abuse rather than a delivery
+fault, the case for keeping that specific SKU out of the catalogue strengthens; if they were a grant
+bug, the fix is client-side and restoring the pack carries no extra refund risk.</li>
+<li><strong>Already checked, and neither reopens the case for keeping it removed:</strong> excluding
+the top payer moves the D0–D2 primary estimate from −$0.04 to
+−$0.05, and campaign-mix reweighting to
+−$0.03.</li>
 </ul>
 
-<h2>8 · Traps respected (and what I could not establish)</h2>
+<h2>9 · Traps respected (and what I could not establish)</h2>
 <ul>
 <li><strong>Reused, not re-derived:</strong> the offer window, the 36.7% break-even framing, the v21
 precedent, the refund-reason mix and the China spike were taken from the 2026-09-18/09-25/10-02 work
 and re-checked here rather than redone.</li>
-<li><strong>Never scored on active users.</strong> Every comparison is install cohort × matched
-days-since-install, because the offer only exists in a new player's first days and a version cut on
-active users is an update-speed selection artifact.</li>
+<li><strong>Never scored <em>on</em> active users for the effect.</strong> Every effect comparison is
+install cohort × matched days-since-install, because the offer only exists in a new player's first
+days and a version cut on active users is an update-speed selection artifact. The one active-user
+comparison (section 4) asks a build-property question — revenue per impression, which who the users
+are cannot change — and it is labelled as such. The version-defined split is disclosed in section 2
+and used nowhere.</li>
 <li><strong>Gross revenue.</strong> <code>event_value_in_usd</code> is gross of refunds and
 VAT-inclusive outside the US; refunds come from Play's API, not GA4, and are reported separately.
 GA4 also misses billing-only app instances, so its absolute revenue level is slightly low — Play's
-order counts in section 4 are the authoritative totals.</li>
-<li><strong>Not established:</strong> (a) whether the post-arm ad gain is behavioural or a build
-effect — the decomposition points at build, but the two are not separable without a same-week build
-comparison; (b) whether the <code>.sale</code> refunds were a delivery bug or refund abuse — GA4 has
+order counts in section 5 are the authoritative totals.</li>
+<li><strong>Not established:</strong> (a) <strong>the net revenue effect.</strong> The same-week build
+test settles the per-impression half of the ad question (section 4), but a residual <em>behavioural</em>
+ad component cannot be isolated because build and removal are perfectly collinear on the install side,
+and the install-cohort design confounds the removal with calendar time. That is why the net-per-install
+estimate is presented as corroboration with intervals that span zero, and why a version-defined split —
+which would report the opposite — is disclosed in section 2 and used nowhere; (b) whether the
+<code>.sale</code> refunds were a delivery bug or refund abuse — GA4 has
 no refund event and the client-side grant telemetry is a known partial instrumentation (9–73% per
 SKU), so this needs a client/Play check of one order's acknowledgement state; (c)
 <strong>why <code>skip.ad.3days</code>, <code>skip.ad.10days</code> and
 <code>skip.ad.30days.sale</code> also stopped selling in the week of 09-14</strong>, a week before
 v32 shipped — Play shows their last orders on 09-09/09-10/09-15, so there was a second shop change
-outside the v32 removal that this page does not explain; (d) whether the D0–D7 point estimate
-(-0.0863) or the D0–D2 one (+0.0277) is closer to the truth —
-the two windows use different (nested) install sets, and the honest answer is that the data cannot
-separate them.</li>
+outside the v32 removal that this page does not explain; (d) whether the D0–D7
+(-0.1331) or the D0–D2 (-0.0413) IAP-only estimate is closer to
+the truth — the two windows use different (nested) install sets and both intervals span zero, so the
+data cannot separate them; (e) <strong>the counterfactual conversion rate.</strong> The rollback's
+expected recovery is inferred from what the pack sold <em>before</em> it was withdrawn; it assumes
+those players still behave the same way in a smaller, differently-sourced install base, which nothing
+here tests.</li>
 </ul>
 <footer>
 Install-cohort analysis of the GA4 export <code>analytics_538412813</code> (intraday shards only, so
