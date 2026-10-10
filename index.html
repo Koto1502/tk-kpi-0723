@@ -31,6 +31,8 @@
   .sub { color:var(--text-secondary); font-size:12.5px; margin:5px 0 22px; }
   h2.sec { font-size:12px; font-weight:650; text-transform:uppercase;
            letter-spacing:0.06em; color:var(--text-muted); margin:26px 0 10px; }
+  h2.sec span.q { text-transform:none; letter-spacing:0; font-weight:400;
+                  color:var(--text-muted); }
 
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:12px; }
   a.card { display:block; background:var(--surface-1); border:1px solid var(--border);
@@ -46,6 +48,7 @@
   .card p { font-size:12.5px; color:var(--text-secondary); margin-bottom:7px; }
   .card .use { font-size:11.5px; color:var(--text-muted); }
   .card .use b { color:var(--text-secondary); font-weight:600; }
+  .card.superseded { opacity:.72; }
 
   .note { background:var(--warn-bg); border:1px solid var(--warn-border);
           border-radius:10px; padding:13px 16px; margin-top:10px; font-size:12.5px;
@@ -68,7 +71,7 @@
   + AppsFlyer attribution · all pages are self-contained and refresh together.
 </div>
 
-<h2 class="sec">Overview</h2>
+<h2 class="sec">Overview <span class="q">— the state of the game</span></h2>
 <div class="grid">
 
   <a class="card" href="kpi.html" style="--accent:var(--series-1)">
@@ -82,7 +85,7 @@
 
 </div>
 
-<h2 class="sec">Acquisition &amp; monetisation</h2>
+<h2 class="sec">Acquisition <span class="q">— what we bought, and whether it stayed</span></h2>
 <div class="grid">
 
   <a class="card" href="campaigns.html" style="--accent:var(--series-3)">
@@ -93,23 +96,7 @@
     <div class="use"><b>Use it for:</b> whether a campaign is paying for itself.</div>
   </a>
 
-  <a class="card" href="iap.html" style="--accent:var(--series-4)">
-    <span class="bar"></span>
-    <h3>IAP &amp; purchase ladder <span class="arrow">→</span></h3>
-    <p>Payer conversion and spend by install cohort, country and campaign, and the
-       ladder of which packs buyers move through.</p>
-    <div class="use"><b>Use it for:</b> who pays, when, and for what.</div>
-  </a>
-
-  <a class="card" href="retention.html" style="--accent:var(--series-7)">
-    <span class="bar"></span>
-    <h3>Retention cohorts <span class="arrow">→</span></h3>
-    <p>Install-date cohorts by day-since-install, filterable by country and campaign,
-       with a Wilson confidence interval on every cell so thin cohorts read as thin.</p>
-    <div class="use"><b>Use it for:</b> whether a retention change is real or noise.</div>
-  </a>
-
-  <a class="card" href="churn.html" style="--accent:var(--series-2)">
+  <a class="card" href="churn.html" style="--accent:var(--series-3)">
     <span class="bar"></span>
     <h3>Campaign churn <span class="arrow">→</span></h3>
     <p>Where acquired players stop playing, per campaign, against their main-quest
@@ -119,8 +106,53 @@
 
 </div>
 
-<h2 class="sec">Gameplay</h2>
+<h2 class="sec">Monetisation <span class="q">— what players pay, and what we earn per player</span></h2>
 <div class="grid">
+
+  <a class="card" href="iap.html" style="--accent:var(--series-4)">
+    <span class="bar"></span>
+    <h3>IAP &amp; purchase ladder <span class="arrow">→</span></h3>
+    <p>Payer conversion and spend by install cohort, country and campaign, and the
+       ladder of which packs buyers move through.</p>
+    <div class="use"><b>Use it for:</b> who pays, when, and for what.</div>
+  </a>
+
+  <a class="card" href="ad_fill_rate.html" style="--accent:var(--series-4)">
+    <span class="bar"></span>
+    <h3>Ad show / fail rate <span class="arrow">→</span></h3>
+    <p>Interstitial ad loads succeed only ~3% of the time (rewarded ~41%) — mostly a
+       DNS/connect failure to AppLovin MAX's own mediation host, not a shortage of ads,
+       hitting ~23% of users. Plus a fresh rewarded-specific decline engineering traced to
+       a <code>REWARDED_INTER</code> format mismatch, and a separately broken
+       backup-interstitial fallback (82% fail).</p>
+    <div class="use"><b>Use it for:</b> ad monetisation health and what to hand engineering. <b>22 Sep 2026.</b></div>
+  </a>
+
+  <a class="card" href="no_ads_impact.html" style="--accent:var(--series-4)">
+    <span class="bar"></span>
+    <h3>No-ads sale packs — should we revert? <span class="arrow">→</span></h3>
+    <p>The <code>.sale</code> packs were removed in v32 (live 21 Sep). <b>Verdict: keep it removed,
+       conditionally.</b> Net revenue per new install is unchanged within the data's precision
+       (+$0.03 D0–D2, −$0.09 D0–D7, intervals spanning zero) and the $29.99 twin did <em>not</em>
+       pick up the volume — break-even needed 36.6%, measured ≈0%. But the removal also did not fix
+       the refund defect: Google auto-refunds unacknowledged purchases exactly 72.17 h after the
+       charge, now on the surviving SKUs too.</p>
+    <div class="use"><b>Use it for:</b> the revert decision and the acknowledgement bug.
+      <b>10 Oct 2026.</b></div>
+  </a>
+
+</div>
+
+<h2 class="sec">Retention &amp; progression <span class="q">— do players stay, and how fast do they move</span></h2>
+<div class="grid">
+
+  <a class="card" href="retention.html" style="--accent:var(--series-7)">
+    <span class="bar"></span>
+    <h3>Retention cohorts <span class="arrow">→</span></h3>
+    <p>Install-date cohorts by day-since-install, filterable by country and campaign,
+       with a Wilson confidence interval on every cell so thin cohorts read as thin.</p>
+    <div class="use"><b>Use it for:</b> whether a retention change is real or noise.</div>
+  </a>
 
   <a class="card" href="stages.html" style="--accent:var(--series-5)">
     <span class="bar"></span>
@@ -133,8 +165,20 @@
 
 </div>
 
-<h2 class="sec">Weekly reports</h2>
+<h2 class="sec">Weekly reports <span class="q">— the Friday review with the dev team, newest first</span></h2>
 <div class="grid">
+
+  <a class="card" href="weekly_2026-10-09.html" style="--accent:var(--series-2)">
+    <span class="bar"></span>
+    <h3>Week ending 8 Oct <span class="arrow">→</span></h3>
+    <p>A quiet week: revenue $788 (+11%), DAU 520 (−7%), nothing broke. One new account in Romania is credited
+       $15 from three impressions logged at exactly $5.00 — the only $5.00 impressions in the export — which accounts
+       for the whole eCPM jump; ad revenue net of it is still up 53%. Ad-load failures changed shape: DNS blocking is
+       now 48% of them and "cannot resolve ms.applvn.com" has fallen from 40% to 12%. Day-1 retention recovered to
+       26.1% and the v34 progression question from last week is closed — v33 and v34 were never competing for the
+       same installs. No new or dropped events.</p>
+    <div class="use"><b>Use it for:</b> the weekly review with the development team. <b>9 Oct 2026.</b></div>
+  </a>
 
   <a class="card" href="weekly_2026-10-02.html" style="--accent:var(--series-1)">
     <span class="bar"></span>
@@ -149,20 +193,10 @@
 
 </div>
 
-<h2 class="sec">One-off investigations</h2>
+<h2 class="sec">Superseded <span class="q">— kept for the record, not for decisions</span></h2>
 <div class="grid">
 
-  <a class="card" href="no_ads_impact.html" style="--accent:var(--series-2)">
-    <span class="bar"></span>
-    <h3>No-ads sale packs — removal impact <span class="arrow">→</span></h3>
-    <p>The <code>.sale</code> packs were removed in v32 (live 21 Sep). New installs since then
-       buy ~70–75% less no-ads in their first two days; players tap the no-ads card 2.4× more
-       and mostly don't pay $29.99. Net early revenue per install is down ~17–29%, not yet
-       significant. China install spike excluded (zero revenue).</p>
-    <div class="use"><b>Use it for:</b> deciding whether to restore a discounted no-ads offer. <b>25 Sep 2026 — early read.</b></div>
-  </a>
-
-  <a class="card" href="no_ads.html" style="--accent:var(--series-2)">
+  <a class="card superseded" href="no_ads.html" style="--accent:var(--text-muted)">
     <span class="bar"></span>
     <h3>The no-ads sale packs <span class="arrow">→</span></h3>
     <p>Evidence that the discounted ad-removal packs are still being sold on v26.2, v28
@@ -170,17 +204,6 @@
        and earlier ones. Live Play storefront check with prices, every individual event,
        and the SQL to re-run it yourself.</p>
     <div class="use"><b>Superseded</b> — it shipped in v32; see the impact card. <b>18 Sep 2026.</b></div>
-  </a>
-
-  <a class="card" href="ad_fill_rate.html" style="--accent:var(--series-2)">
-    <span class="bar"></span>
-    <h3>Ad show / fail rate <span class="arrow">→</span></h3>
-    <p>Interstitial ad loads succeed only ~3% of the time (rewarded ~41%) — mostly a
-       DNS/connect failure to AppLovin MAX's own mediation host, not a shortage of ads,
-       hitting ~23% of users. Plus a fresh rewarded-specific decline engineering traced to
-       a <code>REWARDED_INTER</code> format mismatch, and a separately broken
-       backup-interstitial fallback (82% fail).</p>
-    <div class="use"><b>Use it for:</b> ad monetisation health and what to hand engineering. <b>22 Sep 2026.</b></div>
   </a>
 
 </div>

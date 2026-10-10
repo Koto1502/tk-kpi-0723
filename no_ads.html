@@ -72,11 +72,11 @@ footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--border);
 <div style="font-size:12.5px;margin-bottom:12px">
   <a href="index.html" style="text-decoration:none">&larr; All reports</a></div>
 
-<div style="border:1px solid #eb6834;background:#eb683414;border-radius:8px;padding:10px 14px;margin:0 0 16px;font-size:14px"><strong>Superseded 2026-09-25:</strong> the removal <strong>did ship, in v32</strong> (live 2026-09-21) — no <code>.sale</code> activity on v32/v33/v34. This page is the 18 Sep snapshot of v26.2–v29. <a href="no_ads_impact.html">See the impact analysis &rarr;</a></div>
+<div style="border:1px solid #eb6834;background:#eb683414;border-radius:8px;padding:10px 14px;margin:0 0 16px;font-size:14px"><strong>Superseded 2026-09-25:</strong> the removal <strong>did ship, in v32</strong> (live 2026-09-21) — no <code>.sale</code> activity on v32–v36. This page is the 18 Sep snapshot of v26.2–v29. <a href="no_ads_impact.html">See the 10 Oct revert decision document &rarr;</a></div>
 
 <h1>The no-ads <code>.sale</code> packs are still being sold</h1>
 <div class="sub">Evidence only — no revenue modelling. GA4 raw export
-  <code>analytics_538412813</code> · generated 2026-09-18</div>
+  <code>analytics_538412813</code> · generated 2026-10-10</div>
 
 <div class="verdict">
 <p><strong>On v26.2, v28 and v29 the <code>.sale</code> ad-removal packs are tapped, paid
@@ -142,22 +142,22 @@ ORDER BY app_version, cohort</pre>
 <p>GA4 only ever sees the client. The other half of "is it removed" is the storefront
 itself, so this was pulled straight from the <strong>Play Developer API</strong>
 (<code>androidpublisher v3</code>, <code>monetization.onetimeproducts.list</code>) rather
-than read off a dashboard. All 82 products came back, 14,186
+than read off a dashboard. All 95 products came back, 16,530
 product&times;region price rows, and <strong>every one of the three <code>.sale</code> packs
 is <span class="hit">ACTIVE</span> and <code>AVAILABLE</code> with its price unchanged</strong>:</p>
 <div class="tw"><table>
 <tr><th class="l">Product ID</th><th class="l">Purchase option</th><th>US price</th>
   <th class="l">State</th><th class="l">US availability</th><th>Regions available</th></tr>
-<tr class="on"><td class="l">skip.ad.30days.sale</td><td class="l">buy-no-ads-30-days-sale</td><td>USD 4.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class="on"><td class="l">skip.ad.annual.sale</td><td class="l">buy-no-ads-annual-sale</td><td>USD 4.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class="on"><td class="l">skip.ad.permanent.sale</td><td class="l">buy-no-ads-permanent-sale</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class=""><td class="l">skip.ad.10days</td><td class="l">buy-no-ads-10-days</td><td>USD 4.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class=""><td class="l">skip.ad.30days</td><td class="l">buy-no-ads-30-days</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class=""><td class="l">skip.ad.3days</td><td class="l">buy-no-ads-3-days</td><td>USD 2.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class=""><td class="l">skip.ad.annual</td><td class="l">buy-no-ads-annual</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr>
-<tr class=""><td class="l">skip.ad.permanent</td><td class="l">buy-no-ads-permanent</td><td>USD 29.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>173</td></tr></table></div>
+<tr class="on"><td class="l">skip.ad.30days.sale</td><td class="l">buy-no-ads-30-days-sale</td><td>USD 4.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr>
+<tr class="on"><td class="l">skip.ad.annual.sale</td><td class="l">buy-no-ads-annual-sale</td><td>USD 4.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr>
+<tr class="on"><td class="l">skip.ad.permanent.sale</td><td class="l">buy-no-ads-permanent-sale</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr>
+<tr class=""><td class="l">skip.ad.10days</td><td class="l">buy-no-ads-10-days</td><td>USD 4.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr>
+<tr class=""><td class="l">skip.ad.30days</td><td class="l">buy-no-ads-30-days</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr>
+<tr class=""><td class="l">skip.ad.3days</td><td class="l">buy-no-ads-3-days</td><td>USD 2.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr>
+<tr class=""><td class="l">skip.ad.annual</td><td class="l">buy-no-ads-annual</td><td>USD 10.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr>
+<tr class=""><td class="l">skip.ad.permanent</td><td class="l">buy-no-ads-permanent</td><td>USD 29.99</td><td class="l"><span class="hit">ACTIVE</span></td><td class="l">AVAILABLE</td><td>174</td></tr></table></div>
 <p>The pull was also diffed against the copy committed on 2026-09-16, field by field across
-all 14,186 rows: <strong>zero products added, zero removed, zero price changes,
+all 16,530 rows: <strong>zero products added, zero removed, zero price changes,
 zero state changes.</strong> Nothing has been deactivated or unpublished on the store side.</p>
 <p class="sub">Re-pull the live catalogue yourself:</p><pre>uv run --with google-api-python-client --with google-auth --with pyyaml \\
   python dashboard/pull_play_catalogue.py \\
