@@ -437,7 +437,7 @@ const ramp = ['#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5c
 const vers = [...new Set(AGG.dau_version.map(r=>r.vi))].filter(v=>v!=null).sort((a,b)=>a-b);
 const byVol = {}; AGG.dau_version.forEach(r=>{ byVol[r.vi]=(byVol[r.vi]||0)+r.users; });
 const totUD = vers.reduce((s,v)=>s+byVol[v],0);
-const top = vers.filter(v=>byVol[v] > Math.max(20, totUD*0.02)).slice(-8);
+const top = vers.filter(v=>byVol[v] >= 500).slice(-8); // matches the caption; a 2%-of-all-time rule hid new builds such as v36
 const groups = [...top]; // ascending version order
 const c = card('DAU by app version', 'Distinct users per day, stacked by build (users on several builds in one day count once per build). Minor builds (<500 user-days) folded into “older”. Darker = newer build.', {wide:true});
 const map = {}; AGG.dau_version.forEach(r=>{ map[r.d] = map[r.d]||{}; map[r.d][r.vi]=r.users; });

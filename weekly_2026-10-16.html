@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weekly report — 9 to 15 Oct 2026</title><style>
+.viz-root{color-scheme:light;
+  --surface-1:#fcfcfb; --surface-2:#f4f3f0; --border:#e3e1dc;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#78766f;
+  --series-1:#2a78d6; --series-2:#eb6834; --good:#137a4d; --bad:#c2410c;}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{
+  color-scheme:dark;
+  --surface-1:#1a1a19; --surface-2:#232320; --border:#3a3935;
+  --text-primary:#fff; --text-secondary:#c3c2b7; --text-muted:#96948a;
+  --series-1:#3987e5; --series-2:#d95926; --good:#4bbd86; --bad:#f08a5d;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-1)}
+.viz-root{background:var(--surface-1);color:var(--text-primary);
+  font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:30px 24px 64px;min-height:100vh}
+.wrap{max-width:1060px;margin:0 auto;width:100%;min-width:0}
+h1{font-size:28px;line-height:1.24;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:19px;margin:42px 0 6px;letter-spacing:-.01em;padding-top:16px;
+   border-top:1px solid var(--border)}
+h3{font-size:15.5px;margin:26px 0 4px}
+p{margin:9px 0;color:var(--text-secondary);max-width:80ch}
+.sub{color:var(--text-muted);font-size:13.5px;margin-bottom:6px}
+strong{color:var(--text-primary)}
+a{color:var(--series-1)}
+.back{font-size:14px;margin-bottom:18px;display:inline-block}
+.verdict{border-left:3px solid var(--series-2);background:var(--surface-2);
+  padding:14px 18px;border-radius:0 10px 10px 0;margin:18px 0}
+.verdict p{margin:6px 0}
+.claim{border-left:3px solid var(--bad);padding:2px 0 2px 14px;margin:14px 0}
+.claim p{margin:5px 0}
+.claim.ok{border-left-color:var(--good)}
+.tw{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0}
+.tw table{margin:0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:right;padding:6px 9px;border-bottom:1px solid var(--border);white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+td.wrap-cell{white-space:normal;min-width:240px;text-align:left}
+th{color:var(--text-muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+tr.on td{background:color-mix(in srgb, var(--series-2) 11%, transparent)}
+td.bad{color:var(--bad);font-weight:650}
+td.good{color:var(--good);font-weight:650}
+details{margin:6px 0 16px}
+summary{cursor:pointer;color:var(--series-1);font-size:13px}
+pre{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
+  padding:13px 15px;overflow-x:auto;font:12px/1.5 ui-monospace,Consolas,monospace;
+  color:var(--text-primary);margin:8px 0;max-width:100%}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:0 4px}
+ul{color:var(--text-secondary);max-width:80ch}li{margin:5px 0}
+details.sec{margin:0}
+details.sec>summary{list-style:none;cursor:pointer;color:var(--text-primary);font-size:inherit}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary h2{display:flex;align-items:center;gap:10px}
+details.sec>summary h2::before{content:"▾";font-size:14px;color:var(--text-muted);transition:transform .15s}
+details.sec:not([open])>summary h2::before{transform:rotate(-90deg)}
+.toolbar{display:flex;gap:8px;margin:18px 0 0}
+.toolbar button{font:13px ui-sans-serif,system-ui,sans-serif;padding:5px 12px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary)}
+footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--border);
+  font-size:12.5px;color:var(--text-muted)}
+@media (max-width:640px){
+  .viz-root{padding:20px 14px 48px;font-size:14.5px}
+  h1{font-size:23px} h2{font-size:17px}
+  .tw table{font-size:12px} th,td{padding:5px 7px}
+}
+</style></head><body><div class="viz-root"><div class="wrap">
+<a class="back" href="index.html">← All reports</a>
+<h1>Weekly report — 9 to 15 October 2026</h1>
+<p class="sub">Fri 09-10 to Thu 15-10 · excludes China unless stated · queries <code>dashboard/weekly_sql_1016/</code></p>
+<div class="verdict">
+<p><strong>IAP revenue rose to $1,029 (+68%) on 468 DAU (-7%).</strong>
+Without the week's top payer it is $882 vs $546 (+62%), so this is not one whale.
+The payer count did not move (39 vs 40); each payer spent more.</p>
+<p><strong>v36 replaced v34 over 10–11 Oct</strong> and carried 51% of the week's DAU.
+It shipped 10 new packs; together they earned $89, 9% of IAP.
+Existing packs went from $608 to $940.</p>
+</div>
+
+<h2>5 things worth noting</h2>
+<ol>
+<li><strong>Revenue is up and it is broad.</strong> +62% excluding the top payer; the gain is spread over
+Remove Ads (permanent and 30-day), the Tiny Guide pass, the mythic combo and loot storage, not a single SKU.</li>
+<li><strong>The new packs are a small part of it so far.</strong> 10 SKUs first seen since 25 Sep earned $89.
+Flameborn pass ($30.70, 1 buyer) and Hero Growth ($22.48, 2) lead; Flameborn+, campaign.20.plus, campaign.65 and
+daily.challenge.key.3 have taps but no purchase yet. Most only had 3–5 days live.</li>
+<li><strong>Campaign packs reached players earlier than planned.</strong> campaign.20 / .20.plus / .65 appear on v36 from 12–14 Oct;
+the build plan had them in B3 (rollout 19–21 Oct). Check with the production team whether the stage 20 / 150 difficulty change shipped too.</li>
+<li><strong>Players are falling, not growing.</strong> DAU 818 → 468 in five weeks and installs
+are flat at ~843/week. Revenue per DAU is carrying the week; without new installs this does not compound.</li>
+<li><strong>The week's top payer is on the old build.</strong> United States, v34, 17 purchases, $146.83.
+v34 still carried 30% of the week's DAU; by 15 Oct only 28 daily users were left on it.</li>
+</ol>
+
+<h2>Scoreboard</h2>
+<div class="tw"><table><thead><tr><th class="">week from (Fri)</th><th class="">DAU</th><th class="">installs</th><th class="">IAP $</th><th class="">ad $</th><th class="">total $</th><th class="">eCPM</th></tr></thead><tbody><tr class=""><td class="">09-11</td><td class="">818</td><td class="">1,688</td><td class="">1,298</td><td class="">146</td><td class="">1,443</td><td class="">54.4</td></tr><tr class=""><td class="">09-18</td><td class="">639</td><td class="">1,115</td><td class="">878</td><td class="">121</td><td class="">999</td><td class="">53.9</td></tr><tr class=""><td class="">09-25</td><td class="">527</td><td class="">925</td><td class="">597</td><td class="">113</td><td class="">710</td><td class="">57.0</td></tr><tr class=""><td class="">10-02</td><td class="">501</td><td class="">851</td><td class="">613</td><td class="">174</td><td class="">788</td><td class="">80.0</td></tr><tr class="on"><td class="">10-09</td><td class="">468</td><td class="">843</td><td class="">1,029</td><td class="">185</td><td class="">1,214</td><td class="">87.4</td></tr></tbody></table></div>
+<p>Week starts Friday. IAP is gross (no refunds in the export). Payers: 39 this week, 40 last week.</p>
+<details><summary>Show the query</summary><pre>-- One row per day x app version x China flag, 2026-09-04 .. 2026-10-16: DAU, installs, IAP, payers, ads.
+WITH ev AS (
+  SELECT PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) d, user_pseudo_id u, event_name e, event_timestamp ts,
+    app_info.version v, geo.country = &#x27;China&#x27; cn, event_value_in_usd usd,
+    (SELECT COALESCE(value.double_value, value.float_value, CAST(value.int_value AS FLOAT64))
+       FROM UNNEST(event_params) WHERE key=&#x27;value&#x27;) val
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE _TABLE_SUFFIX BETWEEN &#x27;20260904&#x27; AND &#x27;20261016&#x27;
+),
+ud AS (
+  SELECT d, u,
+    ARRAY_AGG(v IGNORE NULLS ORDER BY ts DESC LIMIT 1)[SAFE_OFFSET(0)] v,
+    LOGICAL_OR(cn) cn,
+    COUNTIF(e=&#x27;first_open&#x27;) &gt; 0 installed,
+    SUM(IF(e=&#x27;in_app_purchase&#x27;, usd, 0)) iap_usd,
+    COUNTIF(e=&#x27;in_app_purchase&#x27;) iap_buys,
+    SUM(IF(e=&#x27;ad_impression_MAX&#x27;, COALESCE(val, 0), 0)) ad_usd,
+    COUNTIF(e=&#x27;ad_impression_MAX&#x27;) ad_imps
+  FROM ev GROUP BY d, u
+)
+SELECT d, v, cn, COUNT(*) dau, COUNTIF(installed) installs, SUM(iap_usd) iap_usd, SUM(iap_buys) iap_buys,
+  COUNTIF(iap_buys &gt; 0) payers, SUM(ad_usd) ad_usd, SUM(ad_imps) ad_imps, COUNTIF(ad_imps &gt; 0) ad_watchers
+FROM ud GROUP BY d, v, cn</pre></details>
+<details><summary>Show the query</summary><pre>-- IAP per payer, ex-China, two report weeks (02-08 Oct, 09-15 Oct).
+SELECT IF(event_date &gt;= &#x27;20261009&#x27;, &#x27;this&#x27;, &#x27;prev&#x27;) wk, user_pseudo_id u, ANY_VALUE(geo.country) country,
+  ANY_VALUE(app_info.version) v, COUNT(*) buys, SUM(event_value_in_usd) usd
+FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+WHERE _TABLE_SUFFIX BETWEEN &#x27;20261002&#x27; AND &#x27;20261015&#x27; AND event_name = &#x27;in_app_purchase&#x27; AND geo.country != &#x27;China&#x27;
+GROUP BY 1, 2</pre></details>
+
+<h2>Builds running</h2>
+<div class="tw"><table><thead><tr><th class="">build</th><th class="">avg DAU</th><th class="">installs</th><th class="">IAP $</th><th class="">ad $</th><th class="">share of DAU %</th><th class="">first seen</th></tr></thead><tbody><tr class="on"><td class="">36</td><td class="">237</td><td class="">608</td><td class="">617</td><td class="">137</td><td class="">50.6</td><td class="">10-07</td></tr><tr class=""><td class="">34</td><td class="">142</td><td class="">207</td><td class="">412</td><td class="">47.2</td><td class="">30.4</td><td class="">09-25</td></tr><tr class=""><td class="">10</td><td class="">18.7</td><td class="">1</td><td class="">0</td><td class="">0</td><td class="">4.0</td><td class="">09-04</td></tr><tr class=""><td class="">21</td><td class="">11.1</td><td class="">13</td><td class="">0</td><td class="">0</td><td class="">2.4</td><td class="">09-04</td></tr><tr class=""><td class="">9</td><td class="">9.4</td><td class="">1</td><td class="">0</td><td class="">0</td><td class="">2.0</td><td class="">09-04</td></tr><tr class=""><td class="">24</td><td class="">7.9</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">1.7</td><td class="">09-04</td></tr><tr class=""><td class="">26.2</td><td class="">7.3</td><td class="">0</td><td class="">0</td><td class="">0.123</td><td class="">1.6</td><td class="">09-11</td></tr><tr class=""><td class="">29</td><td class="">7</td><td class="">7</td><td class="">0</td><td class="">0.850</td><td class="">1.5</td><td class="">09-17</td></tr></tbody></table></div>
+<p>Builds with at least 5 average DAU. Builds other than v34 and v36 still hold ~90 DAU combined, all with zero IAP.</p>
+<h3>v34 → v36 changeover</h3>
+<div class="tw"><table><thead><tr><th class="">day</th><th class="">v34 DAU</th><th class="">v36 DAU</th></tr></thead><tbody><tr class=""><td class="">10-06</td><td class="">330</td><td class="">0</td></tr><tr class=""><td class="">10-07</td><td class="">353</td><td class="">6</td></tr><tr class=""><td class="">10-08</td><td class="">398</td><td class="">2</td></tr><tr class=""><td class="">10-09</td><td class="">415</td><td class="">0</td></tr><tr class=""><td class="">10-10</td><td class="">316</td><td class="">31</td></tr><tr class=""><td class="">10-11</td><td class="">120</td><td class="">304</td></tr><tr class=""><td class="">10-12</td><td class="">55</td><td class="">361</td></tr><tr class=""><td class="">10-13</td><td class="">31</td><td class="">343</td></tr><tr class=""><td class="">10-14</td><td class="">30</td><td class="">324</td></tr><tr class=""><td class="">10-15</td><td class="">28</td><td class="">293</td></tr></tbody></table></div>
+
+<h2>New IAP packs</h2>
+<p>SKUs whose first tap or purchase in the export is on or after 25 Sep, totals to 15 Oct.</p>
+<div class="tw"><table><thead><tr><th class="l">pack</th><th class="">first seen</th><th class="">first purchase</th><th class="">players who tapped</th><th class="">buys</th><th class="">revenue $</th><th class="l">builds</th></tr></thead><tbody><tr class=""><td class="l">premium.pass.flameborn</td><td class="">10-11</td><td class="">10-15</td><td class="">1</td><td class="">1</td><td class="">30.7</td><td class="l">36</td></tr><tr class=""><td class="l">package.hero.growth</td><td class="">10-07</td><td class="">10-11</td><td class="">6</td><td class="">2</td><td class="">22.5</td><td class="l">35, 36</td></tr><tr class=""><td class="l">premium.pass.milestone</td><td class="">10-11</td><td class="">10-13</td><td class="">3</td><td class="">2</td><td class="">21.0</td><td class="l">36</td></tr><tr class=""><td class="l">special.hero.soul.stone</td><td class="">10-05</td><td class="">10-05</td><td class="">1</td><td class="">2</td><td class="">10.9</td><td class="l">34, 36</td></tr><tr class=""><td class="l">package.hero.toy</td><td class="">10-11</td><td class="">10-11</td><td class="">0</td><td class="">1</td><td class="">5.6</td><td class="l">36</td></tr><tr class=""><td class="l">campaign.20</td><td class="">10-12</td><td class="">10-12</td><td class="">3</td><td class="">1</td><td class="">3.3</td><td class="l">36</td></tr><tr class=""><td class="l">premium.pass.flameborn.plus</td><td class="">10-11</td><td class="">–</td><td class="">3</td><td class="">0</td><td class="">0</td><td class="l">36</td></tr><tr class=""><td class="l">campaign.20.plus</td><td class="">10-14</td><td class="">–</td><td class="">1</td><td class="">0</td><td class="">0</td><td class="l">36</td></tr><tr class=""><td class="l">campaign.65</td><td class="">10-14</td><td class="">–</td><td class="">1</td><td class="">0</td><td class="">0</td><td class="l">36</td></tr><tr class=""><td class="l">daily.challenge.key.3</td><td class="">10-14</td><td class="">–</td><td class="">1</td><td class="">0</td><td class="">0</td><td class="l">36</td></tr></tbody></table></div>
+<details><summary>Show the query</summary><pre>-- One row per product SKU x day x version (ex-China): store taps and purchases, plus each SKU&#x27;s first day in the export.
+WITH ev AS (
+  SELECT PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) d, user_pseudo_id u, event_name e, app_info.version v,
+    event_value_in_usd usd,
+    COALESCE((SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;product_id&#x27;),
+             (SELECT value.string_value FROM UNNEST(event_params) WHERE key=&#x27;position&#x27;)) sku
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE event_name IN (&#x27;in_app_purchase&#x27;, &#x27;purchase_click&#x27;, &#x27;first_purchase&#x27;)
+    AND geo.country != &#x27;China&#x27;
+),
+x AS (SELECT * FROM ev WHERE sku LIKE &#x27;com.idle.tiny.%&#x27;),
+first_seen AS (SELECT sku, MIN(d) first_day, MIN(IF(e=&#x27;in_app_purchase&#x27;, d, NULL)) first_buy_day FROM x GROUP BY sku)
+SELECT x.sku, f.first_day, f.first_buy_day, x.d, x.v,
+  COUNTIF(e=&#x27;purchase_click&#x27;) taps, COUNT(DISTINCT IF(e=&#x27;purchase_click&#x27;, u, NULL)) tappers,
+  COUNTIF(e=&#x27;in_app_purchase&#x27;) buys, COUNT(DISTINCT IF(e=&#x27;in_app_purchase&#x27;, u, NULL)) buyers,
+  SUM(IF(e=&#x27;in_app_purchase&#x27;, usd, 0)) usd
+FROM x JOIN first_seen f USING (sku)
+WHERE x.d &gt;= &#x27;2026-09-04&#x27;
+GROUP BY 1, 2, 3, 4, 5</pre></details>
+<h3>Existing packs: biggest moves this week</h3>
+<div class="tw"><table><thead><tr><th class="l">existing pack</th><th class="">this week $</th><th class="">last week $</th><th class="">change $</th></tr></thead><tbody><tr class=""><td class="l">pass.tiny.guide</td><td class="">55.5</td><td class="">0</td><td class=" good">55.5</td></tr><tr class=""><td class="l">package.combo.mythic</td><td class="">46.2</td><td class="">0</td><td class=" good">46.2</td></tr><tr class=""><td class="l">skip.ad.permanent</td><td class="">133</td><td class="">88.9</td><td class=" good">43.8</td></tr><tr class=""><td class="l">special.loot.storage</td><td class="">42.4</td><td class="">10.0</td><td class=" good">32.4</td></tr><tr class=""><td class="l">skip.ad.30days</td><td class="">105</td><td class="">74.0</td><td class=" good">30.9</td></tr><tr class=""><td class="l">weekly.promotion</td><td class="">30.0</td><td class="">0</td><td class=" good">30.0</td></tr><tr class=""><td class="l">daily.challenge.key.1</td><td class="">28.7</td><td class="">36.2</td><td class=" bad">-7.5</td></tr><tr class=""><td class="l">package.adventure</td><td class="">4.0</td><td class="">11.7</td><td class=" bad">-7.8</td></tr><tr class=""><td class="l">daily.promotion</td><td class="">22.7</td><td class="">33.1</td><td class=" bad">-10.4</td></tr><tr class=""><td class="l">package.hero.doom</td><td class="">30.4</td><td class="">42.6</td><td class=" bad">-12.2</td></tr></tbody></table></div>
+
+<h2>Day-1 retention</h2>
+<div class="tw"><table><thead><tr><th class="">wk</th><th class="">installs</th><th class="">d1_users</th><th class="">D1 %</th></tr></thead><tbody><tr class=""><td class="">09-18</td><td class="">2,042</td><td class="">232</td><td class="">11.4</td></tr><tr class=""><td class="">09-25</td><td class="">1,528</td><td class="">154</td><td class="">10.1</td></tr><tr class=""><td class="">10-02</td><td class="">1,481</td><td class="">189</td><td class="">12.8</td></tr><tr class=""><td class="">10-09</td><td class="">1,027</td><td class="">135</td><td class="">13.1</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th class="">install build</th><th class="">installs</th><th class="">d1_users</th><th class="">D1 %</th></tr></thead><tbody><tr class=""><td class="">34</td><td class="">296</td><td class="">36</td><td class="">12.2</td></tr><tr class=""><td class="">36</td><td class="">705</td><td class="">98</td><td class="">13.9</td></tr></tbody></table></div>
+<p>Returned on the day after install (any engagement). Installs on 15 Oct are excluded because their day 1 is incomplete.
+This query's definition differs from the earlier reports' first-session D1, so compare weeks within this table only.</p>
+<details><summary>Show the query</summary><pre>-- Day-1 return by install day and install build, ex-China, installs 2026-09-18 .. 2026-10-15.
+WITH ev AS (
+  SELECT user_pseudo_id u, PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) d, event_name e, event_timestamp ts,
+    app_info.version v, geo.country country
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+  WHERE _TABLE_SUFFIX BETWEEN &#x27;20260918&#x27; AND &#x27;20261016&#x27;
+),
+inst AS (
+  SELECT u, MIN(d) install_d, ARRAY_AGG(v ORDER BY ts LIMIT 1)[OFFSET(0)] v, ANY_VALUE(country) country
+  FROM ev WHERE e = &#x27;first_open&#x27; GROUP BY u
+)
+SELECT i.install_d, i.v, COUNT(*) installs,
+  COUNT(DISTINCT IF(a.d = DATE_ADD(i.install_d, INTERVAL 1 DAY), i.u, NULL)) d1_users
+FROM inst i LEFT JOIN (SELECT DISTINCT u, d FROM ev WHERE e = &#x27;user_engagement&#x27;) a USING (u)
+WHERE i.country != &#x27;China&#x27; AND i.install_d &lt;= &#x27;2026-10-15&#x27;
+GROUP BY 1, 2</pre></details>
+
+<h2>Tracking</h2>
+<p>No event name was first seen between 2 and 15 Oct. The new packs log through the existing <code>purchase_click</code> /
+<code>in_app_purchase</code> events.</p>
+<details><summary>Show the query</summary><pre>-- Event names first seen on or after 2026-10-02 (whole export), with the build they first appear in.
+WITH e AS (
+  SELECT event_name, app_info.version AS v, PARSE_DATE(&#x27;%Y%m%d&#x27;, event_date) AS d, user_pseudo_id AS u
+  FROM `tiny-knightfall-idle-rpg-game.analytics_538412813.events_intraday_*`
+),
+first_seen AS (
+  SELECT event_name, MIN(d) AS first_day, ARRAY_AGG(v ORDER BY d LIMIT 1)[OFFSET(0)] AS first_version
+  FROM e GROUP BY event_name
+)
+SELECT f.event_name, f.first_day, f.first_version,
+  STRING_AGG(DISTINCT e.v ORDER BY e.v) AS versions_seen, COUNT(*) AS events, COUNT(DISTINCT e.u) AS users
+FROM first_seen f JOIN e USING (event_name)
+WHERE f.first_day &gt;= &#x27;2026-10-02&#x27;
+GROUP BY 1, 2, 3
+ORDER BY f.first_day, events DESC</pre></details>
+<footer>Generator <code>dashboard/build_weekly_report_1016.py</code> · caches <code>parquet/wk1016_*</code></footer>
+</div></div></body></html>
