@@ -1,0 +1,181 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lucky Machine, hero packs and heroes per player — 2026-10-27</title><style>
+:root{color-scheme:light;--s0:#f4f3f1;--s1:#fcfcfb;--b:#e4e2dd;--t:#0b0b0b;--t2:#52514e;--t3:#807e78;--acc:#2a78d6;--warn-bg:#fdf6e3;--warn-b:#e8dcb8;--ans:#eef4fc;--band:rgba(42,120,214,.10)}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--s0:#111110;--s1:#1a1a19;--b:#33322f;--t:#fff;--t2:#c3c2b7;--t3:#8f8d85;--acc:#3987e5;--warn-bg:#241f14;--warn-b:#4a3f24;--ans:#15202e;--band:rgba(57,135,229,.16)}}
+*{box-sizing:border-box} body{margin:0 auto;max-width:1180px;padding:26px 20px 50px;background:var(--s0);color:var(--t);font:14px/1.55 "Segoe UI",system-ui,sans-serif}
+a{color:var(--acc)} h1{font-size:22px;margin:6px 0 2px} .sub{color:var(--t2);font-size:12.5px;margin-bottom:16px}
+.summary{background:var(--s1);border:1px solid var(--b);border-left:4px solid var(--acc);border-radius:10px;padding:10px 18px;margin:14px 0 18px}
+.summary h2{font-size:15px;margin:6px 0} .summary li{margin:7px 0}
+details.sec{background:var(--s1);border:1px solid var(--b);border-radius:10px;margin:12px 0;padding:0 18px}
+details.sec>summary{cursor:pointer;list-style:none;padding:12px 0} details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary h2{display:inline;font-size:17px} details.sec>summary::before{content:"▸ ";color:var(--t3)} details.sec[open]>summary::before{content:"▾ "}
+.body{padding-bottom:14px} h3{font-size:15px;margin:22px 0 6px}
+.answer{background:var(--ans);border-radius:8px;padding:9px 13px;margin:8px 0} .why{background:var(--warn-bg);border:1px solid var(--warn-b);border-radius:8px;padding:9px 13px;margin:10px 0}
+.foot{color:var(--t3);font-size:12px} .dim{color:var(--t2)}
+.tw{overflow-x:auto;margin:8px 0} table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{border-bottom:1px solid var(--b);padding:6px 8px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{color:var(--t3);font-weight:600;background:var(--s0);white-space:normal} td:first-child,th:first-child{text-align:left;white-space:normal}
+ul.notes li,ol.notes li{margin:7px 0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;background:var(--s0);border:1px solid var(--b);border-radius:4px;padding:0 4px}
+.ctl{font-size:12px;margin:6px 0} .ctl button{font:inherit;background:var(--s1);border:1px solid var(--b);border-radius:6px;padding:3px 10px;cursor:pointer;color:var(--t)}
+.chart{position:relative;margin:6px 0 4px} .chart svg{display:block;width:100%;height:auto} .chart text{fill:var(--t3);font-size:11px}
+.tip{position:absolute;pointer-events:none;background:var(--s1);border:1px solid var(--b);border-radius:6px;padding:5px 8px;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.12);display:none;white-space:nowrap}
+</style></head><body>
+<a href="index.html">← All reports</a>
+<h1>Lucky Machine, hero packs and heroes per player</h1>
+<div class="sub">Tiny Knightfall · Android, non-China · GA4 export through 2026-10-26 · built 2026-10-27</div>
+
+<div class="summary"><h2>Answers</h2><ol>
+<li><b>Lucky Machine was not a measurable net improvement</b> in ARPU, ARPPU or retention. For stage ≥ 31 players, ARPDAU went
+$0.28 → $0.33 → $0.29 (before / during / after). The during-vs-before gap is
+$0.05 (90% CI −$0.13 … $0.24), and it is two or three large buyers: payers were 27 / 27 / 26.
+Veterans came back at the normal rate, and players who reached stage 31 during the event retained no better (D7 16.5%, vs 23.8% before and 18.6% after; the lower 'before' gap follows the late-September traffic change).
+Its own revenue was $91.72 from 8 pack purchases (6.3% of IAP in its window); the two ticket packs sold 0.</li>
+<li><b>Bring it back, but as a measured test, not as a proven earner, and don't build 2–3 more early events yet.</b> The stage-31 gate did reach players:
+40–49% of stage 31–100 players spun. They did not pay, though: every pack dollar came from stage ≥ 101, and early reachers' retention didn't move. An early event is cheap
+engagement, not revenue. Re-run Lucky Machine with a remote-config holdout and the two defects fixed, and judge the early-event idea on that result.</li>
+<li><b>New hero packs: the Nun pack works, the rest are small, and none of them grew the payer base.</b> The Nun pack ($9.99) sold to
+23 buyers / $248 in 5 weeks, the best new pack. The other four together made
+$136. 1 of 31 buyers made their first-ever purchase on a hero pack; buyers are deep (median stage ~330) existing payers,
+and ARPDAU and payers per 1,000 DAU did not rise after launch. So they mostly re-route existing payers' money.</li>
+<li><b>Heroes per player: almost everyone has only the starter.</b> Estimated, because no event logs a hero. 68.7% of players who reach
+stage 31 own only Pom (mean 1.45 of 16); payers average 2.3, mostly because a first purchase grants Knight.
+The free routes barely land: Volt (5 ads) reaches 18.7% of stage-31 players and Sai (7-day login) 2.6%.
+Each pack hero is owned by under 2%.</li>
+</ol></div>
+<div class="ctl"><button onclick="setAll(true)">Expand all</button> <button onclick="setAll(false)">Collapse all</button></div>
+<details class="sec" open><summary><h2>1. Was Lucky Machine a net improvement in ARPU, ARPPU or retention?</h2></summary><div class="body">
+<div class="answer"><b>No.</b> The 10 event days look a little better on ARPDAU, but the difference is inside the noise, payer counts are flat, and the retention
+measures are flat or lower. The event added $91.72 of its own pack revenue.</div>
+<h3>Stage ≥ 31 players (the event's gate), all builds</h3><div class="tw"><table class=""><thead><tr><th>Stage ≥ 31 players</th><th>Players</th><th>Player-days</th><th>ARPDAU (IAP + ads)</th><th>ARPDAU excl. top payer</th><th>Payers</th><th>Payer rate</th><th>ARPPU (10 days)</th><th>Top payer $</th></tr></thead><tbody><tr><td>Before (09-06 – 09-15)</td><td>655</td><td>2058</td><td>$0.28</td><td>$0.23</td><td>27</td><td>4.1%</td><td>$20.82</td><td>$91</td></tr><tr><td>Lucky Machine (09-16 – 09-25)</td><td>586</td><td>1876</td><td>$0.33</td><td>$0.28</td><td>27</td><td>4.6%</td><td>$22.15</td><td>$90</td></tr><tr><td>After (09-26 – 10-05)</td><td>502</td><td>1440</td><td>$0.29</td><td>$0.23</td><td>26</td><td>5.2%</td><td>$14.23</td><td>$76</td></tr></tbody></table></div>
+<p class="foot">During − before: ARPDAU $0.05 (90% CI −$0.13 … $0.24); payer rate +0.5 pt
+(90% CI -1.4 pt … +2.3 pt). Bootstrap over players. 09-28 (export gap) excluded.</p>
+<h3>Daily ARPDAU of stage ≥ 31 players, 7-day trailing mean</h3>
+<div id="c1" class="chart"></div>
+<h3>Retention of existing players: followed from one 10-day block into the next</h3><div class="tw"><table class=""><thead><tr><th>Followed from → into</th><th>Players (stage ≥ 31, ≥ 3 days active)</th><th>Came back at all</th><th>Activity kept (days ratio)</th><th>Payer rate before</th><th>Payer rate after</th><th>IAP per player after</th><th>… excl. top payer</th></tr></thead><tbody><tr><td>08-07 → 08-17</td><td>388</td><td>62.9%</td><td>0.54</td><td>17.8%</td><td>4.1%</td><td>$0.32</td><td>$0.25</td></tr><tr><td>08-17 → 08-27</td><td>401</td><td>59.1%</td><td>0.53</td><td>18.0%</td><td>5.2%</td><td>$1.46</td><td>$1.16</td></tr><tr><td>08-27 → 09-06</td><td>393</td><td>62.3%</td><td>0.53</td><td>13.7%</td><td>3.1%</td><td>$0.44</td><td>$0.33</td></tr><tr><td><b>09-06 → 09-16 — event</b></td><td>323</td><td>65.0%</td><td>0.57</td><td>10.8%</td><td>4.3%</td><td>$1.30</td><td>$1.02</td></tr><tr><td>09-16 → 09-26</td><td>294</td><td>65.0%</td><td>0.55</td><td>9.2%</td><td>4.8%</td><td>$0.80</td><td>$0.54</td></tr><tr><td>09-26 → 10-06</td><td>209</td><td>71.8%</td><td>0.61</td><td>12.0%</td><td>5.7%</td><td>$1.47</td><td>$1.20</td></tr></tbody></table></div>
+<p class="foot">Same rule for every row: players at stage ≥ 31 who were active ≥ 3 days in the first block, all builds (intent to treat). "Activity kept" = share of days active
+in the second block ÷ share in the first. The event row sits inside the range of the other rows on every column.</p>
+<h3>Retention of players who reached stage 31 (the moment the event appeared)</h3><div class="tw"><table class=""><thead><tr><th>Players reaching stage 31</th><th>Players</th><th>D1</th><th>D3</th><th>D7</th><th>IAP per player, first 7 days</th><th>Payer rate, 7 days</th><th>Spun the machine</th></tr></thead><tbody><tr><td>Before — reached 31 on 09-02 … 09-14</td><td>517</td><td>49.5%</td><td>34.2%</td><td>23.8%</td><td>$2.33</td><td>8.3%</td><td>1.0%</td></tr><tr><td>During — reached 31 on 09-16 … 09-24, event build</td><td>278</td><td>47.1%</td><td>28.4%</td><td>16.5%</td><td>$1.29</td><td>5.8%</td><td>51.4%</td></tr><tr><td>After — reached 31 on 09-29 … 10-07</td><td>199</td><td>50.3%</td><td>33.7%</td><td>18.6%</td><td>$1.87</td><td>7.0%</td><td>0.0%</td></tr></tbody></table></div>
+<p class="foot">D7 during − before: -7.2 pt (90% CI -12.1 pt … -2.6 pt). Half of the "during" group spun the machine,
+yet D1–D7 were not higher. The dip vs "before" matches the traffic change of late September (UA campaigns ended; D1 fell game-wide for 25–30 Sep installs), so it isn't
+evidence the event hurt; "after" is on the same traffic and is level with "during". Day N = active on day N (D3/D7 also accept N+1 so the 09-28 gap doesn't count as churn).</p>
+<h3>Who played and who paid, by stage</h3><div class="tw"><table class=""><thead><tr><th>Highest stage during the event (event build)</th><th>Players</th><th>Spun at least once</th><th>Median spins (spinners)</th><th>Pack buyers</th><th>Pack $</th><th>Reached 10,000★ (Leo)</th></tr></thead><tbody><tr><td>31–50</td><td>95</td><td>40.0%</td><td>28</td><td>0</td><td>$0.00</td><td>0</td></tr><tr><td>51–100</td><td>181</td><td>48.6%</td><td>32</td><td>0</td><td>$0.00</td><td>0</td></tr><tr><td>101–200</td><td>88</td><td>31.8%</td><td>34</td><td>1</td><td>$9.99</td><td>3</td></tr><tr><td>201+</td><td>181</td><td>30.4%</td><td>16</td><td>6</td><td>$69.11</td><td>4</td></tr></tbody></table></div>
+<p class="foot">217 players spun (6,915 spins). Ticket packs (x10 $4.99, x120 $49.99): 0 purchases. 7 players reached the 10,000★ milestone,
+which grants <b>Leo</b>, the same SS hero the $19.99 Divine Cat pack sells (that pack has sold 2).</p>
+<div class="why"><b>Why the event couldn't show much.</b> (1) Reach: on day 1 only 11.2% of players were on an event build
+(v28/29/32/33/34), rising to 80.4% by day 10. (2) Two defects reported on 10-02: ad tickets granted without an ad (87% of ad-ticket grants have no ad),
+and a check-in double claim (41 players). Free tickets compete with the ticket packs. (3) Spin prizes and pack grants are not logged, so the economy can't be audited.
+(4) There was no holdout. Every comparison here is before/after, so a +20% effect would be invisible at this scale (~27 payers per 10 days).</div>
+<h3>Re-run recommendation</h3><ul class="notes">
+<li>Re-run it: it is already built and costs little. Ship it on <b>one build that is ≥ 90% of DAU</b> before the start date.</li>
+<li>Fix the ad-ticket grant (ticket only after <code>ad_impression_MAX</code> on <code>rewareded_mini_event</code>) and the check-in double claim.</li>
+<li>Hold out 20% of eligible players by remote config (event hidden). That turns the next run into an answer: ARPDAU, payer rate and D7 for event vs holdout.</li>
+<li>Log spin prizes and pack grants (<code>earn</code> with the SKU as position, as every other pack does).</li>
+<li>Reconsider giving away Leo at 10,000★ while the Divine Cat pack sells him at $19.99, or make the milestone reachable only with paid tickets.</li></ul>
+</div></details>
+<details class="sec" open><summary><h2>2. Should we add 2–3 more events triggered this early?</h2></summary><div class="body">
+<div class="answer"><b>Not yet.</b> The stage-31 gate brought in players (40–49% of stage 31–100 players spun vs ~30% at 101+), but none of them paid for the event
+and their retention didn't improve. Two or three more events of the same kind would add engagement we can't show is worth anything. What would change this: the
+Lucky Machine re-run with a holdout showing a D7 or payer-rate gain for stage 31–100 players.</div>
+<ul class="notes">
+<li><b>Gate reach</b> (unlock report, v34 installs, by day 3): stage 30 = 14% of installs, stage 65 = 5.5%, stage 101 ≈ 3%. An early gate reaches about 4× the players, but they are
+the ones who don't pay yet.</li>
+<li><b>Where the money is:</b> every Lucky Machine pack dollar came from stage ≥ 101 players. The 10-14 sizing found stage ≥ 101 players are ~25% of DAU and 61% of IAP.</li>
+<li><b>Dice Adventure and Fishing</b> (planned, gate 101) already target the paying group. Run them as planned, each with the same holdout and grant logging, rather than adding new early events.</li>
+<li>If the goal is early retention, the problem is elsewhere: the v36/v37 difficulty wall at stage 34 (losses 10% → 40–45%) and the D1 cliff around stage 24. An event at stage 31 sits right in front of that wall.</li></ul>
+</div></details>
+<details class="sec" open><summary><h2>3. How effective are the new hero packs?</h2></summary><div class="body">
+<div class="answer"><b>The Nun pack is the one that works</b> (23 buyers, $248, ~$51/week). Hero's Growth, SS Hero + Toys, Soulstone and the
+Divine Cat pack together made $136. <b>They have not grown revenue overall</b>: buyers are existing, deep payers, and game-wide ARPDAU and payers
+per 1,000 DAU are flat across the launch weeks.</div>
+<h3>Hero packs (non-China, through 10-26)</h3><div class="tw"><table class=""><thead><tr><th>Pack</th><th>Live since</th><th>Buyers</th><th>Revenue</th><th>$ per week live</th><th>Was buyer's first purchase</th><th>Median stage</th><th>Median prior spend</th><th>Tapped (logged)</th></tr></thead><tbody><tr><td>Lord of Hell — The Nun ($9.99)</td><td>09-23</td><td>23</td><td>$248.26</td><td>$51.11</td><td>4.3%</td><td>326</td><td>$52.35</td><td>12</td></tr><tr><td>Divine Cat — Leo ($19.99)</td><td>09-22</td><td>2</td><td>$44.08</td><td>$8.82</td><td>0.0%</td><td>343</td><td>$124.41</td><td>9</td></tr><tr><td>SS Hero + Toys — Candle ($4.99)</td><td>10-11</td><td>6</td><td>$31.34</td><td>$13.71</td><td>0.0%</td><td>392</td><td>$65.88</td><td>3</td></tr><tr><td>Hero's Growth, 24 h per hero ($9.99)</td><td>10-11</td><td>4</td><td>$43.88</td><td>$19.20</td><td>0.0%</td><td>314</td><td>$18.69</td><td>15</td></tr><tr><td>Hero Soulstone ($4.99)</td><td>10-05</td><td>3</td><td>$17.03</td><td>$5.42</td><td>0.0%</td><td>673</td><td>$20.98</td><td>1</td></tr><tr><td><span class='dim'>Selective Hero ($24.99, older)</span></td><td>08-29</td><td>14</td><td>$399.16</td><td>$47.36</td><td>14.3%</td><td>110</td><td>$95.48</td><td>28</td></tr><tr><td><span class='dim'>Lich fragments ($9.99, older)</span></td><td>08-26</td><td>10</td><td>$109.57</td><td>$12.37</td><td>0.0%</td><td>256</td><td>$108.77</td><td>0</td></tr><tr><td><span class='dim'>Lord of Hell fragments ($9.99, older)</span></td><td>08-29</td><td>10</td><td>$105.98</td><td>$12.57</td><td>0.0%</td><td>360</td><td>$134.19</td><td>0</td></tr></tbody></table></div>
+<p class="foot">"Tapped (logged)" undercounts. <code>purchase_click</code> isn't fired on every path (the Nun pack sells from its own popup), so tap→buy rates are not meaningful.
+"Was buyer's first purchase" = no earlier Play-billed purchase on that device.</p>
+<h3>Game-wide, by week</h3><div class="tw"><table class=""><thead><tr><th>Week (Mon)</th><th>Player-days</th><th>ARPDAU (IAP + ads)</th><th>ARPDAU excl. new hero packs</th><th>Payers per 1,000 DAU-days</th><th>New hero packs $</th><th>Share of IAP</th></tr></thead><tbody><tr><td>08-31</td><td>6190</td><td>$0.24</td><td>$0.24</td><td>10.7</td><td>$0</td><td>0.0%</td></tr><tr><td>09-07</td><td>6264</td><td>$0.21</td><td>$0.21</td><td>9.1</td><td>$0</td><td>0.0%</td></tr><tr><td>09-14</td><td>5040</td><td>$0.25</td><td>$0.25</td><td>9.9</td><td>$0</td><td>0.0%</td></tr><tr><td>09-21</td><td>4395</td><td>$0.21</td><td>$0.18</td><td>10.7</td><td>$156</td><td>19.6%</td></tr><tr><td>09-28 ¹</td><td>3472</td><td>$0.18</td><td>$0.18</td><td>7.8</td><td>$33</td><td>6.8%</td></tr><tr><td>10-05</td><td>3346</td><td>$0.38</td><td>$0.35</td><td>12.3</td><td>$105</td><td>9.7%</td></tr><tr><td>10-12</td><td>2640</td><td>$0.23</td><td>$0.22</td><td>11.7</td><td>$32</td><td>6.5%</td></tr><tr><td>10-19 ²</td><td>2879</td><td>$0.21</td><td>$0.20</td><td>11.8</td><td>$38</td><td>7.4%</td></tr></tbody></table></div>
+<p class="foot">¹ includes the 09-28 export gap. ² includes the 10-18 … 10-20 gap. Launches: Nun 09-23 (v32+), Soulstone 10-05, Hero's Growth / Hero + Toys 10-11 (v36).</p>
+<h3>Did buyers spend more overall, or just on the hero pack?</h3>
+<p>23 buyers whose first new-hero purchase was on or before 10-12: other IAP in the 14 days before = $38.74 per buyer, 14 days after = $18.11,
+plus $13.70 on the hero packs themselves, so $31.81 in total after vs $38.74 before. Their total spend did not go up. The hero pack took
+part of what they were already spending, which matches the flat game-wide numbers.</p>
+<div class="why"><b>Why.</b> Hero packs sit behind deep gates (Nun: mine depth 40; Soulstone: stage 115; Hero + Toys: stage 251), so only ~5–10% of DAU can see them, and those players
+already pay. A hero pack can only grow the payer base if a new or mid-game player can see it. The Divine Cat pack ($19.99, Leo) is ungated but has sold 2. Its price is the likely
+problem (Selective Hero at $24.99 sold 14, mostly on day 0–3).</div>
+</div></details>
+<details class="sec" open><summary><h2>4. How many heroes do players get?</h2></summary><div class="body">
+<div class="answer"><b>One, for most players: 68.7% of players who reach stage 31 own only the starter (Pom); payers typically own 2 (Pom + Knight).</b> The client does not log hero acquisition. These counts are rebuilt from the signals that do exist (below), so read them as estimates.
+The four craftable heroes are counted when ≥ 50 fragments of a faction were earned. The 7-day-login hero (Sai) is counted when the day-6 claim was followed by a later visit.</div>
+<div class="tw"><table class=""><thead><tr><th>Population</th><th>Players</th><th>Mean heroes</th><th>Median</th><th>1 (Pom only)</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6+</th></tr></thead><tbody><tr><td>All installs (08-25 … 10-12)</td><td>10463</td><td>1.10</td><td>1</td><td>92.2%</td><td>6.6%</td><td>0.6%</td><td>0.1%</td><td>0.5%</td><td>0.0%</td></tr><tr><td>Reached stage 31</td><td>1635</td><td>1.45</td><td>1</td><td>68.7%</td><td>24.4%</td><td>3.1%</td><td>0.3%</td><td>3.3%</td><td>0.1%</td></tr><tr><td>Reached stage 101</td><td>573</td><td>1.80</td><td>1</td><td>58.1%</td><td>24.3%</td><td>7.3%</td><td>0.9%</td><td>9.1%</td><td>0.3%</td></tr><tr><td>Payers</td><td>241</td><td>2.31</td><td>2</td><td>0.0%</td><td>75.9%</td><td>19.9%</td><td>1.7%</td><td>2.1%</td><td>0.4%</td></tr></tbody></table></div>
+<div id="c2" class="chart"></div>
+<h3>Where those heroes come from</h3><div class="tw"><table class=""><thead><tr><th>Source</th><th>All installs (08-25 … 10-12)</th><th>Reached stage 31</th><th>Reached stage 101</th><th>Payers</th></tr></thead><tbody><tr><td>Volt (5 rewarded ads, stage 10)</td><td>4.9%</td><td>18.7%</td><td>14.7%</td><td>16.2%</td></tr><tr><td>Sai (7-day login, day 7)</td><td>0.6%</td><td>2.6%</td><td>3.8%</td><td>1.7%</td></tr><tr><td>Knight (first purchase, any product)</td><td>2.3%</td><td>9.4%</td><td>20.2%</td><td>100.0%</td></tr><tr><td>Leo (Divine Cat pack, or 10,000★ in Lucky Machine)</td><td>0.1%</td><td>0.5%</td><td>1.4%</td><td>0.8%</td></tr><tr><td>The Nun (Lord of Hell pack)</td><td>0.1%</td><td>0.7%</td><td>1.9%</td><td>4.6%</td></tr><tr><td>Candle (SS Hero + Toys pack)</td><td>0.0%</td><td>0.2%</td><td>0.5%</td><td>1.2%</td></tr><tr><td>Selective Hero pack (pick one)</td><td>0.1%</td><td>0.4%</td><td>1.0%</td><td>3.7%</td></tr><tr><td>Crafted from 50 faction fragments</td><td>0.6%</td><td>3.5%</td><td>9.8%</td><td>1.7%</td></tr></tbody></table></div>
+<ul class="notes">
+<li>Population: installs 08-25 … 10-12 (Volt's ad grant is logged from v22 / 08-23; ≥ 2 weeks of runway). Everyone has <b>Pom</b> (starter). Free routes add <b>Volt</b> (5 rewarded ads, from stage 10) and <b>Sai</b> (7-day login). Any purchase adds <b>Knight</b>.</li>
+<li>The 7 rank-7 (SS) heroes (Leo, Alahu, Poshedon, Skeleton King, The Nun, Candle, Satan) come from packs, the Selective Hero pool, or pass fragments. Each is owned by &lt; 2% of players.</li>
+<li>Instrumentation gap: add <code>earn</code> with <code>currency = HERO_&lt;id&gt;</code> (and the source as position) when a hero is obtained. Hero ownership is the most direct measure of whether hero packs and events deliver.</li></ul>
+</div></details>
+<details class="sec" open><summary><h2>5. What we suggest</h2></summary><div class="body"><ol class="notes">
+<li><b>Re-run Lucky Machine as an experiment</b>: one ≥ 90% build, defects fixed, 20% remote-config holdout, prizes and grants logged. Decide on more early events from its result.</li>
+<li><b>Keep the event calendar on the paying group</b>: Dice Adventure, then Fishing (gate 101), each with the same holdout. That is where the measurable money is.</li>
+<li><b>Fix the early wall before adding early content.</b> Stage 34 (v36/v37) and the stage-24 D1 cliff decide early retention more than any event can.</li>
+<li><b>Hero monetisation: bring a hero offer forward.</b> The Nun at $9.99 proves the appetite; it is just gated deep. Test a mid-game SS hero offer (stage 31–65, $4.99–9.99, 48 h) and
+watch first-purchase rate. That is the one lever here that could grow payers, not just ARPPU.</li>
+<li><b>Price-test Divine Cat (Leo)</b> at $9.99 (it sold 2 at $19.99), and stop handing Leo out free at 10,000★ in the same period.</li>
+<li><b>Give every player a second hero early.</b> 68.7% of stage-31 players still have only Pom; Volt needs 5 opt-in ads, and only ~9% of DAU watch any ad.
+Granting Volt (or a pick) from a main quest around stage 10–20 opens the roster loop that Hero's Growth, fragments and hero packs sell into.</li>
+<li><b>Log hero acquisition</b> (<code>earn</code> HERO_&lt;id&gt;), so the next report counts heroes instead of estimating them.</li></ol></div></details>
+<details class="sec"><summary><h2>Method and data</h2></summary><div class="body"><ul class="notes">
+<li>Source: GA4 export, non-China, 2026-07-20 … 10-26. SQL <code>dashboard/lm_hero_sql/user_days.sql</code> (3.7 GiB) and <code>store.sql</code>. Builder <code>dashboard/build_lm_hero_report.py</code>.</li>
+<li>Stage cleared = <code>level_win(N) − 1</code>. Lucky Machine gate = campaign stage 31, builds 28/29/32/33/34, 09-16 … 09-25. Rewards and gates from the v37 client data
+(<code>2-EventSlotMachineData</code>, <code>HeroData</code>, <code>SevenDaysLoginData</code>, pack assets).</li>
+<li>Revenue = Play-billed <code>in_app_purchase</code> gross (incl. VAT) + MAX ad value. Export gap days (09-28, 10-18 … 10-20) excluded from per-day rates.</li>
+<li>Build-based control groups were tried and rejected. Players who stayed on old builds during the event were already leaving (2 active days of 10, 25% returned), so comparing them
+with updaters measures who updates, not the event.</li></ul></div></details>
+<script>const DATA = {"c1": [{"d": "08-14", "v": 0.354, "dau": 203, "day": 0.213}, {"d": "08-15", "v": 0.318, "dau": 229, "day": 0.153}, {"d": "08-16", "v": 0.393, "dau": 264, "day": 0.754}, {"d": "08-17", "v": 0.414, "dau": 231, "day": 0.298}, {"d": "08-18", "v": 0.397, "dau": 256, "day": 0.098}, {"d": "08-19", "v": 0.326, "dau": 258, "day": 0.206}, {"d": "08-20", "v": 0.264, "dau": 249, "day": 0.084}, {"d": "08-21", "v": 0.266, "dau": 246, "day": 0.238}, {"d": "08-22", "v": 0.322, "dau": 225, "day": 0.584}, {"d": "08-23", "v": 0.258, "dau": 226, "day": 0.348}, {"d": "08-24", "v": 0.262, "dau": 230, "day": 0.329}, {"d": "08-25", "v": 0.286, "dau": 238, "day": 0.249}, {"d": "08-26", "v": 0.369, "dau": 246, "day": 0.765}, {"d": "08-27", "v": 0.386, "dau": 249, "day": 0.201}, {"d": "08-28", "v": 0.413, "dau": 251, "day": 0.415}, {"d": "08-29", "v": 0.385, "dau": 253, "day": 0.379}, {"d": "08-30", "v": 0.383, "dau": 262, "day": 0.339}, {"d": "08-31", "v": 0.371, "dau": 255, "day": 0.252}, {"d": "09-01", "v": 0.371, "dau": 219, "day": 0.242}, {"d": "09-02", "v": 0.278, "dau": 219, "day": 0.081}, {"d": "09-03", "v": 0.295, "dau": 222, "day": 0.32}, {"d": "09-04", "v": 0.38, "dau": 213, "day": 1.099}, {"d": "09-05", "v": 0.445, "dau": 221, "day": 0.849}, {"d": "09-06", "v": 0.417, "dau": 213, "day": 0.113}, {"d": "09-07", "v": 0.403, "dau": 224, "day": 0.132}, {"d": "09-08", "v": 0.371, "dau": 239, "day": 0.046}, {"d": "09-09", "v": 0.388, "dau": 217, "day": 0.199}, {"d": "09-10", "v": 0.382, "dau": 184, "day": 0.257}, {"d": "09-11", "v": 0.303, "dau": 195, "day": 0.564}, {"d": "09-12", "v": 0.307, "dau": 197, "day": 0.94}, {"d": "09-13", "v": 0.346, "dau": 176, "day": 0.394}, {"d": "09-14", "v": 0.342, "dau": 197, "day": 0.072}, {"d": "09-15", "v": 0.367, "dau": 216, "day": 0.176}, {"d": "09-16", "v": 0.351, "dau": 209, "day": 0.091}, {"d": "09-17", "v": 0.358, "dau": 199, "day": 0.308}, {"d": "09-18", "v": 0.32, "dau": 191, "day": 0.295}, {"d": "09-19", "v": 0.239, "dau": 176, "day": 0.387}, {"d": "09-20", "v": 0.216, "dau": 180, "day": 0.212}, {"d": "09-21", "v": 0.244, "dau": 189, "day": 0.267}, {"d": "09-22", "v": 0.3, "dau": 191, "day": 0.563}, {"d": "09-23", "v": 0.31, "dau": 186, "day": 0.133}, {"d": "09-24", "v": 0.322, "dau": 181, "day": 0.395}, {"d": "09-25", "v": 0.376, "dau": 174, "day": 0.691}, {"d": "09-26", "v": 0.365, "dau": 194, "day": 0.309}, {"d": "09-27", "v": 0.355, "dau": 188, "day": 0.152}, {"d": "09-29", "v": 0.34, "dau": 137, "day": 0.098}, {"d": "09-30", "v": 0.269, "dau": 159, "day": 0.059}, {"d": "10-01", "v": 0.311, "dau": 155, "day": 0.426}, {"d": "10-02", "v": 0.324, "dau": 157, "day": 0.508}, {"d": "10-03", "v": 0.235, "dau": 156, "day": 0.076}, {"d": "10-04", "v": 0.252, "dau": 146, "day": 0.463}, {"d": "10-05", "v": 0.306, "dau": 148, "day": 0.514}, {"d": "10-06", "v": 0.341, "dau": 142, "day": 0.368}, {"d": "10-07", "v": 0.366, "dau": 146, "day": 0.21}, {"d": "10-08", "v": 0.354, "dau": 142, "day": 0.344}, {"d": "10-09", "v": 0.38, "dau": 149, "day": 0.695}, {"d": "10-10", "v": 0.483, "dau": 124, "day": 0.831}, {"d": "10-11", "v": 0.58, "dau": 138, "day": 1.152}, {"d": "10-12", "v": 0.558, "dau": 148, "day": 0.366}, {"d": "10-13", "v": 0.539, "dau": 140, "day": 0.232}, {"d": "10-14", "v": 0.585, "dau": 142, "day": 0.523}, {"d": "10-15", "v": 0.58, "dau": 122, "day": 0.264}, {"d": "10-16", "v": 0.519, "dau": 129, "day": 0.263}, {"d": "10-17", "v": 0.453, "dau": 123, "day": 0.332}, {"d": "10-21", "v": 0.313, "dau": 99, "day": 0.154}, {"d": "10-22", "v": 0.292, "dau": 118, "day": 0.218}, {"d": "10-23", "v": 0.278, "dau": 112, "day": 0.113}, {"d": "10-24", "v": 0.244, "dau": 117, "day": 0.336}, {"d": "10-25", "v": 0.233, "dau": 123, "day": 0.19}], "c2": {"dist": [0.6874617737003058, 0.24403669724770644, 0.031192660550458717, 0.0030581039755351682, 0.03302752293577982, 0.0012232415902140672]}};
+const C1 = DATA.c1, C2 = DATA.c2;
+function el(t, a){const e=document.createElementNS('http://www.w3.org/2000/svg',t);for(const k in a)e.setAttribute(k,a[k]);return e}
+function line(){
+  const box=document.getElementById('c1'), W=1100, H=260, L=52, R=14, T=12, B=28;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`}); box.appendChild(svg);
+  const n=C1.length, ymax=Math.ceil(Math.max(...C1.map(p=>p.v))*10)/10;
+  const x=i=>L+i*(W-L-R)/(n-1), y=v=>T+(1-v/ymax)*(H-T-B);
+  const i0=C1.findIndex(p=>p.d==='09-16'), i1=C1.findIndex(p=>p.d==='09-25');
+  svg.appendChild(el('rect',{x:x(i0),y:T,width:x(i1)-x(i0),height:H-T-B,fill:'var(--band)'}));
+  const lab=el('text',{x:x(i0)+4,y:T+12}); lab.textContent='Lucky Machine'; svg.appendChild(lab);
+  for(let k=0;k<=4;k++){const v=ymax*k/4;svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:'var(--b)','stroke-width':1}));
+    const t=el('text',{x:L-6,y:y(v)+4,'text-anchor':'end'});t.textContent='$'+v.toFixed(2);svg.appendChild(t)}
+  C1.forEach((p,i)=>{if(i%7===0){const t=el('text',{x:x(i),y:H-8,'text-anchor':'middle'});t.textContent=p.d;svg.appendChild(t)}});
+  svg.appendChild(el('path',{d:C1.map((p,i)=>(i?'L':'M')+x(i)+' '+y(p.v)).join(''),fill:'none',stroke:'var(--acc)','stroke-width':2,'stroke-linejoin':'round'}));
+  const cross=el('line',{y1:T,y2:H-B,stroke:'var(--t3)','stroke-width':1,visibility:'hidden'}); svg.appendChild(cross);
+  const dot=el('circle',{r:4.5,fill:'var(--acc)',stroke:'var(--s1)','stroke-width':2,visibility:'hidden'}); svg.appendChild(dot);
+  const tip=document.createElement('div'); tip.className='tip'; box.appendChild(tip);
+  svg.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect(), sx=(e.clientX-r.left)*W/r.width;
+    const i=Math.max(0,Math.min(n-1,Math.round((sx-L)/((W-L-R)/(n-1))))), p=C1[i];
+    cross.setAttribute('x1',x(i));cross.setAttribute('x2',x(i));cross.setAttribute('visibility','visible');
+    dot.setAttribute('cx',x(i));dot.setAttribute('cy',y(p.v));dot.setAttribute('visibility','visible');
+    tip.style.display='block';tip.innerHTML=`<b>${p.d}</b><br>7-day ARPDAU $${p.v.toFixed(3)}<br>that day $${p.day.toFixed(3)} · ${p.dau} players`;
+    const px=x(i)*r.width/W; tip.style.left=Math.min(px+12,r.width-170)+'px'; tip.style.top='10px'});
+  svg.addEventListener('mouseleave',()=>{tip.style.display='none';cross.setAttribute('visibility','hidden');dot.setAttribute('visibility','hidden')});
+}
+function bars(){
+  const box=document.getElementById('c2'), W=1100, H=250, L=52, R=14, T=44, B=30;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`}); box.appendChild(svg);
+  const d=C2.dist, labs=['1','2','3','4','5','6+'], ymax=Math.ceil(Math.max(...d)*10)/10;
+  const bw=(W-L-R)/d.length, y=v=>T+(1-v/ymax)*(H-T-B);
+  for(let k=0;k<=4;k++){const v=ymax*k/4;svg.appendChild(el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:'var(--b)'}));
+    const t=el('text',{x:L-6,y:y(v)+4,'text-anchor':'end'});t.textContent=Math.round(v*100)+'%';svg.appendChild(t)}
+  const tip=document.createElement('div'); tip.className='tip'; box.appendChild(tip);
+  d.forEach((v,i)=>{const x0=L+i*bw+bw*0.2, w=bw*0.6, h=Math.max(y(0)-y(v),0.5);
+    const p=el('path',{d:`M${x0} ${y(0)} V${y(0)-h+4} Q${x0} ${y(0)-h} ${x0+4} ${y(0)-h} H${x0+w-4} Q${x0+w} ${y(0)-h} ${x0+w} ${y(0)-h+4} V${y(0)} Z`,fill:'var(--acc)'});
+    svg.appendChild(p);
+    const t=el('text',{x:x0+w/2,y:y(v)-6,'text-anchor':'middle'});t.textContent=(v*100).toFixed(0)+'%';svg.appendChild(t);
+    const lt=el('text',{x:x0+w/2,y:H-10,'text-anchor':'middle'});lt.textContent=labs[i]+(i?' heroes':' hero');svg.appendChild(lt);
+    const hit=el('rect',{x:L+i*bw,y:T,width:bw,height:H-T-B,fill:'transparent'}); svg.appendChild(hit);
+    hit.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect();tip.style.display='block';
+      tip.innerHTML=`<b>${labs[i]} hero${i?'es':''}</b><br>${(v*100).toFixed(1)}% of stage-31 players`;
+      tip.style.left=Math.min((x0+w)*r.width/W+8,r.width-180)+'px';tip.style.top='10px'});
+    hit.addEventListener('mouseleave',()=>tip.style.display='none')});
+  const t=el('text',{x:L,y:12});t.textContent='Players who reached stage 31 — share by estimated heroes owned';svg.appendChild(t);
+}
+line(); bars();
+function setAll(o){document.querySelectorAll('details.sec').forEach(d=>d.open=o)}
+</script>
+</body></html>
