@@ -1,0 +1,229 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny Knight Fall — Week 9–15 Nov: versions, Build 1 changes and impact</title>
+<style>
+:root{color-scheme:light;--s0:#f4f3f1;--s1:#fcfcfb;--b:#e4e2dd;--t:#0b0b0b;--t2:#52514e;--t3:#807e78;--acc:#2a78d6;--warn-bg:#fdf6e3;--warn-b:#e8dcb8;--ans:#eef4fc;
+  --c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c0:#b9b7b0}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--s0:#111110;--s1:#1a1a19;--b:#33322f;--t:#fff;--t2:#c3c2b7;--t3:#8f8d85;--acc:#3987e5;--warn-bg:#241f14;--warn-b:#4a3f24;--ans:#15202e;
+  --c1:#3987e5;--c2:#d95926;--c3:#199e70;--c0:#5c5b56}}
+*{box-sizing:border-box} body{margin:0 auto;max-width:1180px;padding:26px 20px 50px;background:var(--s0);color:var(--t);font:14px/1.55 "Segoe UI",system-ui,sans-serif}
+a{color:var(--acc)} h1{font-size:22px;margin:6px 0 2px} .sub{color:var(--t2);font-size:12.5px;margin-bottom:16px}
+.summary{background:var(--s1);border:1px solid var(--b);border-left:4px solid var(--acc);border-radius:10px;padding:10px 18px;margin:14px 0 18px}
+.summary h2{font-size:15px;margin:6px 0} .summary li{margin:6px 0}
+details.sec{background:var(--s1);border:1px solid var(--b);border-radius:10px;margin:12px 0;padding:0 18px}
+details.sec>summary{cursor:pointer;list-style:none;padding:12px 0} details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary h2{display:inline;font-size:17px} details.sec>summary::before{content:"▸ ";color:var(--t3)} details.sec[open]>summary::before{content:"▾ "}
+.body{padding-bottom:14px} h3{font-size:15px;margin:22px 0 6px}
+.answer{background:var(--ans);border-radius:8px;padding:9px 13px;margin:8px 0}
+.why{background:var(--warn-bg);border:1px solid var(--warn-b);border-radius:8px;padding:9px 13px;margin:8px 0}
+.foot{color:var(--t3);font-size:12px}
+.tw{overflow-x:auto;margin:8px 0} table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{border-bottom:1px solid var(--b);padding:6px 8px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{color:var(--t3);font-weight:600;background:var(--s0);white-space:normal} td:first-child,th:first-child{text-align:left;white-space:normal}
+td.l,th.l{text-align:left;white-space:normal} ul.notes li{margin:7px 0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;background:var(--s0);border:1px solid var(--b);border-radius:4px;padding:0 4px}
+.ctl{font-size:12px;margin:6px 0} .ctl button{font:inherit;background:var(--s1);border:1px solid var(--b);border-radius:6px;padding:3px 10px;cursor:pointer;color:var(--t)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}
+.tile{background:var(--s1);border:1px solid var(--b);border-radius:10px;padding:10px 14px}
+.tile .k{color:var(--t2);font-size:12px} .tile .v{font-size:24px;font-weight:600;line-height:1.2;margin:2px 0} .tile .n{color:var(--t3);font-size:11.5px}
+.chart{position:relative;margin:10px 0 4px} .chart svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--t2);margin:6px 0 2px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.ax{fill:var(--t3);font-size:11px} .lab{fill:var(--t2);font-size:11px} .grid{stroke:var(--b);stroke-width:1}
+.tip{position:absolute;pointer-events:none;background:var(--s1);border:1px solid var(--b);border-radius:8px;padding:7px 10px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.14);display:none;z-index:5;white-space:nowrap}
+.tip b{font-weight:600} .tip .r{display:flex;gap:14px;justify-content:space-between} .tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.tag{display:inline-block;font-size:11px;border:1px solid var(--b);border-radius:999px;padding:0 8px;color:var(--t2);background:var(--s0)}
+</style></head><body>
+<a href="index.html">← All reports</a>
+<h1>Week 9–15 Nov: versions, Build 1 changes and impact</h1>
+<div class="sub">Tiny Knight Fall · 15 Nov 2026 · Android · excludes China · GA4 export through 14 Nov (15 Nov is a partial day) · builds read from the Google Play release</div>
+
+<div class="summary"><h2>The short version</h2><ol>
+<li><b>Five builds ran this week; two reached players.</b> v39 (Build 1, live since 6 Nov) carried 73–84% of daily players from 9 to 14 Nov. v40, v41 and v42 were internal test builds (8 testers a day at most). v43 began rolling out on 14 Nov and was 35% of players on 15 Nov, a partial day.</li>
+<li><b>Three of Build 1's five early unlocks reach almost twice as many new players.</b> Within 3 days of install, Mine use rose from 10.7% to 19.6% of installs, Research from 10.2% to 17.7% and Pom Growth from 5.4% to 10.1%.</li>
+<li><b>Honey War and Relic have not moved yet.</b> The build sets both to stage 26, but players still first use them much later: 2.1% of installs within 3 days, against 2.8% before, and 3 of the 83 new players between stages 30 and 63.</li>
+<li><b>Retention is unchanged so far.</b> D1 18.6% against 19.6% and D3 6.8% against 7.4%; both differences are inside the margin of error. D7 can be read from 21 Nov.</li>
+<li><b>Revenue per install is not yet readable.</b> $0.39 against $0.24 over the first 3 days, from 15 and 6 payers; the interval on the difference spans zero.</li>
+<li><b>Hero tracking is live.</b> 315 hero pick-ups are logged with hero and source. 9.8% of new installs received Faun from Cat Guide and 5.0% earned Volt from ads.</li>
+<li><b>No released build contains PvP.</b> v43 adds the TikTok SDK and the Fishing event screens and keeps Build 1's unlock stages.</li>
+</ol></div>
+
+<div class="ctl"><button onclick="document.querySelectorAll('details.sec').forEach(d=>d.open=true)">Expand all</button>
+<button onclick="document.querySelectorAll('details.sec').forEach(d=>d.open=false)">Collapse all</button></div>
+
+<details class="sec" id="versions" open><summary><h2>1. Versions run this week</h2></summary><div class="body">
+<p class="answer"><b>v39 was the live build all week; v43 started replacing it on 14 Nov.</b> Daily players by the version they ran most that day. Daily players went from about 650 (4–7 Nov) to 410–480 (10–14 Nov) while daily installs went from 210–400 to 115–205; retention per install did not change (section 3c).</p>
+<div class="legend" id="lgV"></div>
+<div class="chart" id="chV"></div>
+<div class="foot">15 Nov is a partial day. “Other” is every older version plus the internal builds.</div>
+<div class="tw"><table><thead><tr><th>Version</th><th class="l">Status</th><th>First seen</th><th>Peak daily players</th><th class="l">What it contains</th></tr></thead><tbody>
+<tr><td>v39</td><td class="l">Live from 6 Nov (Build 1)</td><td>6 Nov</td><td>470</td><td class="l">Five unlock stages moved earlier; hero pick-up tracking; free S hero (Faun) in Cat Guide</td></tr>
+<tr><td>v40</td><td class="l">Internal test</td><td>11 Nov</td><td>8</td><td class="l">TikTok SDK integration, first pass</td></tr>
+<tr><td>v41</td><td class="l">Internal test</td><td>12 Nov</td><td>6</td><td class="l">TikTok events and purchase verification</td></tr>
+<tr><td>v42</td><td class="l">Internal test</td><td>13 Nov</td><td>6</td><td class="l">Fixes from testing</td></tr>
+<tr><td>v43</td><td class="l">Rolling out from 14 Nov</td><td>13 Nov (testers)</td><td>93 (15 Nov, partial)</td><td class="l">TikTok Business SDK and events; Fishing event screens; unlock stages identical to v39</td></tr>
+</tbody></table></div>
+<div class="foot">Dates are GA4 reporting days.</div>
+<p><b>PvP.</b> Neither v39 nor v43 contains PvP: no PvP code, screens, unlock entry or events. The ad reward still grants Volt on v43, so the SS hero for the ad reward has not shipped either.</p>
+<p><b>v43 so far.</b> 47 installs through 14 Nov. Its unlock stages behave as in v39: new players first use Mine and Research on clearing stage 14 and Pom Growth from stage 16. The Fishing event has its first recorded activity on v43 (2 players). There is not enough data for retention or revenue on v43 yet.</p>
+</div></details>
+
+<details class="sec" id="changes" open><summary><h2>2. What Build 1 (v39) changed</h2></summary><div class="body">
+<p class="answer"><b>Build 1 matches its plan.</b> The unlock table in the released build has exactly five changed entries out of 41; the other 36 are the same as in v37.</p>
+<div class="tw"><table><thead><tr><th>Feature</th><th>Unlock stage, v37</th><th>Unlock stage, v39</th><th>Median stage cleared at first use, v37</th><th>Median stage cleared at first use, v39</th><th class="l">In player data</th></tr></thead><tbody id="tbGate"></tbody></table></div>
+<div class="foot">A feature that unlocks at stage N is first used after clearing stage N−1, so 14 means “on reaching stage 15”.</div>
+<p><b>Also in Build 1:</b> every hero pick-up is now logged with the hero and where it came from (<code>hero_receive</code>); Cat Guide gives the S hero Faun; the tutorial trigger stages tied to these unlocks moved in step (30 → 15 and 65 → 26).</p>
+</div></details>
+
+<details class="sec" id="impact" open><summary><h2>3. Impact of Build 1 on new players</h2></summary><div class="body">
+<p class="why"><b>How the comparison is made.</b> A new UA campaign (GA ROAS Global 02/11) started four days before Build 1, so the two builds are compared inside that one campaign: v37 installs of 2–5 Nov against v39 installs of 6–13 Nov. Three-day figures use v37 installs of 2–3 Nov (391) and v39 installs of 6–11 Nov (1,048), so that no v37 player could have updated inside the window.</p>
+
+<h3>3a. Share of installs using each feature within 3 days</h3>
+<p class="answer"><b>Mine, Research and Pom Growth now reach almost twice as many new players. Honey War and Relic are unchanged.</b></p>
+<div class="legend" id="lgF"></div>
+<div class="chart" id="chF"></div>
+<div class="tw"><table><thead><tr><th>Feature</th><th>v37, % of installs</th><th>v39, % of installs</th><th>Change, points</th><th>95% interval on the change</th></tr></thead><tbody id="tbFeat"></tbody></table></div>
+<div class="foot">v37: 391 installs · v39: 1,048 installs · first use = first Mine reward, first Research start, first Pom Growth reward, first Honey War entry, first Relic search.</div>
+
+<h3>3b. Honey War and Relic</h3>
+<p class="answer"><b>Players do not start Honey War or Relic at stage 26.</b> On v37 most first uses (18 of 25) came on reaching stage 65. On v39 there is no such point: first uses are spread from stage 48 to 148, and almost none happen between stages 26 and 47.</p>
+<div class="tw"><table><thead><tr><th class="l">Players, up to 7 days after install</th><th>v37 installs, 26–29 Oct</th><th>v39 installs, 6–14 Nov</th></tr></thead><tbody>
+<tr><td>Cleared the Honey War unlock stage (65 on v37, 26 on v39)</td><td>34</td><td>161</td></tr>
+<tr><td>… of whom entered Honey War</td><td>25 (74%)</td><td>33 (20%)</td></tr>
+<tr><td>… of whom used Relic</td><td>25 (74%)</td><td>32 (20%)</td></tr>
+<tr><td>First Honey War entry within one stage of the unlock</td><td>18 of 25</td><td>1 of 33</td></tr>
+<tr><td>Cleared stage 30 but not yet stage 64</td><td>75</td><td>83</td></tr>
+<tr><td>… of whom entered Honey War</td><td>0</td><td>3</td></tr>
+<tr><td>For comparison: used Mine after clearing its unlock stage</td><td>110 of 111 (99%)</td><td>279 of 283 (99%)</td></tr>
+</tbody></table></div>
+<p>Relic first use tracks Honey War first use in both builds. The practical reading: the two stage-26 unlocks have not yet produced earlier use, so the 18% reach projected for them is not being realised.</p>
+
+<h3>3c. Retention</h3>
+<p class="answer"><b>No measurable change.</b> D1 and D3 are within one point of the previous build, well inside the margin of error.</p>
+<div class="tw"><table><thead><tr><th class="l">Day</th><th>v37 (same campaign)</th><th>v39</th><th>Change, points</th><th>95% interval on the change</th><th class="l">Installs (v37 / v39)</th></tr></thead><tbody id="tbRet"></tbody></table></div>
+<div class="foot" id="ftRet"></div>
+
+<h3>3d. Early progression</h3>
+<p class="answer"><b>Players are not progressing further; more of them simply meet the features on the way.</b> The share of installs clearing each stage within 3 days is level or slightly lower than before, within the margin of error.</p>
+<div class="tw"><table><thead><tr><th class="l">Cleared within 3 days</th><th>v37, old campaign</th><th>v37, same campaign</th><th>v39</th></tr></thead><tbody id="tbProg"></tbody></table></div>
+<div class="foot">The plan's projection for Mine (31% of installs reaching stage 15 within 7 days) came from September–October installs. In November about one install in five clears stage 15 within 3 days, on either build.</div>
+
+<h3>3e. Revenue per install, first 3 days</h3>
+<p class="answer"><b>Too few payers to call.</b> The v39 figure is higher, but it rests on 15 payers against 6 and the interval on the difference spans zero.</p>
+<div class="tw"><table><thead><tr><th class="l">Per install, D0–D3</th><th>v37 (same campaign)</th><th>v39</th><th>Difference</th><th>95% interval</th></tr></thead><tbody id="tbMoney"></tbody></table></div>
+
+<h3>3f. Do the earlier unlocks cost retention at stages 15–30?</h3>
+<p class="answer"><b>No sign of it.</b> Players who stopped between stages 15 and 25 on their first day return the next day at the same rate as before (30% against 31%).</p>
+<div class="tw"><table><thead><tr><th class="l">Stage cleared on install day</th><th>Share of installs, v37</th><th>D1, v37</th><th>Share of installs, v39</th><th>D1, v39</th></tr></thead><tbody id="tbRisk"></tbody></table></div>
+<div class="foot">v37 and v39 inside the same campaign (855 and 1,263 installs). Bands above stage 15 hold 22–106 installs each, so their D1 figures are indicative. Players below stage 15 have not met any moved feature; the differences in those bands are within their intervals.</div>
+</div></details>
+
+<details class="sec" id="heroes" open><summary><h2>4. Heroes: first tracked numbers</h2></summary><div class="body">
+<p class="answer"><b>Hero pick-ups are now measured instead of estimated.</b> Among v39 installs of 6–11 Nov, 12.1% received at least one hero beyond the starter: 9.8% Faun from Cat Guide and 5.0% Volt from the ad reward. 26.0% of those installs cleared stage 11 within 3 days; Cat Guide opens at stage 11.</p>
+<div class="tw"><table><thead><tr><th class="l">Source</th><th class="l">Hero</th><th>Rank</th><th>Pick-ups</th><th>Players</th></tr></thead><tbody id="tbHero"></tbody></table></div>
+<div class="foot">All <code>hero_receive</code> events, 5–15 Nov, every version that logs them.</div>
+</div></details>
+
+<details class="sec" id="limits" open><summary><h2>5. What these numbers can and cannot say</h2></summary><div class="body"><ul class="notes">
+<li><b>Combined effect only.</b> The five unlock changes, the free hero and the tracking shipped in one build, so retention and revenue cannot be split between them.</li>
+<li><b>Short comparison window.</b> The v37 group inside the same campaign is four install days (Mon–Thu); the v39 group is eight. Day-of-week mix differs slightly.</li>
+<li><b>D7 and later are not readable yet.</b> D7 for v39 installs of 6–13 Nov completes on 20 Nov. The first D1 figure for v43 completes on 16 Nov.</li>
+<li><b>Revenue is driven by a handful of payers.</b> At about 1.4% of installs paying in the first 3 days, one large purchase moves the average.</li>
+<li><b>Feature use is read from events.</b> A feature counts as used at the first event that only it produces; a player who opened a feature without acting in it is not counted.</li>
+</ul></div></details>
+
+<details class="sec" id="method"><summary><h2>Method and sources</h2></summary><div class="body"><ul class="notes">
+<li>GA4 export (BigQuery), Android, China excluded, 26 Oct–15 Nov; 14 Nov is the last complete day.</li>
+<li>Version per day: the version a player logged most events on that day. Install build: the version on the player's <code>first_open</code>.</li>
+<li>Campaign: GA4 first-touch campaign of the install. Old campaign = GA ROAS Global 20/07; same campaign = GA ROAS Global 02/11.</li>
+<li>Stage cleared = <code>level_win</code> level − 1. Retention day N = any event on calendar day N after install.</li>
+<li>Intervals: Wilson 95% for shares, normal approximation for differences in shares, bootstrap for revenue.</li>
+<li>Build contents: unlock table and code read from the Google Play releases of v37 (26 Oct), v39 (14 Nov) and v43 (15 Nov).</li>
+<li>Related: <a href="unlocks.html">Who reaches each feature unlock</a> · <a href="builds_2026-10-22.html">What each build changed</a> · <a href="lm_heroes_2026-10-27.html">Lucky Machine and heroes</a></li>
+</ul></div></details>
+
+<script>
+const DATA = {"cohorts":{"A":{"n_d1":1776,"n_d3":1776},"B":{"n_d1":855,"n_d3":391},"C":{"n_d1":1263,"n_d3":1048}},"retention":{"A":{"d1":[19.8,18.0,21.7],"d3":[6.9,5.8,8.2],"d7":[2.5,1.7,3.6,1076]},"B":{"d1":[19.6,17.1,22.4],"d3":[7.4,5.2,10.4]},"C":{"d1":[18.6,16.6,20.8],"d3":[6.8,5.4,8.5],"d7":[3.9,2.4,6.5,357]},"diff_d1":[-1.0,-4.5,2.4],"diff_d3":[-0.6,-3.7,2.4],"C_d1_country_adj":18.9,"country_mix":{"B":{"rest":0.353,"Indonesia":0.236,"Thailand":0.103,"Philippines":0.082,"United States":0.074,"Canada":0.062,"Malaysia":0.044,"Hungary":0.023,"Belgium":0.022},"C":{"rest":0.345,"Indonesia":0.222,"Thailand":0.139,"United States":0.078,"Philippines":0.073,"Canada":0.055,"Malaysia":0.049,"Hungary":0.021,"Belgium":0.018}}},"features":[{"key":"mine","name":"Mine","old":30,"new":15,"A":{"d1":[9.9,8.6,11.3],"d3":[10.3,9.0,11.8],"stage_med":29.0,"stage_p10":29.0,"users":191},"B":{"d1":[8.4,6.7,10.5],"d3":[10.7,8.0,14.2],"stage_med":29.0,"stage_p10":29.0,"users":43},"C":{"d1":[18.7,16.6,20.9],"d3":[19.6,17.3,22.1],"stage_med":14.0,"stage_p10":14.0,"users":207},"diff_d3":[8.8,4.9,12.7],"diff_d1":[10.3,7.4,13.1]},{"key":"research","name":"Research","old":30,"new":15,"A":{"d1":[9.1,7.9,10.6],"d3":[9.5,8.2,11.0],"stage_med":29.0,"stage_p10":29.0,"users":178},"B":{"d1":[8.0,6.3,10.0],"d3":[10.2,7.6,13.6],"stage_med":30.0,"stage_p10":29.0,"users":41},"C":{"d1":[17.2,15.2,19.4],"d3":[17.7,15.6,20.2],"stage_med":14.0,"stage_p10":14.0,"users":188},"diff_d3":[7.5,3.7,11.3],"diff_d1":[9.2,6.5,12.0]},{"key":"pom","name":"Pom Growth","old":45,"new":17,"A":{"d1":[4.3,3.5,5.4],"d3":[4.4,3.6,5.5],"stage_med":45.0,"stage_p10":44.0,"users":82},"B":{"d1":[4.3,3.2,5.9],"d3":[5.4,3.5,8.1],"stage_med":45.0,"stage_p10":44.0,"users":22},"C":{"d1":[9.7,8.2,11.5],"d3":[10.1,8.4,12.1],"stage_med":18.5,"stage_p10":16.0,"users":106},"diff_d3":[4.7,1.9,7.6],"diff_d1":[5.4,3.3,7.5]},{"key":"honey","name":"Honey War","old":65,"new":26,"A":{"d1":[1.8,1.3,2.5],"d3":[2.1,1.6,2.9],"stage_med":64.0,"stage_p10":64.0,"users":46},"B":{"d1":[1.9,1.2,3.0],"d3":[2.8,1.6,5.0],"stage_med":64.0,"stage_p10":64.0,"users":13},"C":{"d1":[1.7,1.2,2.6],"d3":[2.1,1.4,3.2],"stage_med":64.0,"stage_p10":53.3,"users":22},"diff_d3":[-0.7,-2.6,1.1],"diff_d1":[-0.1,-1.3,1.0]},{"key":"relic","name":"Relic","old":65,"new":26,"A":{"d1":[1.8,1.3,2.5],"d3":[2.1,1.5,2.9],"stage_med":64.0,"stage_p10":64.0,"users":43},"B":{"d1":[1.9,1.2,3.0],"d3":[3.1,1.8,5.3],"stage_med":64.0,"stage_p10":64.0,"users":14},"C":{"d1":[1.7,1.2,2.6],"d3":[2.1,1.4,3.2],"stage_med":64.0,"stage_p10":52.1,"users":22},"diff_d3":[-1.0,-2.9,0.9],"diff_d1":[-0.1,-1.3,1.0]}],"progression":{"A":{"s15_d3":[23.0,21.1,25.0],"s17_d3":[20.5,18.7,22.4],"s26_d3":[12.3,10.9,13.9],"s30_d3":[9.5,8.2,10.9],"s45_d3":[5.8,4.8,7.0],"s65_d3":[2.6,1.9,3.4],"s15_d1":[22.6,20.7,24.6],"s26_d1":[11.8,10.4,13.4],"s30_d1":[9.0,7.8,10.4],"med_s1":1.0,"med_s3":1.0},"B":{"s15_d3":[20.7,17.0,25.0],"s17_d3":[19.4,15.8,23.6],"s26_d3":[13.8,10.7,17.6],"s30_d3":[10.7,8.0,14.2],"s45_d3":[6.6,4.6,9.6],"s65_d3":[3.1,1.8,5.3],"s15_d1":[19.4,16.9,22.2],"s26_d1":[10.6,8.7,12.9],"s30_d1":[8.2,6.5,10.2],"med_s1":0.0,"med_s3":0.0},"C":{"s15_d3":[18.9,16.6,21.4],"s17_d3":[16.2,14.1,18.6],"s26_d3":[10.2,8.5,12.2],"s30_d3":[8.1,6.6,9.9],"s45_d3":[4.7,3.6,6.1],"s65_d3":[2.4,1.6,3.5],"s15_d1":[17.9,15.9,20.1],"s26_d1":[9.7,8.2,11.5],"s30_d1":[7.7,6.3,9.3],"med_s1":0.0,"med_s3":0.0}},"money":{"A":{"iap3":[0.1661,0.0658,0.2987],"ad3":[0.0506,0.0316,0.0753],"payers3":[1.2,0.8,1.8],"imps3":0.88,"rev3":[0.2167,0.11,0.3671],"n_payers":21},"B":{"iap3":[0.1836,0.0321,0.3902],"ad3":[0.06,0.0273,0.103],"payers3":[1.5,0.7,3.3],"imps3":0.95,"rev3":[0.2436,0.0838,0.4621],"n_payers":6},"C":{"iap3":[0.3272,0.1422,0.5576],"ad3":[0.0633,0.0395,0.0935],"payers3":[1.4,0.9,2.3],"imps3":0.71,"rev3":[0.3905,0.1967,0.6313],"n_payers":15},"diff_rev3":[0.1469,-0.1511,0.4382],"diff_ad3":[0.0033,-0.0489,0.0474],"diff_iap3":[0.1436,-0.1318,0.4245]},"risk":[{"band":"0-4","A":{"share":63.6,"d1":[13.1,11.3,15.2],"n":1129},"B":{"share":65.0,"d1":[15.5,12.7,18.7],"n":556},"C":{"share":68.3,"d1":[12.4,10.4,14.8],"n":862}},{"band":"5-14","A":{"share":14.9,"d1":[23.5,18.8,29.0],"n":264},"B":{"share":16.1,"d1":[17.4,12.0,24.6],"n":138},"C":{"share":14.9,"d1":[22.9,17.4,29.4],"n":188}},{"band":"15-25","A":{"share":10.8,"d1":[28.6,22.7,35.4],"n":192},"B":{"share":9.0,"d1":[31.2,21.9,42.2],"n":77},"C":{"share":8.4,"d1":[30.2,22.3,39.5],"n":106}},{"band":"26-29","A":{"share":3.3,"d1":[44.8,32.7,57.5],"n":58},"B":{"share":2.6,"d1":[40.9,23.3,61.3],"n":22},"C":{"share":2.3,"d1":[48.3,31.4,65.6],"n":29}},{"band":"30+","A":{"share":7.5,"d1":[45.9,37.6,54.3],"n":133},"B":{"share":7.3,"d1":[40.3,29.0,52.7],"n":62},"C":{"share":6.2,"d1":[50.0,39.2,60.8],"n":78}}],"v43":{"installs":47,"mine":{"users":5,"min":14,"med":14.0},"research":{"users":5,"min":14,"med":14.0},"pom":{"users":3,"min":16,"med":19.0},"honey":{"users":1,"min":66,"med":66.0},"relic":{"users":1,"min":66,"med":66.0}},"v39min":{"mine":{"min":0,"below_gate":2,"users":207},"research":{"min":0,"below_gate":2,"users":188},"pom":{"min":16,"below_gate":0,"users":106},"honey":{"min":0,"below_gate":1,"users":22},"relic":{"min":0,"below_gate":1,"users":22}},"hero_sources":[{"position":"cat_guide","hero_name":"Faun","rank":"S","events":179,"users":179},{"position":"acquire_hero_ad","hero_name":"Volt","rank":"S","events":85,"users":85},{"position":"login_7_day","hero_name":"Sai","rank":"S","events":26,"users":26},{"position":"first_purchase","hero_name":"Knight","rank":"SS","events":12,"users":12},{"position":"com.idle.tiny.package.hero.doom","hero_name":"The Nun","rank":"SS","events":4,"users":4},{"position":"craft_fragment","hero_name":"Faun","rank":"S","events":2,"users":2},{"position":"com.idle.tiny.package.angel","hero_name":"Leo","rank":"SS","events":1,"users":1},{"position":"com.idle.tiny.selective.hero","hero_name":"Pyro","rank":"SS","events":1,"users":1},{"position":"craft_fragment","hero_name":"Gon","rank":"S","events":1,"users":1},{"position":"craft_fragment","hero_name":"Sioux","rank":"S","events":1,"users":1},{"position":"craft_fragment","hero_name":"Rat tammer","rank":"S","events":1,"users":1},{"position":"leagueboss_shop_buyseasonitem","hero_name":"Faun","rank":"S","events":1,"users":1}],"hero_total":{"events":315,"users":245},"hero_reach":{"n":1048,"faun_cat_guide":[9.8,8.2,11.8],"volt_ads":[5.0,3.8,6.4],"any":[12.1,10.3,14.2],"reach_s11_d3":[26.0,23.4,28.7]},"versions":{"days":["11-02","11-03","11-04","11-05","11-06","11-07","11-08","11-09","11-10","11-11","11-12","11-13","11-14","11-15"],"series":{"37":[441,658,551,516,278,115,54,40,20,26,15,21,18,4],"38":[1,1,1,24,47,9,3,2,1,3,0,0,0,0],"39":[0,0,1,0,168,410,445,470,404,351,356,300,343,137],"40":[0,0,0,0,0,0,0,0,0,8,1,3,0,0],"41":[0,0,0,0,0,0,0,0,0,0,6,6,0,0],"42":[0,0,0,0,0,0,0,0,0,0,0,6,2,0],"43":[0,0,0,0,0,0,0,0,0,0,0,6,44,93]},"other":[125,109,92,118,180,106,89,84,57,69,60,70,54,28]},"installs_by_day":{"11-02":184,"11-03":406,"11-04":281,"11-05":275,"11-06":275,"11-07":289,"11-08":228,"11-09":235,"11-10":191,"11-11":165,"11-12":151,"11-13":133,"11-14":210}};
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const f1 = x => x == null ? '–' : x.toFixed(1);
+const pct = a => a[0] == null ? '–' : a[0].toFixed(1) + '%';
+const ci = a => a[0] == null ? '' : ' <span class="foot">(' + a[1].toFixed(1) + '–' + a[2].toFixed(1) + ')</span>';
+const sgn = x => (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(1);
+const svgEl = (tag, attrs, parent) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+function tipFor(box) { const t = document.createElement('div'); t.className = 'tip'; box.appendChild(t);
+  return { show(html, ev) { t.innerHTML = html; t.style.display = 'block'; const r = box.getBoundingClientRect(); let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 12;
+    if (x + t.offsetWidth > r.width) x = ev.clientX - r.left - t.offsetWidth - 14; t.style.left = x + 'px'; t.style.top = y + 'px'; }, hide() { t.style.display = 'none'; } }; }
+function roundTop(x, y, w, h, r) { r = Math.min(r, w / 2, h); return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`; }
+
+// ---- 1. versions: stacked bars, one per day
+(function () {
+  const V = DATA.versions, i0 = V.days.indexOf('11-04'), days = V.days.slice(i0);
+  const ser = [['v37', 'c1', V.series['37']], ['v39', 'c2', V.series['39']], ['v43', 'c3', V.series['43']]].map(([n, c, a]) => ({ n, c, a: a.slice(i0) }));
+  const total = days.map((_, i) => V.other[i0 + i] + Object.values(V.series).reduce((s, a) => s + a[i0 + i], 0));
+  const other = days.map((_, i) => total[i] - ser.reduce((s, q) => s + q.a[i], 0));
+  ser.push({ n: 'Other', c: 'c0', a: other });
+  $('lgV').innerHTML = ser.map(s => `<span><i style="background:var(--${s.c})"></i>${s.n}</span>`).join('');
+  const W = 1100, H = 300, m = { l: 44, r: 10, t: 14, b: 26 }, pw = W - m.l - m.r, ph = H - m.t - m.b, max = 700;
+  const box = $('chV'), svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Daily players by app version, 4 to 15 November' }, box), tip = tipFor(box);
+  for (const g of [0, 175, 350, 525, 700]) { const y = m.t + ph - ph * g / max; svgEl('line', { x1: m.l, x2: W - m.r, y1: y, y2: y, class: 'grid' }, svg); svgEl('text', { x: m.l - 8, y: y + 4, 'text-anchor': 'end', class: 'ax' }, svg).textContent = g; }
+  const bw = pw / days.length, w = Math.min(46, bw - 10);
+  days.forEach((d, i) => {
+    const x = m.l + i * bw + (bw - w) / 2; let acc = 0;
+    ser.forEach((s, k) => { const v = s.a[i]; if (!v) return; const h = ph * v / max, y = m.t + ph - ph * (acc + v) / max; acc += v;
+      const top = ser.slice(k + 1).every(q => !q.a[i]);
+      const p = top ? svgEl('path', { d: roundTop(x, y, w, Math.max(h - 2, 1), 4), fill: css('--' + s.c) }, svg) : svgEl('rect', { x, y, width: w, height: Math.max(h - 2, 1), fill: css('--' + s.c) }, svg); });
+    svgEl('text', { x: x + w / 2, y: H - 8, 'text-anchor': 'middle', class: 'ax' }, svg).textContent = +d.slice(3) + ' Nov' + (d === '11-15' ? '*' : '');
+    const hit = svgEl('rect', { x: m.l + i * bw, y: m.t, width: bw, height: ph, fill: 'transparent' }, svg);
+    hit.addEventListener('mousemove', ev => tip.show(`<b>${+d.slice(3)} Nov${d === '11-15' ? ' (partial)' : ''}</b>` + ser.map(s => `<div class="r"><span><i style="background:var(--${s.c})"></i>${s.n}</span><b>${s.a[i]}</b></div>`).join('') + `<div class="r"><span>All players</span><b>${total[i]}</b></div>`, ev));
+    hit.addEventListener('mouseleave', tip.hide);
+  });
+})();
+
+// ---- 2. gate table
+$('tbGate').innerHTML = DATA.features.map(f => { const moved = f.C.stage_med != null && f.C.stage_med <= f.new + 3;
+  return `<tr><td>${f.name}</td><td>${f.old}</td><td>${f.new}</td><td>${f1(f.B.stage_med ?? f.A.stage_med).replace('.0', '')}</td><td>${f1(f.C.stage_med).replace('.0', '')}</td><td class="l">${moved ? 'Moved as planned' : 'Not moved yet'}</td></tr>`; }).join('');
+
+// ---- 3a. features: grouped bars
+(function () {
+  const F = DATA.features, ser = [['v37 (same campaign)', 'c1', 'B'], ['v39', 'c2', 'C']];
+  $('lgF').innerHTML = ser.map(s => `<span><i style="background:var(--${s[1]})"></i>${s[0]}</span>`).join('');
+  const W = 1100, H = 280, m = { l: 44, r: 10, t: 22, b: 28 }, pw = W - m.l - m.r, ph = H - m.t - m.b, max = 25;
+  const box = $('chF'), svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Share of installs using each feature within 3 days, v37 against v39' }, box), tip = tipFor(box);
+  for (const g of [0, 5, 10, 15, 20, 25]) { const y = m.t + ph - ph * g / max; svgEl('line', { x1: m.l, x2: W - m.r, y1: y, y2: y, class: 'grid' }, svg); svgEl('text', { x: m.l - 8, y: y + 4, 'text-anchor': 'end', class: 'ax' }, svg).textContent = g + '%'; }
+  const gw = pw / F.length, w = 44;
+  F.forEach((f, i) => { const x0 = m.l + i * gw + gw / 2 - w - 1;
+    ser.forEach((s, k) => { const v = f[s[2]].d3[0], h = Math.max(ph * v / max, 1), x = x0 + k * (w + 2), y = m.t + ph - h;
+      svgEl('path', { d: roundTop(x, y, w, h, 4), fill: css('--' + s[1]) }, svg);
+      svgEl('text', { x: x + w / 2, y: y - 5, 'text-anchor': 'middle', class: 'lab' }, svg).textContent = v.toFixed(1) + '%'; });
+    svgEl('text', { x: m.l + i * gw + gw / 2, y: H - 8, 'text-anchor': 'middle', class: 'ax' }, svg).textContent = `${f.name} (${f.old} → ${f.new})`;
+    const hit = svgEl('rect', { x: m.l + i * gw, y: m.t, width: gw, height: ph, fill: 'transparent' }, svg);
+    hit.addEventListener('mousemove', ev => tip.show(`<b>${f.name}</b>, unlock stage ${f.old} → ${f.new}` + ser.map(s => `<div class="r"><span><i style="background:var(--${s[1]})"></i>${s[0]}</span><b>${f[s[2]].d3[0].toFixed(1)}% <span class="foot">(${f[s[2]].d3[1].toFixed(1)}–${f[s[2]].d3[2].toFixed(1)})</span></b></div>`).join('') + `<div class="r"><span>Change</span><b>${sgn(f.diff_d3[0])} pts</b></div>`, ev));
+    hit.addEventListener('mouseleave', tip.hide); });
+})();
+$('tbFeat').innerHTML = DATA.features.map(f => `<tr><td>${f.name}</td><td>${pct(f.B.d3)}${ci(f.B.d3)}</td><td>${pct(f.C.d3)}${ci(f.C.d3)}</td><td>${sgn(f.diff_d3[0])}</td><td>${sgn(f.diff_d3[1])} to ${sgn(f.diff_d3[2])}</td></tr>`).join('');
+
+// ---- 3c. retention
+(function () { const R = DATA.retention, N = DATA.cohorts;
+  $('tbRet').innerHTML = [['D1', 'd1', R.diff_d1, N.B.n_d1, N.C.n_d1], ['D3', 'd3', R.diff_d3, N.B.n_d3, N.C.n_d3]].map(([l, k, d, nb, nc]) =>
+    `<tr><td>${l}</td><td>${pct(R.B[k])}${ci(R.B[k])}</td><td>${pct(R.C[k])}${ci(R.C[k])}</td><td>${sgn(d[0])}</td><td>${sgn(d[1])} to ${sgn(d[2])}</td><td class="l">${nb.toLocaleString()} / ${nc.toLocaleString()}</td></tr>`).join('') +
+    `<tr><td>D7</td><td>–</td><td>${pct(R.C.d7)}${ci(R.C.d7)}</td><td>–</td><td>–</td><td class="l">– / ${R.C.d7[3]} (installs of 6–7 Nov only)</td></tr>`;
+  $('ftRet').innerHTML = `Brackets are 95% intervals. For context, v37 on the old campaign (26 Oct–1 Nov, ${N.A.n_d1.toLocaleString()} installs): D1 ${pct(R.A.d1)}, D3 ${pct(R.A.d3)}, D7 ${pct(R.A.d7)}. v39 D1 re-weighted to v37's country mix: ${R.C_d1_country_adj.toFixed(1)}%.`; })();
+
+// ---- 3d. progression
+$('tbProg').innerHTML = [15, 17, 26, 30, 45, 65].map(n => `<tr><td>Stage ${n}</td>` + ['A', 'B', 'C'].map(k => `<td>${pct(DATA.progression[k]['s' + n + '_d3'])}${ci(DATA.progression[k]['s' + n + '_d3'])}</td>`).join('') + '</tr>').join('');
+
+// ---- 3e. money
+(function () { const M = DATA.money, usd = x => '$' + x.toFixed(2), d = a => (a[0] >= 0 ? '+' : '−') + '$' + Math.abs(a[0]).toFixed(2), iv = a => (a[1] >= 0 ? '+' : '−') + '$' + Math.abs(a[1]).toFixed(2) + ' to ' + (a[2] >= 0 ? '+' : '−') + '$' + Math.abs(a[2]).toFixed(2);
+  $('tbMoney').innerHTML = [['IAP + ad revenue', 'rev3', M.diff_rev3], ['IAP revenue', 'iap3', M.diff_iap3], ['Ad revenue', 'ad3', M.diff_ad3]].map(([l, k, df]) =>
+    `<tr><td>${l}</td><td>${usd(M.B[k][0])}</td><td>${usd(M.C[k][0])}</td><td>${d(df)}</td><td>${iv(df)}</td></tr>`).join('') +
+    `<tr><td>Installs paying</td><td>${pct(M.B.payers3)} <span class="foot">(${M.B.n_payers} payers)</span></td><td>${pct(M.C.payers3)} <span class="foot">(${M.C.n_payers} payers)</span></td><td>–</td><td>–</td></tr>` +
+    `<tr><td>Ad impressions</td><td>${M.B.imps3.toFixed(2)}</td><td>${M.C.imps3.toFixed(2)}</td><td>–</td><td>–</td></tr>`; })();
+
+// ---- 3f. risk bands
+$('tbRisk').innerHTML = DATA.risk.map(r => `<tr><td>${r.band.replace('-', '–')}</td><td>${r.B.share.toFixed(1)}%</td><td>${pct(r.B.d1)}${ci(r.B.d1)}</td><td>${r.C.share.toFixed(1)}%</td><td>${pct(r.C.d1)}${ci(r.C.d1)}</td></tr>`).join('');
+
+// ---- 4. heroes
+(function () { const nm = { cat_guide: 'Cat Guide', acquire_hero_ad: 'Ad reward', login_7_day: '7-day login', first_purchase: 'First purchase', craft_fragment: 'Crafted from fragments', leagueboss_shop_buyseasonitem: 'League Boss shop' };
+  $('tbHero').innerHTML = DATA.hero_sources.map(h => `<tr><td>${nm[h.position] || 'IAP pack: ' + h.position.replace('com.idle.tiny.', '')}</td><td class="l">${h.hero_name}</td><td>${h.rank}</td><td>${h.events}</td><td>${h.users}</td></tr>`).join(''); })();
+</script>
+</body></html>
