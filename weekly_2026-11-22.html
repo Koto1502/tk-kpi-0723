@@ -1,0 +1,314 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny Knight Fall — Week 16–22 Nov: revenue, UA spend, v43 first read</title>
+<style>
+:root{color-scheme:light;--s0:#f4f3f1;--s1:#fcfcfb;--b:#e4e2dd;--t:#0b0b0b;--t2:#52514e;--t3:#807e78;--acc:#2a78d6;--warn-bg:#fdf6e3;--warn-b:#e8dcb8;--ans:#eef4fc;
+  --c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c0:#b9b7b0}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--s0:#111110;--s1:#1a1a19;--b:#33322f;--t:#fff;--t2:#c3c2b7;--t3:#8f8d85;--acc:#3987e5;--warn-bg:#241f14;--warn-b:#4a3f24;--ans:#15202e;
+  --c1:#3987e5;--c2:#d95926;--c3:#199e70;--c0:#5c5b56}}
+*{box-sizing:border-box} body{margin:0 auto;max-width:1180px;padding:26px 20px 50px;background:var(--s0);color:var(--t);font:14px/1.55 "Segoe UI",system-ui,sans-serif}
+a{color:var(--acc)} h1{font-size:22px;margin:6px 0 2px} .sub{color:var(--t2);font-size:12.5px;margin-bottom:16px}
+.summary{background:var(--s1);border:1px solid var(--b);border-left:4px solid var(--acc);border-radius:10px;padding:10px 18px;margin:14px 0 18px}
+.summary h2{font-size:15px;margin:6px 0} .summary li{margin:6px 0}
+details.sec{background:var(--s1);border:1px solid var(--b);border-radius:10px;margin:12px 0;padding:0 18px}
+details.sec>summary{cursor:pointer;list-style:none;padding:12px 0} details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary h2{display:inline;font-size:17px} details.sec>summary::before{content:"▸ ";color:var(--t3)} details.sec[open]>summary::before{content:"▾ "}
+.body{padding-bottom:14px} h3{font-size:15px;margin:22px 0 6px}
+.answer{background:var(--ans);border-radius:8px;padding:9px 13px;margin:8px 0}
+.why{background:var(--warn-bg);border:1px solid var(--warn-b);border-radius:8px;padding:9px 13px;margin:8px 0}
+.foot{color:var(--t3);font-size:12px}
+.tw{overflow-x:auto;margin:8px 0} table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{border-bottom:1px solid var(--b);padding:6px 8px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{color:var(--t3);font-weight:600;background:var(--s0);white-space:normal} td:first-child,th:first-child{text-align:left;white-space:normal}
+td.l,th.l{text-align:left;white-space:normal} ul.notes li{margin:7px 0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;background:var(--s0);border:1px solid var(--b);border-radius:4px;padding:0 4px}
+.ctl{font-size:12px;margin:6px 0} .ctl button{font:inherit;background:var(--s1);border:1px solid var(--b);border-radius:6px;padding:3px 10px;cursor:pointer;color:var(--t)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}
+.tile{background:var(--s1);border:1px solid var(--b);border-radius:10px;padding:10px 14px}
+.tile .k{color:var(--t2);font-size:12px} .tile .v{font-size:24px;font-weight:600;line-height:1.2;margin:2px 0} .tile .n{color:var(--t3);font-size:11.5px}
+.chart{position:relative;margin:10px 0 4px} .chart svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--t2);margin:6px 0 2px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.ax{fill:var(--t3);font-size:11px} .lab{fill:var(--t2);font-size:11px} .grid{stroke:var(--b);stroke-width:1}
+.tip{position:absolute;pointer-events:none;background:var(--s1);border:1px solid var(--b);border-radius:8px;padding:7px 10px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.14);display:none;z-index:5;white-space:nowrap}
+.tip b{font-weight:600} .tip .r{display:flex;gap:14px;justify-content:space-between} .tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.tag{display:inline-block;font-size:11px;border:1px solid var(--b);border-radius:999px;padding:0 8px;color:var(--t2);background:var(--s0)}
+</style></head><body>
+<a href="index.html">← All reports</a>
+<h1>Week 16–22 Nov: revenue, UA spend, v43 first read</h1>
+<div class="sub">Tiny Knight Fall · 23 Nov 2026 · Android · excludes China · GA4 export through 22 Nov (23 Nov is a partial day and is left out) · orders checked against Google Play Console · UA spend from AppsFlyer</div>
+
+<div class="summary"><h2>The short version</h2><ol>
+<li><b>Revenue fell by two thirds.</b> $229 against $668 the week before: IAP $158 against $577, ads $70 against $90. Google Play Console records 17 orders against 75, so the fall is in actual sales, not in tracking.</li>
+<li><b>Far fewer players paid.</b> 9 buyers against 26. Of last week's 26 buyers, 15 did not play this week, and the 11 who did made one purchase between them. Last week's five largest buyers alone spent $304, 53% of that week's IAP.</li>
+<li><b>UA spend halved, and the traffic moved to lower-value markets.</b> GA ROAS Global 02/11 spent $698 against $1,410 and brought 508 paid installs against 773. All installs fell 25% (1,239 → 926); the Tier-1 share of installs fell from 25% to 17%, and US installs halved (107 → 51).</li>
+<li><b>Daily players fell 17%</b> (474 → 392 a day). Players watched more rewarded ads, but fewer of the views came from Tier-1 countries (26% → 15%), so ad revenue still fell 22%.</li>
+<li><b>v43 is now the live build</b>, on 65% of daily players on 16 Nov and 79% on 22 Nov. New-player retention is level with v39: D1 18.8% against 18.6%, D3 5.5% against 6.8%, both inside the margin of error. Three-day revenue per install is $0.20 against $0.39, from 3 payers against 15; the interval on the difference spans zero.</li>
+<li><b>Build 1 (v39) at day 7: no change in retention.</b> D7 3.0% against 2.1% in the same campaign, inside the margin of error. Mine, Research and Pom Growth still reach about twice as many installs within 7 days; Honey War and Relic still do not (2.2% against 2.6%).</li>
+<li><b>Fishing event, first full week: 46 players.</b> That is 3.5% of v43's weekly players, and 25% of those who played on 3 days or more.</li>
+<li><b>v44, the Arena (PvP) test build, ran on 1–4 test devices a day.</b> No released build contains PvP.</li>
+</ol></div>
+
+<div class="ctl"><button onclick="document.querySelectorAll('details.sec').forEach(d=>d.open=true)">Expand all</button>
+<button onclick="document.querySelectorAll('details.sec').forEach(d=>d.open=false)">Collapse all</button></div>
+
+<details class="sec" id="week" open><summary><h2>1. The week in numbers</h2></summary><div class="body">
+<p class="answer"><b>Every headline number fell; IAP fell most.</b> Weeks run Monday to Sunday. The change column compares 16–22 Nov with 9–15 Nov.</p>
+<div class="tw"><table><thead><tr><th class="l">Metric</th><th>2–8 Nov</th><th>9–15 Nov</th><th>16–22 Nov</th><th>Change</th></tr></thead><tbody id="tbKpi"></tbody></table></div>
+<div class="foot">GA4 figures exclude China. Daily players and the per-player rates are daily averages over the week. Payers are distinct players with at least one purchase in the week. Play Console orders exclude refunds. Paid installs and spend are AppsFlyer-attributed; the last 2–3 days can still be revised upward.</div>
+<h3>Revenue per day</h3>
+<div class="legend" id="lgRev"></div>
+<div class="chart" id="chRev"></div>
+<h3>Paid UA spend per day</h3>
+<div class="legend" id="lgSp"></div>
+<div class="chart" id="chSp"></div>
+<div class="foot">AppsFlyer daily spend, all paid campaigns.</div>
+</div></details>
+
+<details class="sec" id="buyers" open><summary><h2>2. Why IAP fell: who bought</h2></summary><div class="body">
+<p class="answer"><b>The players who paid last week mostly did not come back, and few new buyers replaced them.</b> Revenue at this scale rests on a handful of players: last week's top buyer spent $130 alone, more than the whole IAP of 17–22 Nov.</p>
+<div class="tw"><table><thead><tr><th class="l">Buyers</th><th>9–15 Nov</th><th>16–22 Nov</th></tr></thead><tbody id="tbBuy"></tbody></table></div>
+<p><b>Shop interest held up, purchases did not.</b> About as many players opened a shop offer as the week before (<span id="tClk"></span>), but far fewer of them bought. Two thirds of this week's clicks came from Indonesia, the Philippines and Vietnam, where players buy less often. The event data has no checkout-failure event, so it cannot show whether any purchase attempts failed. The purchases that did go through all appear in Play Console.</p>
+<h3>Orders by product (Play Console)</h3>
+<div class="tw"><table><thead><tr><th class="l">Product</th><th>9–15 Nov</th><th>16–22 Nov</th></tr></thead><tbody id="tbSku"></tbody></table></div>
+<div class="foot">Charged orders by order date. Product IDs without the <code>com.idle.tiny.</code> prefix.</div>
+</div></details>
+
+<details class="sec" id="ua" open><summary><h2>3. Traffic: UA spend and where installs came from</h2></summary><div class="body">
+<p class="answer"><b>The one live campaign spent half as much, and the installs it bought were cheaper and from lower-value markets.</b> Spend on GA ROAS Global 02/11 went from about $200 a day (9–15 Nov) to $57–109 a day (19–22 Nov). Its cost per paid install fell from $1.82 to $1.37 as the mix moved away from Tier-1 countries. A Tier-3 campaign (GA ROAS Tier3 20/11) started on 20 Nov.</p>
+<div class="tw"><table><thead><tr><th class="l">Campaign</th><th>Spend, 2–8 Nov</th><th>Spend, 9–15 Nov</th><th>Spend, 16–22 Nov</th><th>Installs, 2–8 Nov</th><th>Installs, 9–15 Nov</th><th>Installs, 16–22 Nov</th></tr></thead><tbody id="tbCamp"></tbody></table></div>
+<div class="foot">AppsFlyer-attributed installs and spend. GA4 counts more installs (926 this week), because it includes players AppsFlyer does not attribute.</div>
+<h3>Installs by country</h3>
+<div class="tw"><table><thead><tr><th class="l">Country</th><th>9–15 Nov</th><th>16–22 Nov</th><th>Change</th></tr></thead><tbody id="tbCty"></tbody></table></div>
+<div class="foot" id="ftCty"></div>
+<h3>Ads</h3>
+<p><b>More rewarded ads per player, but less revenue per view.</b> Rewarded views rose from 1,110 to 1,395 while daily players fell. Most of the rise came from a small group: Blessing ads (29 → 169 views, about 10 players), Flybox gold (41 → 120, 19 players) and Lucky Spin (51 → 97, 17 players). Revenue per view depends on the viewer's country, and Tier-1 views fell from 26% to 15% of the total. Last week those Tier-1 views earned 80% of ad revenue.</p>
+<div class="tw"><table><thead><tr><th class="l">Ads</th><th>9–15 Nov</th><th>16–22 Nov</th></tr></thead><tbody id="tbAds"></tbody></table></div>
+</div></details>
+
+<details class="sec" id="versions" open><summary><h2>4. Versions run this week</h2></summary><div class="body">
+<p class="answer"><b>v43 replaced v39 as the live build.</b> Daily players by the version they ran most that day.</p>
+<div class="legend" id="lgV"></div>
+<div class="chart" id="chV"></div>
+<div class="foot">23 Nov is a partial day. “Other” is every older version plus the internal builds.</div>
+<div class="tw"><table><thead><tr><th>Version</th><th class="l">Status</th><th class="l">Share of daily players</th><th class="l">What it contains</th></tr></thead><tbody>
+<tr><td>v39</td><td class="l">Previous live build (Build 1)</td><td class="l">17% on 16 Nov, 2% on 22 Nov</td><td class="l">Five unlock stages moved earlier; hero pick-up tracking; free S hero (Faun) in Cat Guide</td></tr>
+<tr><td>v43</td><td class="l">Live build</td><td class="l">65% on 16 Nov, 79% on 22 Nov</td><td class="l">TikTok Business SDK and events; Fishing event screens; unlock stages identical to v39</td></tr>
+<tr><td>v44</td><td class="l">Internal test</td><td class="l">1–4 devices a day from 17 Nov</td><td class="l">Arena (PvP) mode, unlocked after campaign stage 24, running in a sandbox with test currency</td></tr>
+</tbody></table></div>
+<p>The rest of daily players are on older builds that never updated (mostly v10 and v9, 20–27 players a day between them).</p>
+</div></details>
+
+<details class="sec" id="v43" open><summary><h2>5. v43 against v39: new players</h2></summary><div class="body">
+<p class="answer"><b>No measurable change in retention.</b> Both builds are compared inside the same campaign (GA ROAS Global 02/11): v39 installs of 6–13 Nov against v43 installs of 14–21 Nov.</p>
+<div class="tw"><table><thead><tr><th class="l">Day</th><th>v39</th><th>v43</th><th>Change, points</th><th>95% interval on the change</th><th>v43, country-adjusted</th><th class="l">Installs (v39 / v43)</th></tr></thead><tbody id="tbV43"></tbody></table></div>
+<div class="foot">Country-adjusted: v43's rate per country, weighted to v39's country mix (top 8 countries plus the rest). v43 drew fewer Tier-1 installs (<span id="tT1"></span>). D3 uses installs up to 11 Nov (v39) and 19 Nov (v43).</div>
+<p><b>Same days, same campaign.</b> On 14–15 Nov the Play staged rollout gave some new installs v39 and some v43: <span id="tSame"></span>. These groups are too small to read on their own, and they do not contradict the comparison above.</p>
+<h3>Revenue per install, first 3 days</h3>
+<p><b>Lower on v43, but not distinguishable from noise.</b> The gap is all IAP (3 payers against 15); ad revenue per install is slightly higher on v43.</p>
+<div class="tw"><table><thead><tr><th class="l">Per install, D0–D3</th><th>v39</th><th>v43</th></tr></thead><tbody id="tbV43m"></tbody></table></div>
+<div class="foot" id="ftV43m"></div>
+<p><b>The unlock stages behave as in v39.</b> <span id="tUnl"></span></p>
+</div></details>
+
+<details class="sec" id="b1" open><summary><h2>6. Build 1 (v39) at day 7</h2></summary><div class="body">
+<p class="answer"><b>D7 did not change, and Honey War and Relic still have not moved.</b> v37 installs of 2–5 Nov against v39 installs of 6–15 Nov, both in GA ROAS Global 02/11. Last week's report could not read D7 yet.</p>
+<div class="tw"><table><thead><tr><th class="l">Day 7</th><th>v37, old campaign</th><th>v37, same campaign</th><th>v39</th><th>Change v37 → v39, points</th><th>95% interval</th></tr></thead><tbody id="tbD7"></tbody></table></div>
+<div class="foot" id="ftD7"></div>
+<h3>Share of installs using each feature within 7 days</h3>
+<div class="tw"><table><thead><tr><th class="l">Feature</th><th>v37</th><th>v39</th><th>Change, points</th><th>95% interval</th></tr></thead><tbody id="tbF7"></tbody></table></div>
+<p id="tHoney"></p>
+</div></details>
+
+<details class="sec" id="fishing" open><summary><h2>7. Fishing event, first full week</h2></summary><div class="body">
+<p class="answer"><b>A small share of all players took part, but a quarter of the regular ones did.</b> The Fishing event ships with v43; this is its first full week.</p>
+<div class="tw"><table><thead><tr><th class="l">Fishing event, 16–22 Nov</th><th>Players</th></tr></thead><tbody id="tbFish"></tbody></table></div>
+<div class="foot">A player takes part if they log any Fishing event action: a catch, a quest reward, a shop exchange or an event ad. No purchase this week was a Fishing pack.</div>
+</div></details>
+
+<details class="sec" id="limits" open><summary><h2>8. What these numbers can and cannot say</h2></summary><div class="body"><ul class="notes">
+<li><b>The build change and the traffic change happened together.</b> v43 took over on 15–16 Nov, and UA spend fell from 17 Nov. This week's data cannot split the drop in revenue and daily players between them. The same-campaign comparison in section 5 is the closest thing to a clean read on the build.</li>
+<li><b>IAP is a handful of players.</b> 26 buyers last week and 9 this week; one player can move the weekly total by $100 or more.</li>
+<li><b>Failed purchases are not logged.</b> The data shows shop clicks and completed purchases, not checkout errors or cancellations.</li>
+<li><b>v43 is a week old.</b> D7 for its first full week of installs (16–22 Nov) completes on 29 Nov; its revenue per install needs two to three weeks.</li>
+<li><b>AppsFlyer spend for the last days can still change</b> as late cost data arrives.</li>
+</ul></div></details>
+
+<details class="sec" id="method"><summary><h2>Method and sources</h2></summary><div class="body"><ul class="notes">
+<li>GA4 export (BigQuery), Android, China excluded, 26 Oct–22 Nov. 23 Nov is a partial day and is left out.</li>
+<li>Revenue: IAP is <code>in_app_purchase</code> value in USD (gross); ads are <code>ad_impression_MAX</code> value. Orders reconciled with the Google Play Console sales report (charged orders by order date).</li>
+<li>Tier 1: United States, Canada, United Kingdom, Australia, New Zealand, Ireland, Germany, France, Netherlands, Belgium, Switzerland, Austria, the Nordic countries, Japan and South Korea.</li>
+<li>Version per day: the version a player logged most events on that day. Install build: the version on the player's <code>first_open</code>.</li>
+<li>Campaign: GA4 first-touch campaign of the install. UA spend and paid installs: AppsFlyer daily report.</li>
+<li>Retention day N = any event on calendar day N after install. Feature first use is defined as in the 9–15 Nov report.</li>
+<li>Intervals: Wilson 95% for shares, normal approximation for differences in shares, bootstrap for revenue.</li>
+<li>Related: <a href="weekly_2026-11-15.html">Week 9–15 Nov report</a> · <a href="builds_2026-10-22.html">What each build changed</a> · <a href="kpi.html">KPI dashboard</a> · <a href="campaigns.html">Campaign LTV</a></li>
+</ul></div></details>
+
+<script>
+const DATA = {"kpi":{"W0":{"days":7,"dau":648.9,"installs":1938,"iap":591.17,"ad":120.52,"purchases":89,"imps":1854,"sessions_per_dau":1.28,"play_orders":90,"spend":2179.69,"paid_installs_af":1405,"rev":711.69,"arpdau":0.157,"imps_per_dau":0.41,"ecpm":65.0,"cpi":1.55,"payers":null},"W1":{"days":7,"dau":474.4,"installs":1239,"iap":577.48,"ad":90.14,"purchases":75,"imps":1166,"sessions_per_dau":1.27,"play_orders":75,"spend":1409.5,"paid_installs_af":773,"rev":667.62,"arpdau":0.201,"imps_per_dau":0.35,"ecpm":77.3,"cpi":1.82,"payers":26},"W2":{"days":7,"dau":392.1,"installs":926,"iap":158.02,"ad":70.49,"purchases":15,"imps":1486,"sessions_per_dau":1.24,"play_orders":17,"spend":702.31,"paid_installs_af":521,"rev":228.51,"arpdau":0.083,"imps_per_dau":0.54,"ecpm":47.4,"cpi":1.35,"payers":9}},"daily":{"days":["11-02","11-03","11-04","11-05","11-06","11-07","11-08","11-09","11-10","11-11","11-12","11-13","11-14","11-15","11-16","11-17","11-18","11-19","11-20","11-21","11-22"],"dau":[567,768,645,658,673,640,591,596,482,457,441,419,487,439,451,420,404,371,357,358,384],"installs":[184,406,281,275,275,289,228,235,191,165,151,133,215,149,179,135,124,93,123,118,154],"iap":[77.84,132.0,15.18,118.1,0.0,28.46,219.59,118.19,62.44,79.66,46.39,188.19,39.18,43.43,54.92,12.66,0.0,41.97,9.57,23.65,15.25],"ad":[16.69,28.9,17.2,23.16,9.48,14.9,10.19,19.9,14.11,22.06,11.95,2.05,10.51,9.56,35.1,12.2,8.59,3.83,5.37,2.15,3.25],"spend":[179.94,463.1,406.82,309.7,283.51,327.19,209.43,187.36,231.69,168.27,243.13,144.06,209.66,225.33,139.91,82.71,162.83,56.89,76.05,75.24,108.68]},"buyers":{"W1":{"payers":26,"usd":577.47,"t1_payers":15,"top5_usd":303.54,"top1_usd":129.53},"W2":{"payers":9,"usd":158.03,"t1_payers":6,"repeat_from_W1":1,"repeat_usd":5.54},"W1_payers_seen_in_W2":11,"W1_top5_seen_in_W2":3},"clicks":{"W1":{"clicks":108,"clickers":48,"clickers_bought":13,"t1_clickers":13,"t1_clickers_bought":8},"W2":{"clicks":113,"clickers":43,"clickers_bought":2,"t1_clickers":8,"t1_clickers_bought":1}},"sku":[{"sku":"daily.challenge.key.1","W1":11,"W2":3},{"sku":"skip.ad.30days.sale","W1":6,"W2":1},{"sku":"campaign.101","W1":5,"W2":1},{"sku":"auto.blessing","W1":5,"W2":0},{"sku":"skip.ad.permanent.sale","W1":4,"W2":3},{"sku":"campaign.51","W1":4,"W2":2},{"sku":"membership","W1":4,"W2":2},{"sku":"pass.tiny.guide","W1":3,"W2":1},{"sku":"campaign.20","W1":3,"W2":0},{"sku":"package.hero.doom","W1":3,"W2":0},{"sku":"skip.ad.30days","W1":3,"W2":0},{"sku":"time.limit.mega.summon","W1":3,"W2":0}],"sku_rest":{"W1":21,"W2":4,"n":14},"play_vs_ga4":{"W0":{"play":90,"ga4":89},"W1":{"play":75,"ga4":75},"W2":{"play":17,"ga4":15}},"campaigns":[{"camp":"GA_TinyKnightfa_A_ROAS_Global_20072026","cost_W0":175.09,"cost_W1":0.0,"cost_W2":0.0,"inst_W0":131,"inst_W1":0,"inst_W2":0},{"camp":"GA_TinyKnightfall_A_ROAS_Global_02112026","cost_W0":2004.6,"cost_W1":1409.5,"cost_W2":698.34,"inst_W0":1274,"inst_W1":773,"inst_W2":508},{"camp":"GA_TinyKnightfall_A_ROAS_Tier3_20112026","cost_W0":0.0,"cost_W1":0.0,"cost_W2":3.97,"inst_W0":0,"inst_W1":0,"inst_W2":13},{"camp":"Organic","cost_W0":0.0,"cost_W1":0.0,"cost_W2":0.0,"inst_W0":127,"inst_W1":155,"inst_W2":123}],"geo":{"W0":{"installs":1938,"t1_share":24.0,"top":{"Indonesia":407,"Thailand":209,"United States":145,"Philippines":127,"Canada":114,"Malaysia":78}},"W1":{"installs":1239,"t1_share":24.6,"top":{"Indonesia":257,"Thailand":160,"United States":107,"Philippines":86,"Canada":66,"Malaysia":44}},"W2":{"installs":926,"t1_share":16.7,"top":{"Indonesia":216,"Thailand":117,"Philippines":80,"United States":51,"Canada":39,"Malaysia":38}}},"countries":[{"c":"Indonesia","W1":257,"W2":216,"t1":false},{"c":"Thailand","W1":160,"W2":117,"t1":false},{"c":"United States","W1":107,"W2":51,"t1":true},{"c":"Philippines","W1":86,"W2":80,"t1":false},{"c":"Canada","W1":66,"W2":39,"t1":true},{"c":"Malaysia","W1":44,"W2":38,"t1":false},{"c":"Netherlands","W1":28,"W2":13,"t1":true},{"c":"Portugal","W1":28,"W2":11,"t1":false}],"ads":{"W1":{"t1_imp_share":26.4,"t1_rev_share":79.8,"ecpm_t1":233.6,"ecpm_rest":21.2},"W2":{"t1_imp_share":15.1,"t1_rev_share":48.4,"ecpm_t1":151.7,"ecpm_rest":28.8},"placements_up":[{"p":"flybox_gold","W1":41,"W2":120},{"p":"blessing_cooldown","W1":6,"W2":55},{"p":"blessing_gold","W1":9,"W2":55},{"p":"lucky_spin","W1":51,"W2":97},{"p":"blessing_attack","W1":14,"W2":59},{"p":"skip_time_research","W1":10,"W2":35}],"placements_down":[{"p":"flybox_blessing","W1":24,"W2":11},{"p":"daily_quest","W1":144,"W2":131},{"p":"acquire_hero","W1":318,"W2":283}],"rewarded_W1":1110,"rewarded_W2":1395},"versions":{"days":["11-09","11-10","11-11","11-12","11-13","11-14","11-15","11-16","11-17","11-18","11-19","11-20","11-21","11-22","11-23"],"series":{"39":[470,404,351,356,300,348,180,77,51,37,20,15,19,9,8],"43":[0,0,0,0,6,46,181,291,271,273,256,274,266,304,160],"44":[0,0,0,0,0,0,0,0,2,4,1,1,0,3,3]},"other":[126,78,106,85,113,93,78,83,96,90,94,67,73,68,19]},"v43_share":{"11-09":0.0,"11-10":0.0,"11-11":0.0,"11-12":0.0,"11-13":1.4,"11-14":9.4,"11-15":41.2,"11-16":64.5,"11-17":64.5,"11-18":67.6,"11-19":69.0,"11-20":76.8,"11-21":74.3,"11-22":79.2,"11-23":84.2},"v44_max":4,"v43":{"n_d1":[1263,767],"n_d3":[1048,560],"d1":[[18.6,16.6,20.8],[18.8,16.2,21.7]],"d3":[[6.8,5.4,8.5],[5.5,3.9,7.8]],"diff_d1":[0.2,-3.3,3.7],"diff_d3":[-1.2,-3.7,1.2],"t1":[23.4,18.8],"a1_v43_adj":18.5,"a3_v43_adj":5.5,"same_days":{"n":[169,143],"d1":[28,28],"d3":[5,10],"d7":[4,1]},"rev3":[[0.39,0.19,0.628],[0.205,0.063,0.413]],"iap3":[0.327,0.111],"ad3":[0.063,0.094],"payers3":[15,3],"imps3":[0.71,0.72],"diff_rev3":[-0.185,-0.455,0.109],"s15_d3":[[18.9,16.6,21.4],[20.0,16.9,23.5]],"mine_d3":[[19.6,17.3,22.1],[20.9,17.7,24.5]]},"build1_d7":{"n":[1776,855,1432],"d7":[[3.4,2.6,4.3],[2.1,1.3,3.3],[3.0,2.2,4.0]],"diff_d7":[0.9,-0.4,2.2],"rev7":[[0.274,0.125,0.474],[0.439,0.215,0.71]],"diff_rev7":[0.165,-0.132,0.481],"payers7":[12,20],"features_d7":[{"name":"Mine","B":[9.1,7.4,11.2],"C":[19.2,17.2,21.3],"diff":[10.1,7.3,12.9]},{"name":"Research","B":[8.7,7.0,10.7],"C":[17.8,15.9,19.9],"diff":[9.2,6.4,11.9]},{"name":"Pom Growth","B":[4.8,3.6,6.4],"C":[9.8,8.4,11.5],"diff":[5.1,2.9,7.2]},{"name":"Honey War","B":[2.6,1.7,3.9],"C":[2.2,1.5,3.1],"diff":[-0.4,-1.7,0.9]},{"name":"Relic","B":[2.5,1.6,3.7],"C":[2.1,1.5,3.0],"diff":[-0.4,-1.6,0.9]}],"honey_v39":{"users":31,"med":64.0,"at_26_30":1}},"fishing":{"actives_v43":1331,"players":46,"players_all":46,"actives_3d":125,"players_3d":31,"catch_players":25,"shop_players":11,"ad_players":6,"ads":10,"med_days":1.0,"daily_quest_players":42},"ret_by_week":{"W0":{"n":1938,"d1":[19.6,17.9,21.4],"d3":[8.2,7.0,9.5],"d7":[3.0,2.4,3.9]},"W1":{"n":1239,"d1":[16.6,14.7,18.8],"d3":[5.2,4.1,6.6],"d7":[2.5,1.8,3.5]},"W2":{"n":926,"d1":[18.5,15.9,21.4],"d3":[6.0,4.3,8.4],"d7":[null,null,null]}}};
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const pct = a => a[0] == null ? '–' : a[0].toFixed(1) + '%';
+const ci = a => a[0] == null ? '' : ' <span class="foot">(' + a[1].toFixed(1) + '–' + a[2].toFixed(1) + ')</span>';
+const sgn = x => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(x).toFixed(1);
+const n0 = x => x == null ? '–' : Math.round(x).toLocaleString('en-US');
+const usd0 = x => '$' + Math.round(x).toLocaleString('en-US');
+const usd2 = x => '$' + x.toFixed(2);
+const usd3 = x => '$' + x.toFixed(3);
+const chg = (a, b) => (a == null || b == null || !a) ? '' : ((b - a) / a * 100 >= 0 ? '+' : '−') + Math.abs(Math.round((b - a) / a * 100)) + '%';
+const dmy = d => +d.slice(3) + ' Nov';
+const svgEl = (tag, attrs, parent) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+function tipFor(box) { const t = document.createElement('div'); t.className = 'tip'; box.appendChild(t);
+  return { show(html, ev) { t.innerHTML = html; t.style.display = 'block'; const r = box.getBoundingClientRect(); let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 12;
+    if (x + t.offsetWidth > r.width) x = ev.clientX - r.left - t.offsetWidth - 14; t.style.left = x + 'px'; t.style.top = y + 'px'; }, hide() { t.style.display = 'none'; } }; }
+function roundTop(x, y, w, h, r) { r = Math.min(r, w / 2, h); return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`; }
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p; return 10 * p; }
+
+// stacked bars: days = ['11-02', ...], ser = [{n, c, a:[...]}], fmt = value formatter, partial = day label to star
+function stack(boxId, lgId, days, ser, fmt, label, partial) {
+  $(lgId).innerHTML = ser.map(s => `<span><i style="background:var(--${s.c})"></i>${s.n}</span>`).join('');
+  const total = days.map((_, i) => ser.reduce((s, q) => s + q.a[i], 0));
+  const W = 1100, H = 260, m = { l: 52, r: 10, t: 14, b: 26 }, pw = W - m.l - m.r, ph = H - m.t - m.b, max = niceMax(Math.max(...total) * 1.05);
+  const box = $(boxId), svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': label }, box), tip = tipFor(box);
+  for (let g = 0; g <= 4; g++) { const v = max * g / 4, y = m.t + ph - ph * g / 4; svgEl('line', { x1: m.l, x2: W - m.r, y1: y, y2: y, class: 'grid' }, svg); svgEl('text', { x: m.l - 8, y: y + 4, 'text-anchor': 'end', class: 'ax' }, svg).textContent = fmt(v); }
+  const bw = pw / days.length, w = Math.min(46, bw - 8);
+  days.forEach((d, i) => {
+    const x = m.l + i * bw + (bw - w) / 2; let acc = 0;
+    ser.forEach((s, k) => { const v = s.a[i]; if (!v) return; const h = ph * v / max, y = m.t + ph - ph * (acc + v) / max; acc += v;
+      const top = ser.slice(k + 1).every(q => !q.a[i]);
+      if (top) svgEl('path', { d: roundTop(x, y, w, Math.max(h - 2, 1), 4), fill: css('--' + s.c) }, svg); else svgEl('rect', { x, y, width: w, height: Math.max(h - 2, 1), fill: css('--' + s.c) }, svg); });
+    if (i % (days.length > 16 ? 2 : 1) === 0) svgEl('text', { x: x + w / 2, y: H - 8, 'text-anchor': 'middle', class: 'ax' }, svg).textContent = +d.slice(3) + (d === partial ? '*' : '');
+    const hit = svgEl('rect', { x: m.l + i * bw, y: m.t, width: bw, height: ph, fill: 'transparent' }, svg);
+    hit.addEventListener('mousemove', ev => tip.show(`<b>${dmy(d)}${d === partial ? ' (partial)' : ''}</b>` + ser.map(s => `<div class="r"><span><i style="background:var(--${s.c})"></i>${s.n}</span><b>${fmt(s.a[i], true)}</b></div>`).join('') + (ser.length > 1 ? `<div class="r"><span>Total</span><b>${fmt(total[i], true)}</b></div>` : ''), ev));
+    hit.addEventListener('mouseleave', tip.hide);
+  });
+  // week separators
+  ['11-09', '11-16', '11-23'].forEach(d => { const i = days.indexOf(d); if (i > 0) { const x = m.l + i * bw; svgEl('line', { x1: x, x2: x, y1: m.t, y2: m.t + ph, stroke: css('--t3'), 'stroke-dasharray': '2 4' }, svg); } });
+}
+const money = (v, tip) => tip ? '$' + v.toFixed(2) : '$' + Math.round(v);
+
+// ---- 1. KPI table + daily charts
+(function () {
+  const K = DATA.kpi, W = ['W0', 'W1', 'W2'];
+  const rows = [
+    ['Daily players (average)', k => k.dau, n0],
+    ['Installs (GA4)', k => k.installs, n0],
+    ['Revenue, IAP + ads', k => k.rev, usd0],
+    ['IAP revenue', k => k.iap, usd0],
+    ['Ad revenue', k => k.ad, usd0],
+    ['Revenue per daily player', k => k.arpdau, usd3],
+    ['Purchases (GA4)', k => k.purchases, n0],
+    ['Orders (Play Console)', k => k.play_orders, n0],
+    ['Payers', k => k.payers, n0],
+    ['Ad impressions per daily player', k => k.imps_per_dau, x => x.toFixed(2)],
+    ['Ad revenue per 1,000 impressions', k => k.ecpm, usd0],
+    ['Sessions per daily player', k => k.sessions_per_dau, x => x.toFixed(2)],
+    ['UA spend', k => k.spend, usd0],
+    ['Paid installs (AppsFlyer)', k => k.paid_installs_af, n0],
+    ['Cost per paid install', k => k.cpi, usd2],
+  ];
+  $('tbKpi').innerHTML = rows.map(([lab, f, fmt]) => `<tr><td>${lab}</td>` + W.map(w => `<td>${f(K[w]) == null ? '–' : fmt(f(K[w]))}</td>`).join('') + `<td>${chg(f(K.W1), f(K.W2))}</td></tr>`).join('');
+  const D = DATA.daily;
+  stack('chRev', 'lgRev', D.days, [{ n: 'IAP', c: 'c1', a: D.iap }, { n: 'Ads', c: 'c2', a: D.ad }], money, 'Revenue per day, IAP and ads, 2 to 22 November');
+  stack('chSp', 'lgSp', D.days, [{ n: 'UA spend', c: 'c3', a: D.spend }], money, 'Paid UA spend per day, 2 to 22 November');
+})();
+
+// ---- 2. buyers
+(function () {
+  const B = DATA.buyers, C = DATA.clicks;
+  const rows = [
+    ['Players who bought', B.W1.payers, B.W2.payers],
+    ['… of whom in Tier-1 countries', B.W1.t1_payers, B.W2.t1_payers],
+    ['IAP revenue', usd0(B.W1.usd), usd0(B.W2.usd)],
+    ["Last week's five largest buyers", usd0(B.W1.top5_usd) + ' (' + Math.round(100 * B.W1.top5_usd / B.W1.usd) + '%)', B.W1_top5_seen_in_W2 + ' of 5 played; ' + B.W2.repeat_from_W1 + ' bought'],
+    ["Last week's buyers who played this week", '', B.W1_payers_seen_in_W2 + ' of ' + B.W1.payers],
+    ["… and bought again", '', B.W2.repeat_from_W1 + ' (' + usd2(B.W2.repeat_usd) + ')'],
+    ['Players who clicked a shop offer', C.W1.clickers, C.W2.clickers],
+    ['… of whom bought that week', C.W1.clickers_bought, C.W2.clickers_bought],
+    ['Tier-1 players who clicked a shop offer', C.W1.t1_clickers, C.W2.t1_clickers],
+    ['… of whom bought that week', C.W1.t1_clickers_bought, C.W2.t1_clickers_bought],
+  ];
+  $('tbBuy').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+  $('tClk').textContent = `${C.W2.clickers} players against ${C.W1.clickers}`;
+  $('tbSku').innerHTML = DATA.sku.map(s => `<tr><td>${s.sku}</td><td>${s.W1}</td><td>${s.W2}</td></tr>`).join('')
+    + `<tr><td>${DATA.sku_rest.n} other products</td><td>${DATA.sku_rest.W1}</td><td>${DATA.sku_rest.W2}</td></tr>`
+    + `<tr><td><b>All orders</b></td><td><b>${DATA.kpi.W1.play_orders}</b></td><td><b>${DATA.kpi.W2.play_orders}</b></td></tr>`;
+})();
+
+// ---- 3. UA, geo, ads
+(function () {
+  const nm = c => c === 'Organic' ? 'Organic (no spend)' : c.replace('GA_TinyKnightfall_A_', 'GA ').replace('GA_TinyKnightfa_A_', 'GA ').replace(/_(\d{2})(\d{2})\d{4}$/, ' $1/$2').replace(/_/g, ' ');
+  $('tbCamp').innerHTML = DATA.campaigns.map(c => `<tr><td>${nm(c.camp)}</td>` + ['W0', 'W1', 'W2'].map(w => `<td>${c.camp === 'Organic' ? '–' : usd0(c['cost_' + w])}</td>`).join('') + ['W0', 'W1', 'W2'].map(w => `<td>${n0(c['inst_' + w])}</td>`).join('') + '</tr>').join('');
+  $('tbCty').innerHTML = DATA.countries.map(c => `<tr><td>${c.c}${c.t1 ? ' <span class="tag">Tier 1</span>' : ''}</td><td>${c.W1}</td><td>${c.W2}</td><td>${chg(c.W1, c.W2)}</td></tr>`).join('');
+  const G = DATA.geo; $('ftCty').textContent = `GA4 installs, the eight largest countries of 9–15 Nov. Tier-1 share of all installs: ${G.W0.t1_share.toFixed(1)}% (2–8 Nov), ${G.W1.t1_share.toFixed(1)}% (9–15 Nov), ${G.W2.t1_share.toFixed(1)}% (16–22 Nov).`;
+  const A = DATA.ads, K = DATA.kpi;
+  const rows = [
+    ['Rewarded ad views', n0(A.rewarded_W1), n0(A.rewarded_W2)],
+    ['Ad impressions per daily player', K.W1.imps_per_dau.toFixed(2), K.W2.imps_per_dau.toFixed(2)],
+    ['Tier-1 share of impressions', A.W1.t1_imp_share + '%', A.W2.t1_imp_share + '%'],
+    ['Tier-1 share of ad revenue', A.W1.t1_rev_share + '%', A.W2.t1_rev_share + '%'],
+    ['Revenue per 1,000 impressions, Tier 1', usd0(A.W1.ecpm_t1), usd0(A.W2.ecpm_t1)],
+    ['Revenue per 1,000 impressions, other countries', usd0(A.W1.ecpm_rest), usd0(A.W2.ecpm_rest)],
+    ['Ad revenue', usd0(K.W1.ad), usd0(K.W2.ad)],
+  ];
+  $('tbAds').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+})();
+
+// ---- 4. versions
+(function () {
+  const V = DATA.versions;
+  const ser = [{ n: 'v39', c: 'c2', a: V.series['39'] }, { n: 'v43', c: 'c3', a: V.series['43'] }, { n: 'v44 (test)', c: 'c1', a: V.series['44'] }, { n: 'Other', c: 'c0', a: V.other }];
+  stack('chV', 'lgV', V.days, ser, (v, tip) => Math.round(v), 'Daily players by app version, 9 to 23 November', '11-23');
+})();
+
+// ---- 5. v43 against v39
+(function () {
+  const X = DATA.v43;
+  $('tbV43').innerHTML = [['D1', 'd1', 'diff_d1', 'a1_v43_adj', 'n_d1'], ['D3', 'd3', 'diff_d3', 'a3_v43_adj', 'n_d3']].map(([lab, k, dk, adj, nk]) =>
+    `<tr><td>${lab}</td><td>${pct(X[k][0])}${ci(X[k][0])}</td><td>${pct(X[k][1])}${ci(X[k][1])}</td><td>${sgn(X[dk][0])}</td><td>${sgn(X[dk][1])} to ${sgn(X[dk][2])}</td><td>${X[adj].toFixed(1)}%</td><td class="l">${n0(X[nk][0])} / ${n0(X[nk][1])}</td></tr>`).join('');
+  $('tT1').textContent = `${X.t1[1]}% of installs against ${X.t1[0]}%`;
+  const S = X.same_days;
+  $('tSame').textContent = `D1 ${S.d1[0]} of ${S.n[0]} on v39 against ${S.d1[1]} of ${S.n[1]} on v43, D3 ${S.d3[0]} against ${S.d3[1]}, D7 ${S.d7[0]} against ${S.d7[1]}`;
+  const iv = a => `${a[1] >= 0 ? '+' : '−'}$${Math.abs(a[1]).toFixed(2)} to ${a[2] >= 0 ? '+' : '−'}$${Math.abs(a[2]).toFixed(2)}`;
+  const rows = [
+    ['IAP + ads', usd2(X.rev3[0][0]) + ` <span class="foot">(${usd2(X.rev3[0][1])}–${usd2(X.rev3[0][2])})</span>`, usd2(X.rev3[1][0]) + ` <span class="foot">(${usd2(X.rev3[1][1])}–${usd2(X.rev3[1][2])})</span>`],
+    ['IAP', usd2(X.iap3[0]), usd2(X.iap3[1])],
+    ['Ads', usd2(X.ad3[0]), usd2(X.ad3[1])],
+    ['Ad impressions', X.imps3[0].toFixed(2), X.imps3[1].toFixed(2)],
+    ['Payers', X.payers3[0], X.payers3[1]],
+  ];
+  $('tbV43m').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+  $('ftV43m').textContent = `Installs: ${n0(X.n_d3[0])} (v39, 6–11 Nov) and ${n0(X.n_d3[1])} (v43, 14–19 Nov). Difference v43 − v39: ${X.diff_rev3[0] >= 0 ? '+' : '−'}$${Math.abs(X.diff_rev3[0]).toFixed(2)}, 95% interval ${iv(X.diff_rev3)}.`;
+  $('tUnl').textContent = `Within 3 days, ${pct(X.mine_d3[1])} of v43 installs used Mine (v39: ${pct(X.mine_d3[0])}) and ${pct(X.s15_d3[1])} cleared stage 15 (v39: ${pct(X.s15_d3[0])}).`;
+})();
+
+// ---- 6. Build 1 at D7
+(function () {
+  const B = DATA.build1_d7;
+  $('tbD7').innerHTML = `<tr><td>Retention</td>` + B.d7.map(a => `<td>${pct(a)}${ci(a)}</td>`).join('') + `<td>${sgn(B.diff_d7[0])}</td><td>${sgn(B.diff_d7[1])} to ${sgn(B.diff_d7[2])}</td></tr>`
+    + `<tr><td>Revenue per install, D0–D7</td><td>–</td><td>${usd2(B.rev7[0][0])}</td><td>${usd2(B.rev7[1][0])}</td><td>${B.diff_rev7[0] >= 0 ? '+' : '−'}$${Math.abs(B.diff_rev7[0]).toFixed(2)}</td><td>${B.diff_rev7[1] >= 0 ? '+' : '−'}$${Math.abs(B.diff_rev7[1]).toFixed(2)} to ${B.diff_rev7[2] >= 0 ? '+' : '−'}$${Math.abs(B.diff_rev7[2]).toFixed(2)}</td></tr>`
+    + `<tr><td>Payers within 7 days</td><td>–</td><td>${B.payers7[0]}</td><td>${B.payers7[1]}</td><td></td><td></td></tr>`;
+  $('ftD7').textContent = `Installs: ${n0(B.n[0])} (v37, GA ROAS Global 20/07, 26 Oct–1 Nov, context only), ${n0(B.n[1])} (v37, 2–5 Nov) and ${n0(B.n[2])} (v39, 6–15 Nov). Some v37 players updated to v39 within their first week, which would narrow any difference.`;
+  $('tbF7').innerHTML = B.features_d7.map(f => `<tr><td>${f.name}</td><td>${pct(f.B)}${ci(f.B)}</td><td>${pct(f.C)}${ci(f.C)}</td><td>${sgn(f.diff[0])}</td><td>${sgn(f.diff[1])} to ${sgn(f.diff[2])}</td></tr>`).join('');
+  const H = B.honey_v39;
+  $('tHoney').innerHTML = `<b>Honey War on v39.</b> ${H.users} v39 installs entered Honey War within 7 days, at a median stage of ${H.med}; ${H.at_26_30} of them did so between stages 25 and 30. The unlock is at stage 26, but players still start it around the old stage 65.`;
+})();
+
+// ---- 7. Fishing
+(function () {
+  const F = DATA.fishing;
+  const rows = [
+    ['Weekly players on v43', n0(F.actives_v43)],
+    ['… who took part in the Fishing event', `${F.players} (${(100 * F.players / F.actives_v43).toFixed(1)}%)`],
+    ['v43 players active on 3 days or more', n0(F.actives_3d)],
+    ['… who took part', `${F.players_3d} (${Math.round(100 * F.players_3d / F.actives_3d)}%)`],
+    ['Completed a Fishing daily quest', F.daily_quest_players],
+    ['Caught fish', F.catch_players],
+    ['Used the event shop', F.shop_players],
+    ['Watched the Fishing ad', `${F.ad_players} (${F.ads} views)`],
+    ['Median days with Fishing activity, per participant', F.med_days],
+  ];
+  $('tbFish').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+})();
+</script>
+</body></html>
